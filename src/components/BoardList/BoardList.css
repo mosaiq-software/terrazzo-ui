@@ -1,0 +1,19 @@
+#BoardList{
+    display: flex;
+    flex-direction: column;
+    background-color: black;
+    width: 20rem;
+    margin: 0 0 0 2rem;
+    border-radius: .5rem;
+    color: white;
+    height: fit-content;
+}
+h2{
+    margin: 0;
+    padding: 0 .5rem;
+}
+.AddCardButton{
+    margin:1rem;
+}
+
+

@@ -1,0 +1,30 @@
+#ListCard{
+    background-color: hsl(0, 2%, 17%);
+    margin: .5rem;
+    padding: .4rem;
+    border-radius: .5rem;
+}
+.CategoryTags{
+    display: flex;
+}
+.CategoryTag{
+    background-color: white;
+    border-radius: .3rem;
+    margin: 0 .2rem;
+    padding: 0 .6rem;
+    color: black;
+
+}
+.cardDescription{
+    color:white;
+    padding: 0 1rem;
+}
+.ListCard-bottomContainer{
+    display: flex;
+    justify-content: space-between;
+    padding: 0 1rem;
+    color: white;
+}
+.ListCard-bottomContainer>p{
+    margin: 0;
+}
