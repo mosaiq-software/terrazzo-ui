@@ -8,7 +8,6 @@ import { TRZProvider } from "@trz/util/TRZ-context";
 // import { GithubAuth } from "@trz/pages/auth/github";
 
 //Components
-import Board from "./components/Board/Board";
 import Navbar from "./components/Navbar/Navbar";
 
 //Styling
@@ -26,7 +25,6 @@ const App = () => {
 						<Route path='/auth' element={<Outlet />}>
 							{/* <Route path='github' element={<GithubAuth />} /> */}
 						</Route>
-						<Route path='/boards/:board_id' element={<Board />}></Route>
 					</Routes>
 				</BrowserRouter>
 				<p>
