@@ -1,0 +1,52 @@
+#Navbar{
+    display: flex;
+    justify-content: space-between;
+    background-color: black;
+    height: 6vh;
+    color: white;
+    align-items: center;
+}
+#Navbar div{
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    column-gap: 2rem;
+}
+#WorkspaceTitle{
+    color: hsl(0, 2%, 60%)
+}
+.profilieIcon{
+    display: flex;
+    justify-content: center;
+    background-color: hsl(0, 2%, 40%);
+    border-radius: 50%;
+    border: none;
+    height: 35px;
+    width: 35px;
+    margin: 0;
+    padding: 0;
+    font-size: 22px;
+    color:white
+}
+.WorkspaceButton{
+    background-color: black;
+    color: hsl(0, 2%, 60%);
+    border: none;
+}
+.searchbar{
+    background-color: hsl(0, 2%, 40%);
+    border: 1px solid hsl(0, 2%, 60%);
+    border-radius: .5rem;
+    padding: .4rem;
+
+}
+::placeholder{
+    color: hsl(0, 2%, 60%);
+}
+.CreateButton{
+    background-color: rgb(30, 111, 233);
+    color: white;
+    border: none;
+    border-radius: .5rem;
+    padding: .1rem 1.2rem;
+}

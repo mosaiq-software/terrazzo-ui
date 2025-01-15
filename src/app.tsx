@@ -9,6 +9,7 @@ import { TRZProvider } from "@trz/util/TRZ-context";
 
 //Components
 import Board from "./components/Board/Board";
+import Navbar from "./components/Navbar/Navbar";
 
 //Styling
 
@@ -19,6 +20,7 @@ const App = () => {
 		<MantineProvider theme={theme}>
 			<TRZProvider>
 				<BrowserRouter>
+				<Navbar/>
 					<Routes>
 						<Route path='/' element={<Outlet />} />
 						<Route path='/auth' element={<Outlet />}>
