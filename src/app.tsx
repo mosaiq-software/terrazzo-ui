@@ -4,11 +4,12 @@ import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { createTheme, MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
 import { TRZProvider } from "@trz/util/TRZ-context";
-// import { getGithubLoginUrl } from "@trz/util/githubAuth";
-// import { GithubAuth } from "@trz/pages/auth/github";
+import { getGithubLoginUrl } from "@trz/util/githubAuth";
+import { GithubAuth } from "@trz/pages/auth/github";
 
 //Components
 import Navbar from "./components/Navbar/Navbar";
+import Board from "./components/Board/Board";
 
 //Styling
 
@@ -23,8 +24,9 @@ const App = () => {
 					<Routes>
 						<Route path='/' element={<Outlet />} />
 						<Route path='/auth' element={<Outlet />}>
-							{/* <Route path='github' element={<GithubAuth />} /> */}
+							<Route path='github' element={<GithubAuth />} />
 						</Route>
+						<Route path='/boards/:board_id' element={<Board/>}></Route>
 					</Routes>
 				</BrowserRouter>
 				<p>
