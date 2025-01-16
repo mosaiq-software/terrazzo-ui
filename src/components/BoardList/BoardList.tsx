@@ -12,11 +12,12 @@ const BoardList = (): React.JSX.Element => {
 				display: " flex",
 				flexDirection: "column",
 				backgroundColor: " black",
-				width: " 20rem",
+				width: " 22rem",
 				margin: " 0 0 0 2rem",
-				borderRadius: " .5rem",
+				borderRadius: ".5rem",
 				color: "white",
-				height: " fit-content",
+				height: "fit-content",
+				maxHeight: "88vh"
 			}}>
 			<h2
 				style={{
@@ -27,7 +28,20 @@ const BoardList = (): React.JSX.Element => {
 			</h2>
 
 			{/* Placeholders for Card Components */}
+			<div style={{
+								overflowY: "scroll",
+			}}>
+
 			<ListCard></ListCard>
+			<ListCard></ListCard>
+			<ListCard></ListCard>
+			<ListCard></ListCard>
+			<ListCard></ListCard>
+			<ListCard></ListCard>
+			<ListCard></ListCard>
+			<ListCard></ListCard>
+			<ListCard></ListCard>
+			</div>
 			<button
 				className='AddCardButton'
 				style={{

@@ -10,6 +10,7 @@ const ListCard = (): React.JSX.Element => {
 				margin: " .5rem",
 				padding: " .4rem",
 				borderRadius: " .5rem",
+				border: "1px solid hsl(0,2%, 40%"
 			}}>
 			<div
 				className='CategoryTags'
@@ -75,7 +76,17 @@ const ListCard = (): React.JSX.Element => {
 				</p>
 				<p
 					style={{
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
 						margin: " 0",
+						width: "35px",
+						height: "35px",
+						borderRadius: "50%",
+						textAlign: "center",
+						backgroundColor: "hsl(0, 2%, 80%)",
+						fontSize: "25px",
+						color: "hsl(0, 2%, 17%",
 					}}>
 					A
 				</p>

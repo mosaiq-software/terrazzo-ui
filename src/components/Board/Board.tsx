@@ -11,19 +11,26 @@ const Board = (): React.JSX.Element => {
 			style={{
 				display: "flex",
 				backgroundColor: "hsl(0, 2%, 24%)",
-				height: "100vh",
+				height: "94vh",
+				overflowX: "scroll",
+
 			}}>
+
+			{/* Sideboard rendered for layout purposes. This should be a separate component at some point */}
 			<div
 				className='sidebar'
 				style={{
 					display: "flex",
+					position: "sticky",
+					left: "0",
 					flexDirection: "column",
 					justifyContent: "space-between",
 					alignItems: "center",
 					backgroundColor: "hsl(0, 2%, 17%)",
 					width: "14rem",
-					height: "100vh",
+					height: "94vh",
 					color: "white",
+					borderRight: "1px solid hsl(0, 2%, 40%)"
 				}}>
 				<div
 					className='organizations'
@@ -146,6 +153,8 @@ const Board = (): React.JSX.Element => {
 				{/* Placeholder for List Components. Will be replaced with an array of mapped BoardList components*/}
 				<BoardList></BoardList>
 				<BoardList></BoardList>
+				<BoardList></BoardList>
+				<BoardList></BoardList>
 				<button
 					className='AddListButton'
 					style={{
@@ -155,7 +164,7 @@ const Board = (): React.JSX.Element => {
 						margin: "0 0 0 2rem",
 						borderRadius: ".5rem",
 					}}>
-					+ Add Another List
+					+ Add New List
 				</button>
 			</div>
 		</div>
