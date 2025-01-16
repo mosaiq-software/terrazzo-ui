@@ -1,34 +1,38 @@
+//Utility
 import React from "react";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
-import { createTheme, MantineProvider } from '@mantine/core';
-import '@mantine/core/styles.css';
+import { createTheme, MantineProvider } from "@mantine/core";
+import "@mantine/core/styles.css";
 import { TRZProvider } from "@trz/util/TRZ-context";
-import { getGithubLoginUrl } from "@trz/util/githubAuth";
+// import { getGithubLoginUrl } from "@trz/util/githubAuth";
+// import { GithubAuth } from "@trz/pages/auth/github";
 
-import {GithubAuth} from "@trz/pages/auth/github";
+//Components
+import Navbar from "./components/Navbar/Navbar";
 
-const theme = createTheme({
+//Styling
 
-});
+const theme = createTheme({});
 
 const App = () => {
-    return (
-        <MantineProvider theme={theme}>
-            <TRZProvider>
-                <BrowserRouter>
-                    <Routes>
-                        <Route path="/" element={<Outlet />} />
-                        <Route path="/auth" element={<Outlet />}>
-                            <Route path="github" element={<GithubAuth />} />
-                        </Route>
-                    </Routes>
-                </BrowserRouter>
-                <p>
-                    Hello world! <a href={getGithubLoginUrl()}>Login with GitHub</a>
-                </p>
-            </TRZProvider>
-        </MantineProvider>
-    );
+	return (
+		<MantineProvider theme={theme}>
+			<TRZProvider>
+				<BrowserRouter>
+				<Navbar/>
+					<Routes>
+						<Route path='/' element={<Outlet />} />
+						<Route path='/auth' element={<Outlet />}>
+							{/* <Route path='github' element={<GithubAuth />} /> */}
+						</Route>
+					</Routes>
+				</BrowserRouter>
+				<p>
+					{/* Hello world! <a href={getGithubLoginUrl()}>Login with GitHub</a> */}
+				</p>
+			</TRZProvider>
+		</MantineProvider>
+	);
 };
 
 export default App;
