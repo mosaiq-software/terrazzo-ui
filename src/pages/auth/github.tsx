@@ -1,19 +1,34 @@
 import React from "react";
 import queryString from "query-string";
-import { getUserDataFromGithub } from "@trz/util/githubAuth";
+import { tryLoginWithGithub } from "@trz/util/githubAuth";
+import { useTRZ } from "@trz/util/TRZ-context";
+import { useNavigate } from "react-router-dom";
 
+/*
+This page will only show as the callback fro github login. It should take the code from the string, save it, and then go to another page with the new data.
+*/
 export const GithubAuth = () => {
+    const trz = useTRZ();
+    const navigate = useNavigate();
     const urlParams = queryString.parse(window.location.search);
     const code = urlParams.code;
-    if (!code || Array.isArray(code)) {
-        return <p>Error: No code found in URL</p>;
-    }
-    const data = getUserDataFromGithub(code);
-    console.log(data);
+    React.useEffect(() => {
+        const fetchData = async (code: string) => {
+            const {authToken, data} = await tryLoginWithGithub(code);
+            if(authToken && data) {
+                trz.setGithubAuthToken(authToken);
+                trz.setGithubData(data);
+                navigate("/dashboard");
+            }
+        };
+        if(code && typeof code === "string") {
+            fetchData(code);
+        }
+    }, [code]);
+
     return (
         <div>
-            <p>Signed in with GitHub! Here's your data:</p>
-            <pre>{JSON.stringify(data, null, 2)}</pre>
+            <p>Logging in...</p>
         </div>
-    )
+    );
 };
