@@ -6,6 +6,7 @@ import "@mantine/core/styles.css";
 import { TRZProvider } from "@trz/util/TRZ-context";
 import { getGithubLoginUrl } from "@trz/util/githubAuth";
 import { GithubAuth } from "@trz/pages/auth/github";
+import { Dashboard } from "@trz/pages/dashboard";
 
 //Components
 import Navbar from "./components/Navbar/Navbar";
@@ -23,15 +24,14 @@ const App = () => {
 				<Navbar/>
 					<Routes>
 						<Route path='/' element={<Outlet />} />
+						<Route path='/login' element={<p><a href={getGithubLoginUrl()}>Login with GitHub</a></p>} />
 						<Route path='/auth' element={<Outlet />}>
 							<Route path='github' element={<GithubAuth />} />
 						</Route>
+						<Route path='/dashboard' element={<Dashboard />} />
 						<Route path='/boards/:board_id' element={<Board/>}></Route>
 					</Routes>
 				</BrowserRouter>
-				<p>
-					{/* Hello world! <a href={getGithubLoginUrl()}>Login with GitHub</a> */}
-				</p>
 			</TRZProvider>
 		</MantineProvider>
 	);

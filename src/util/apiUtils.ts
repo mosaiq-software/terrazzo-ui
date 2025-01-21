@@ -1,5 +1,4 @@
 import axios from "axios";
-import {debounce} from "lodash";
 
 export const getApiUrl = () => {
     const apiUrl = process.env.API_URL;
@@ -18,8 +17,11 @@ export const callTrzApi = async (endpoint: string, method: string, data?: any) =
         endpoint = endpoint.slice(1);
     }
     try {
-        const response = await debouncedRequest(method, `${apiUrl}/${endpoint}`, data);
-        console.log("in callTrzApi", response);
+        const response = await axios({
+            method,
+            url: `${apiUrl}/${endpoint}`,
+            data,
+        });
         if (!response) {
             console.error(`Error calling ${endpoint} with method ${method}`);
             return null;
