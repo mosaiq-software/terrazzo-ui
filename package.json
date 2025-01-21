@@ -2,10 +2,14 @@
   "name": "terrazzo-ui",
   "version": "1.0.1",
   "main": "src/index.tsx",
+  "repository": "https://github.com/mosaiq-software/terrazzo-ui",
   "scripts": {
     "test": "test",
     "start": "webpack serve --open",
-    "build": "webpack --mode production"
+    "build": "webpack --mode production",
+    "prepare": "husky",
+    "after-push": "node ./scripts/after-push.mjs",
+    "before-push": "node ./scripts/before-push.mjs"
   },
   "license": "UNLICENSED",
   "dependencies": {
@@ -49,6 +53,8 @@
     "style-loader": "^4.0.0",
     "webpack": "^5.96.1",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.1.0"
+    "webpack-dev-server": "^5.1.0",
+    "husky": "^9.1.7",
+    "open": "^10.1.0"
   }
 }
