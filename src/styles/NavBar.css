@@ -1,0 +1,14 @@
+.navb-container {
+    padding: var(--mantine-spacing-md);
+}
+.navb-layout {
+    display: flex;
+    gap: var(--mantine-spacing-md);
+}
+.flex-grow {
+    display: flex;
+    flex-grow: 1;
+}
+.fit-content {
+    width: fit-content;
+}
