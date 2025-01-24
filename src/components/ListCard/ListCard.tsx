@@ -1,10 +1,19 @@
 //Utility
-import React from "react";
+import { useToggle } from "@mantine/hooks";
+import React, { useState} from "react";
+
+//Components
+import ListCardDetails from '../ListCardDetails/ListCardDetails'
+import MemberIcon from '../MemberIcon/MemberIcon'
 
 const ListCard = (): React.JSX.Element => {
+	
+	const [showDetails, toggleShowDetails] = useToggle([false, true]);
+
 	return (
 		<div
 			id='ListCard'
+			onClick={() => toggleShowDetails()}
 			style={{
 				backgroundColor: " hsl(0, 2%, 17%)",
 				margin: " .5rem",
@@ -74,23 +83,9 @@ const ListCard = (): React.JSX.Element => {
 					}}>
 					TRZ-##
 				</p>
-				<p
-					style={{
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-						margin: " 0",
-						width: "35px",
-						height: "35px",
-						borderRadius: "50%",
-						textAlign: "center",
-						backgroundColor: "hsl(0, 2%, 80%)",
-						fontSize: "25px",
-						color: "hsl(0, 2%, 17%",
-					}}>
-					A
-				</p>
+				<MemberIcon name={"test"}/>
 			</div>
+			{ showDetails && <ListCardDetails/>}
 		</div>
 	);
 };

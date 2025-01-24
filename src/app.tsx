@@ -29,7 +29,7 @@ const App = () => {
 							<Route path='github' element={<GithubAuth />} />
 						</Route>
 						<Route path='/dashboard' element={<Dashboard />} />
-						<Route path='/boards/:board_id' element={<Board/>}></Route>
+						<Route path='/boards/:boardId' element={<Board/>}></Route>
 					</Routes>
 				</BrowserRouter>
 			</TRZProvider>
