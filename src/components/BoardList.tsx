@@ -2,7 +2,7 @@
 import React from "react";
 
 //Components
-import ListCard from "../ListCard/ListCard";
+import ListCard from "./ListCard";
 
 const BoardList = (): React.JSX.Element => {
 	return (

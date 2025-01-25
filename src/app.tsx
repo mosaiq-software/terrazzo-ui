@@ -7,10 +7,10 @@ import { getGithubLoginUrl } from "@trz/util/githubAuth";
 import { GithubAuth } from "@trz/pages/auth/github";
 import { Dashboard } from "@trz/pages/dashboard";
 
-import { createTheme, MantineProvider, Button, Flex } from "@mantine/core";
+import { createTheme, MantineProvider } from "@mantine/core";
 import "@mantine/core/styles.css";
 
-import TRZNavBar from "./components/NavBar"
+import TRZNavBar from "./components/TRZNavBar"
 
 //Styling
 const theme = createTheme({

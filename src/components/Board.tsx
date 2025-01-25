@@ -2,7 +2,7 @@
 import React from "react";
 
 //Components
-import BoardList from "../BoardList/BoardList";
+import BoardList from "./BoardList";
 
 const Board = (): React.JSX.Element => {
 	return (

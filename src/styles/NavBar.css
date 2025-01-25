@@ -1,13 +1,15 @@
-.navb-container {
+.mosi-navbar {
+    max-width: 100%;
+    height: var(--trz-navbar-height);
     padding: var(--mantine-spacing-md);
+    background-color: #1f1f1f;
 }
-.navb-layout {
+.mosi-navbar-nav {
+    height: 100%;
     display: flex;
+    align-items: center;
+    justify-content: space-between;
     gap: var(--mantine-spacing-md);
-}
-.flex-grow {
-    display: flex;
-    flex-grow: 1;
 }
 .fit-content {
     width: fit-content;
