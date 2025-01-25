@@ -1,0 +1,22 @@
+ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+li:nth-child(even) {
+    background-color: #303030;
+}
+.trz-dropdown {
+    width: 100%;
+    position: fixed;
+    top: var(--mosi-navbar-height); left: 0;
+    display: flex;
+    flex-direction: column;
+}
+.trz-dropdown-item {
+    padding: var(--mantine-spacing-md);
+}
+.trz-dropdown-item:hover {
+    cursor: pointer;
+    filter: brightness(1.4);
+}
