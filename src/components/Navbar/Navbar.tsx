@@ -4,8 +4,15 @@ import { faBell } from "@fortawesome/free-solid-svg-icons";
 
 //Components
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {Button, Modal} from "@mantine/core";
+import {useDisclosure} from "@mantine/hooks";
+import CreateBoard from "@trz/components/CreateBoard/CreateBoard";
+
+
 
 const Navbar = () => {
+	const [opened, { open, close }] = useDisclosure(false);
+
 	return (
 		<div
 			style={{
@@ -39,6 +46,7 @@ const Navbar = () => {
 					Workspace
 				</button>
 				<button
+
 					className='CreateButton'
 					style={{
 						backgroundColor: " rgb(30, 111, 233)",
@@ -49,6 +57,16 @@ const Navbar = () => {
 					}}>
 					Create +
 				</button>
+				<Modal opened={opened} onClose={close} centered>
+					<CreateBoard/>
+					<Button onClick={close}>
+						Submit
+					</Button>
+				</Modal>
+
+				<Button variant="default" onClick={open}>
+					Open modal
+				</Button>
 			</div>
 			<div
 				style={{

@@ -11,6 +11,7 @@ import { Dashboard } from "@trz/pages/dashboard";
 //Components
 import Navbar from "./components/Navbar/Navbar";
 import Board from "./components/Board/Board";
+import CreateBoard from "./components/CreateBoard/CreateBoard";
 
 //Styling
 
@@ -30,6 +31,7 @@ const App = () => {
 						</Route>
 						<Route path='/dashboard' element={<Dashboard />} />
 						<Route path='/boards/:board_id' element={<Board/>}></Route>
+						<Route path='/test' element={<CreateBoard/>}></Route>
 					</Routes>
 				</BrowserRouter>
 			</TRZProvider>
