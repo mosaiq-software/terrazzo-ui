@@ -1,91 +1,101 @@
 //Utility
 import { useToggle } from "@mantine/hooks";
-import React, { useState} from "react";
+import React, { useState } from "react";
 
 //Components
-import ListCardDetails from '../ListCardDetails/ListCardDetails'
-import MemberIcon from '../MemberIcon/MemberIcon'
+import ListCardDetails from "../ListCardDetails/ListCardDetails";
+import MemberIcon from "../MemberIcon/MemberIcon";
+
+/**ListCard Component
+ *
+ * State => showDetails => boolean toggle functionality to show card details
+ *
+ * Props: none
+ */
 
 const ListCard = (): React.JSX.Element => {
-	
 	const [showDetails, toggleShowDetails] = useToggle([false, true]);
 
 	return (
-		<div
-			id='ListCard'
-			onClick={() => toggleShowDetails()}
-			style={{
-				backgroundColor: " hsl(0, 2%, 17%)",
-				margin: " .5rem",
-				padding: " .4rem",
-				borderRadius: " .5rem",
-				border: "1px solid hsl(0,2%, 40%"
-			}}>
+		<div>
 			<div
-				className='CategoryTags'
+				id='ListCard'
+				onClick={() => toggleShowDetails()}
 				style={{
-					display: " flex",
+					backgroundColor: " hsl(0, 2%, 17%)",
+					margin: " .5rem",
+					padding: " .4rem",
+					borderRadius: " .5rem",
+					border: "1px solid hsl(0,2%, 40%",
 				}}>
-				{/* Placeholders for category tags. Replace with mapped array of category Tags */}
 				<div
-					className='CategoryTag'
+					className='CategoryTags'
 					style={{
-						backgroundColor: " white",
-						borderRadius: " .3rem",
-						margin: " 0 .2rem",
-						padding: " 0 .6rem",
-						color: " black",
+						display: " flex",
 					}}>
-					Terrazzo
+					{/* Placeholders for category tags. Replace with mapped array of category Tags */}
+					<div
+						className='CategoryTag'
+						style={{
+							backgroundColor: " white",
+							borderRadius: " .3rem",
+							margin: " 0 .2rem",
+							padding: " 0 .6rem",
+							color: " black",
+						}}>
+						Terrazzo
+					</div>
+					<div
+						className='CategoryTag'
+						style={{
+							backgroundColor: " white",
+							borderRadius: " .3rem",
+							margin: " 0 .2rem",
+							padding: " 0 .6rem",
+							color: " black",
+						}}>
+						Terrazzo
+					</div>
+					<div
+						className='CategoryTag'
+						style={{
+							backgroundColor: " white",
+							borderRadius: " .3rem",
+							margin: " 0 .2rem",
+							padding: " 0 .6rem",
+							color: " black",
+						}}>
+						Terrazzo
+					</div>
 				</div>
-				<div
-					className='CategoryTag'
-					style={{
-						backgroundColor: " white",
-						borderRadius: " .3rem",
-						margin: " 0 .2rem",
-						padding: " 0 .6rem",
-						color: " black",
-					}}>
-					Terrazzo
-				</div>
-				<div
-					className='CategoryTag'
-					style={{
-						backgroundColor: " white",
-						borderRadius: " .3rem",
-						margin: " 0 .2rem",
-						padding: " 0 .6rem",
-						color: " black",
-					}}>
-					Terrazzo
-				</div>
-			</div>
-			<p
-				className='cardDescription'
-				style={{
-					color: "white",
-					padding: " 0 1rem",
-				}}>
-				Workspace UI{" "}
-			</p>
-			<div
-				className='ListCard-bottomContainer'
-				style={{
-					display: " flex",
-					justifyContent: " space-between",
-					padding: " 0 1rem",
-					color: " white",
-				}}>
 				<p
+					className='cardDescription'
 					style={{
-						margin: " 0",
+						color: "white",
+						padding: " 0 1rem",
 					}}>
-					TRZ-##
+					Workspace UI{" "}
 				</p>
-				<MemberIcon name={"test"}/>
+				<div
+					className='ListCard-bottomContainer'
+					style={{
+						display: " flex",
+						justifyContent: " space-between",
+						padding: " 0 1rem",
+						color: " white",
+					}}>
+					<p
+						style={{
+							margin: " 0",
+						}}>
+						TRZ-##
+					</p>
+					<MemberIcon name={"test"} />
+				</div>
+
+				{/* Once logic is completed. Pass the ListCard id into the ListCardDetails component as a prop */}
 			</div>
-			{ showDetails && <ListCardDetails/>}
+			{showDetails && <ListCardDetails id={123} toggle={toggleShowDetails}/>}
 		</div>
 	);
 };

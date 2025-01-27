@@ -4,6 +4,13 @@ import React from "react";
 //Components
 import ListCard from "../ListCard/ListCard";
 
+/**BoardList Component
+ * 
+ * State: none
+ * 
+ * Props: none
+ */
+
 const BoardList = (): React.JSX.Element => {
 	return (
 		<div
