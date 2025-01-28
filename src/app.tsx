@@ -31,7 +31,7 @@ const App = () => {
 						</Route>
 						<Route element={<AuthWrapper />}>
 							<Route path='/dashboard' element={<Dashboard />} />
-							<Route path='/boards/:board_id' element={<Board/>}></Route>
+							<Route path='/boards/:boardId' element={<Board/>}></Route>
 						</Route>
 					</Routes>
 				</BrowserRouter>
