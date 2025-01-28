@@ -2,7 +2,7 @@
 import React from "react";
 
 //Components
-import ListCard from "@trz/components/ListCard";
+import Card from "@trz/components/Card";
 import EditableTextbox from "@trz/components/EditableTextbox";
 import { Button, Group, Paper, Stack, Title } from "@mantine/core";
 
@@ -51,7 +51,7 @@ const List = (): React.JSX.Element => {
 			>
 				{
 					Array.from({ length: (Math.floor(Math.random()*20)) }).map((_, index) => (
-						<ListCard key={index} />
+						<Card key={index} />
 					))
 				}
 
