@@ -25,13 +25,12 @@ import {
  * }
  */
 
-interface Props {
+interface CardDetailsProps {
 	id: number;
 	toggle: () => void;
 	open: boolean;
 }
-
-const ListCardDetails = ({ id, toggle, open }: Props): React.JSX.Element => {
+const CardDetails = (props: CardDetailsProps): React.JSX.Element => {
 	//Replace the below information with data returned by call to API getting specific card information based on cardId above.
 	const members = ["Member 1", "Member 2", "Member 3"];
 	const labels = ["label 1", "label 2", "label 3"];
@@ -43,8 +42,8 @@ const ListCardDetails = ({ id, toggle, open }: Props): React.JSX.Element => {
 
 	return (
 		<Modal
-			opened={open}
-			onClose={toggle}
+			opened={props.open}
+			onClose={props.toggle}
 			title='Terrazzo'
 			size='50%'
 			overlayProps={{ backgroundOpacity: 0.5, blur: 3 }}>
@@ -103,4 +102,4 @@ const ListCardDetails = ({ id, toggle, open }: Props): React.JSX.Element => {
 	);
 };
 
-export default ListCardDetails;
+export default CardDetails;

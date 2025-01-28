@@ -2,7 +2,7 @@
 import React from "react";
 
 //Components
-import ListCard from "../ListCard/ListCard";
+import ListCard from "@trz/components/ListCard";
 import EditableTextbox from "@trz/components/EditableTextbox";
 import { Button, Group, Paper, Stack, Title } from "@mantine/core";
 
@@ -13,7 +13,7 @@ import { Button, Group, Paper, Stack, Title } from "@mantine/core";
  * Props: none
  */
 
-const BoardList = (): React.JSX.Element => {
+const List = (): React.JSX.Element => {
 	const [listTitle, setListTitle] = React.useState("Board List");
 	return (
 		<Paper 
@@ -61,4 +61,4 @@ const BoardList = (): React.JSX.Element => {
 	);
 };
 
-export default BoardList;
+export default List;

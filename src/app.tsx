@@ -9,9 +9,9 @@ import { GithubAuth } from "@trz/pages/auth/github";
 import { Dashboard } from "@trz/pages/dashboard";
 
 //Components
-import {AuthWrapper} from "./pages/auth/authWrapper";
-import Navbar from "./components/Navbar/Navbar";
-import Board from "./components/Board/Board";
+import {AuthWrapper} from "@trz/pages/auth/AuthWrapper";
+import Navbar from "@trz/components/Navbar";
+import Board from "@trz/components/Board";
 
 //Styling
 
