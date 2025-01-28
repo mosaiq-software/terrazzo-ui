@@ -1,10 +1,10 @@
 //Utility
-import { useToggle } from "@mantine/hooks";
+import { useDisclosure, useToggle } from "@mantine/hooks";
 import React, { useState } from "react";
 
 //Components
 import ListCardDetails from "../ListCardDetails/ListCardDetails";
-import MemberIcon from "../MemberIcon/MemberIcon";
+import { Avatar } from "@mantine/core";
 
 /**ListCard Component
  *
@@ -14,13 +14,13 @@ import MemberIcon from "../MemberIcon/MemberIcon";
  */
 
 const ListCard = (): React.JSX.Element => {
-	const [showDetails, toggleShowDetails] = useToggle([false, true]);
+	const [opened, {open, close}] = useDisclosure(false);
 
 	return (
 		<div>
 			<div
 				id='ListCard'
-				onClick={() => toggleShowDetails()}
+				onClick={open}
 				style={{
 					backgroundColor: " hsl(0, 2%, 17%)",
 					margin: " .5rem",
@@ -90,12 +90,14 @@ const ListCard = (): React.JSX.Element => {
 						}}>
 						TRZ-##
 					</p>
-					<MemberIcon name={"test"} />
+					<Avatar>T</Avatar>
 				</div>
 
 				{/* Once logic is completed. Pass the ListCard id into the ListCardDetails component as a prop */}
 			</div>
-			{showDetails && <ListCardDetails id={123} toggle={toggleShowDetails}/>}
+			{opened && (
+					<ListCardDetails id={123} open={opened} toggle={close} />
+			)}
 		</div>
 	);
 };
