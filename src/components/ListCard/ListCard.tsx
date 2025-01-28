@@ -1,5 +1,6 @@
 //Utility
 import { useDisclosure, useToggle } from "@mantine/hooks";
+import {  Group, Paper, Pill, Text, Title } from "@mantine/core";
 import React, { useState } from "react";
 
 //Components
@@ -17,88 +18,16 @@ const ListCard = (): React.JSX.Element => {
 	const [opened, {open, close}] = useDisclosure(false);
 
 	return (
-		<div>
-			<div
-				id='ListCard'
-				onClick={open}
-				style={{
-					backgroundColor: " hsl(0, 2%, 17%)",
-					margin: " .5rem",
-					padding: " .4rem",
-					borderRadius: " .5rem",
-					border: "1px solid hsl(0,2%, 40%",
-				}}>
-				<div
-					className='CategoryTags'
-					style={{
-						display: " flex",
-					}}>
-					{/* Placeholders for category tags. Replace with mapped array of category Tags */}
-					<div
-						className='CategoryTag'
-						style={{
-							backgroundColor: " white",
-							borderRadius: " .3rem",
-							margin: " 0 .2rem",
-							padding: " 0 .6rem",
-							color: " black",
-						}}>
-						Terrazzo
-					</div>
-					<div
-						className='CategoryTag'
-						style={{
-							backgroundColor: " white",
-							borderRadius: " .3rem",
-							margin: " 0 .2rem",
-							padding: " 0 .6rem",
-							color: " black",
-						}}>
-						Terrazzo
-					</div>
-					<div
-						className='CategoryTag'
-						style={{
-							backgroundColor: " white",
-							borderRadius: " .3rem",
-							margin: " 0 .2rem",
-							padding: " 0 .6rem",
-							color: " black",
-						}}>
-						Terrazzo
-					</div>
-				</div>
-				<p
-					className='cardDescription'
-					style={{
-						color: "white",
-						padding: " 0 1rem",
-					}}>
-					Workspace UI{" "}
-				</p>
-				<div
-					className='ListCard-bottomContainer'
-					style={{
-						display: " flex",
-						justifyContent: " space-between",
-						padding: " 0 1rem",
-						color: " white",
-					}}>
-					<p
-						style={{
-							margin: " 0",
-						}}>
-						TRZ-##
-					</p>
-					<Avatar>T</Avatar>
-				</div>
-
-				{/* Once logic is completed. Pass the ListCard id into the ListCardDetails component as a prop */}
-			</div>
-			{opened && (
-					<ListCardDetails id={123} open={opened} toggle={close} />
-			)}
-		</div>
+		<Paper bg="#17191b" radius="md" p="sm" mx="xs" shadow="lg" bd="1px solid #757575">
+			<Pill.Group>
+				<Pill size="xs" color='blue'>To Do</Pill>
+				<Pill size="xs" color='red'>In Progress</Pill>
+			</Pill.Group>
+			<Title order={6} lineClamp={1} c="#ffffff">Test Title</Title>
+			<Text size='sm' c="#878787">TRZ-33</Text>
+			<Group>
+			</Group>
+		</Paper>
 	);
 };
 export default ListCard;
