@@ -9,6 +9,7 @@ import { GithubAuth } from "@trz/pages/auth/github";
 import { Dashboard } from "@trz/pages/dashboard";
 
 //Components
+import {AuthWrapper} from "./pages/auth/authWrapper";
 import Navbar from "./components/Navbar/Navbar";
 import Board from "./components/Board/Board";
 
@@ -28,8 +29,10 @@ const App = () => {
 						<Route path='/auth' element={<Outlet />}>
 							<Route path='github' element={<GithubAuth />} />
 						</Route>
-						<Route path='/dashboard' element={<Dashboard />} />
-						<Route path='/boards/:board_id' element={<Board/>}></Route>
+						<Route element={<AuthWrapper />}>
+							<Route path='/dashboard' element={<Dashboard />} />
+							<Route path='/boards/:board_id' element={<Board/>}></Route>
+						</Route>
 					</Routes>
 				</BrowserRouter>
 			</TRZProvider>
