@@ -30,6 +30,7 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.0.1",
+    "socket.io-client": "^4.8.1",
     "typescript": "^5.7.2"
   },
   "devDependencies": {
@@ -46,6 +47,8 @@
     "css-loader": "^7.1.2",
     "dotenv-webpack": "^8.1.0",
     "html-webpack-plugin": "^5.6.3",
+    "husky": "^9.1.7",
+    "open": "^10.1.0",
     "postcss": "^8.4.49",
     "postcss-loader": "^8.1.1",
     "postcss-preset-mantine": "^1.17.0",
@@ -53,8 +56,6 @@
     "style-loader": "^4.0.0",
     "webpack": "^5.96.1",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.1.0",
-    "husky": "^9.1.7",
-    "open": "^10.1.0"
+    "webpack-dev-server": "^5.1.0"
   }
 }
