@@ -1,96 +1,103 @@
 //Utility
-import React from "react";
+import { useDisclosure, useToggle } from "@mantine/hooks";
+import React, { useState } from "react";
+
+//Components
+import ListCardDetails from "../ListCardDetails/ListCardDetails";
+import { Avatar } from "@mantine/core";
+
+/**ListCard Component
+ *
+ * State => showDetails => boolean toggle functionality to show card details
+ *
+ * Props: none
+ */
 
 const ListCard = (): React.JSX.Element => {
+	const [opened, {open, close}] = useDisclosure(false);
+
 	return (
-		<div
-			id='ListCard'
-			style={{
-				backgroundColor: " hsl(0, 2%, 17%)",
-				margin: " .5rem",
-				padding: " .4rem",
-				borderRadius: " .5rem",
-				border: "1px solid hsl(0,2%, 40%"
-			}}>
+		<div>
 			<div
-				className='CategoryTags'
+				id='ListCard'
+				onClick={open}
 				style={{
-					display: " flex",
+					backgroundColor: " hsl(0, 2%, 17%)",
+					margin: " .5rem",
+					padding: " .4rem",
+					borderRadius: " .5rem",
+					border: "1px solid hsl(0,2%, 40%",
 				}}>
-				{/* Placeholders for category tags. Replace with mapped array of category Tags */}
 				<div
-					className='CategoryTag'
+					className='CategoryTags'
 					style={{
-						backgroundColor: " white",
-						borderRadius: " .3rem",
-						margin: " 0 .2rem",
-						padding: " 0 .6rem",
-						color: " black",
+						display: " flex",
 					}}>
-					Terrazzo
+					{/* Placeholders for category tags. Replace with mapped array of category Tags */}
+					<div
+						className='CategoryTag'
+						style={{
+							backgroundColor: " white",
+							borderRadius: " .3rem",
+							margin: " 0 .2rem",
+							padding: " 0 .6rem",
+							color: " black",
+						}}>
+						Terrazzo
+					</div>
+					<div
+						className='CategoryTag'
+						style={{
+							backgroundColor: " white",
+							borderRadius: " .3rem",
+							margin: " 0 .2rem",
+							padding: " 0 .6rem",
+							color: " black",
+						}}>
+						Terrazzo
+					</div>
+					<div
+						className='CategoryTag'
+						style={{
+							backgroundColor: " white",
+							borderRadius: " .3rem",
+							margin: " 0 .2rem",
+							padding: " 0 .6rem",
+							color: " black",
+						}}>
+						Terrazzo
+					</div>
 				</div>
-				<div
-					className='CategoryTag'
-					style={{
-						backgroundColor: " white",
-						borderRadius: " .3rem",
-						margin: " 0 .2rem",
-						padding: " 0 .6rem",
-						color: " black",
-					}}>
-					Terrazzo
-				</div>
-				<div
-					className='CategoryTag'
-					style={{
-						backgroundColor: " white",
-						borderRadius: " .3rem",
-						margin: " 0 .2rem",
-						padding: " 0 .6rem",
-						color: " black",
-					}}>
-					Terrazzo
-				</div>
-			</div>
-			<p
-				className='cardDescription'
-				style={{
-					color: "white",
-					padding: " 0 1rem",
-				}}>
-				Workspace UI{" "}
-			</p>
-			<div
-				className='ListCard-bottomContainer'
-				style={{
-					display: " flex",
-					justifyContent: " space-between",
-					padding: " 0 1rem",
-					color: " white",
-				}}>
 				<p
+					className='cardDescription'
 					style={{
-						margin: " 0",
+						color: "white",
+						padding: " 0 1rem",
 					}}>
-					TRZ-##
+					Workspace UI{" "}
 				</p>
-				<p
+				<div
+					className='ListCard-bottomContainer'
 					style={{
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-						margin: " 0",
-						width: "35px",
-						height: "35px",
-						borderRadius: "50%",
-						textAlign: "center",
-						backgroundColor: "hsl(0, 2%, 80%)",
-						fontSize: "25px",
-						color: "hsl(0, 2%, 17%",
+						display: " flex",
+						justifyContent: " space-between",
+						padding: " 0 1rem",
+						color: " white",
 					}}>
-					A
-				</p>
+					<p
+						style={{
+							margin: " 0",
+						}}>
+						TRZ-##
+					</p>
+					<Avatar>T</Avatar>
+				</div>
+
+				{/* Once logic is completed. Pass the ListCard id into the ListCardDetails component as a prop */}
 			</div>
+			{opened && (
+					<ListCardDetails id={123} open={opened} toggle={close} />
+			)}
 		</div>
 	);
 };
