@@ -4,6 +4,13 @@ import React from "react";
 //Components
 import BoardList from "../BoardList/BoardList";
 
+/**Board Component: Holds different BoardLists
+ * 
+ * State: none
+ * 
+ * Props: none
+ */
+
 const Board = (): React.JSX.Element => {
 	return (
 		<div
