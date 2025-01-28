@@ -13,12 +13,33 @@
     <div id="root"></div>
   </body>
   <style>
-    body, html {
+    body, html, #root {
       margin: 0;
       padding: 0;
       font-family: 'Lato', sans-serif;
-      overflow-x: hidden;
+      overflow: hidden;
       height: 100%;
     }
+
+    /* SCROLLBARS */
+    * {
+      scrollbar-color: #454547 #17191b;
+      scrollbar-width: thin;
+    }
+    *::-webkit-scrollbar {
+      width: 12px;
+    }
+    *::-webkit-scrollbar-track {
+      background: #17191b;
+    }
+    *::-webkit-scrollbar-thumb {
+      background-color: #454547;
+      border-radius: 20px;
+      border: 3px solid #17191b;
+    }
+    *::-webkit-scrollbar-thumb:hover {
+      background: #7b7b80;
+    }
+
   </style>
 </html>
