@@ -9,8 +9,9 @@ import { GithubAuth } from "@trz/pages/auth/github";
 import { Dashboard } from "@trz/pages/dashboard";
 
 //Components
-import Navbar from "./components/Navbar/Navbar";
-import Board from "./components/Board/Board";
+import {AuthWrapper} from "@trz/pages/auth/AuthWrapper";
+import Navbar from "@trz/components/Navbar";
+import Board from "@trz/components/Board";
 import { io } from "socket.io-client";
 
 //Styling
@@ -58,8 +59,10 @@ const App = () => {
 						<Route path='/auth' element={<Outlet />}>
 							<Route path='github' element={<GithubAuth />} />
 						</Route>
-						<Route path='/dashboard' element={<Dashboard />} />
-						<Route path='/boards/:boardId' element={<Board/>}></Route>
+						<Route element={<AuthWrapper />}>
+							<Route path='/dashboard' element={<Dashboard />} />
+							<Route path='/boards/:boardId' element={<Board/>}></Route>
+						</Route>
 					</Routes>
 				</BrowserRouter>
 			</TRZProvider>
