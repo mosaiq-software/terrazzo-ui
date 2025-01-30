@@ -50,7 +50,7 @@ const List = (): React.JSX.Element => {
 				}}
 			>
 				{
-					Array.from({ length: (Math.floor(Math.random()*20)) }).map((_, index) => (
+					Array.from({ length: (5)}).map((_, index) => (
 						<Card key={index} />
 					))
 				}

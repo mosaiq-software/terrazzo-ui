@@ -1,6 +1,6 @@
 import queryString from "query-string";
 import { callTrzApi } from "./apiUtils";
-import { LocalStorageKey } from "@mosaiq/terrazzo-common/dist/constants";
+import { LocalStorageKey } from "@mosaiq/terrazzo-common/constants";
 
 /*
     Returns the URL to redirect to for GitHub login.

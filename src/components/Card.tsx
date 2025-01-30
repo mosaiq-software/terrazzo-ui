@@ -18,7 +18,7 @@ import { C } from "react-router/dist/production/fog-of-war-CbNQuoo8";
 const Card = (): React.JSX.Element => {
 	const [opened, {open, close}] = useDisclosure(false);
 	const MAX_USERS = 3;
-	const testUsers = Array.from({ length: (Math.floor(Math.random()*6)) }).map((_, index) => ({
+	const testUsers = Array.from({ length: 1 }).map((_, index) => ({
 		name: "John Doe",
 		avatar: "https://avatars.githubusercontent.com/u/47070087?v=4"
 	}))
