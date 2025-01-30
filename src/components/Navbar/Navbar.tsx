@@ -4,14 +4,10 @@ import { faBell } from "@fortawesome/free-solid-svg-icons";
 
 //Components
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {Button, Modal} from "@mantine/core";
-import {useDisclosure} from "@mantine/hooks";
-import CreateBoard from "@trz/components/CreateBoard/CreateBoard";
-
-
+import {Button} from "@mantine/core";
+import {modals} from "@mantine/modals";
 
 const Navbar = () => {
-	const [opened, { open, close }] = useDisclosure(false);
 
 	return (
 		<div
@@ -57,16 +53,15 @@ const Navbar = () => {
 					}}>
 					Create +
 				</button>
-				<Modal opened={opened} onClose={close} centered title="Create Board" >
-					<CreateBoard/>
-					<div style={{display:"flex", justifyContent: 'flex-end', padding: '1rem'}}>
-						<Button onClick={close} >
-							Create
-						</Button>
-					</div>
-
-				</Modal>
-				<Button variant="default" onClick={open} >
+				<Button
+					onClick={() =>
+						modals.openContextModal({
+							modal: 'board',
+							title: 'Create Board',
+							innerProps: {},
+						})
+					}
+				>
 					Open modal
 				</Button>
 			</div>
