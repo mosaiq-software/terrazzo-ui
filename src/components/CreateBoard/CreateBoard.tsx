@@ -1,35 +1,28 @@
 //Utility
 import React from "react";
-import {Input, TextInput, Button, Container, Flex} from "@mantine/core";
-
-const createBoardCont = {
-    bg: 'blue',
-    p: '0',
-    h: 600,
-    mt:'md',
-};
+import {TextInput, Container, Flex} from "@mantine/core";
 
 const CreateBoard = (): React.JSX.Element => {
     return (
-        <Container {...createBoardCont}>
+        <Container>
             <Flex
-                bg='gray'
-                justify='center'
-                align='center'
-                direction='column'
-                gap='xl'
+                direction="column"
+                justify="center"
+                align="center"
+                gap="md"
             >
-                <div>
-                    Board Name
-                    <TextInput placeholder="Board Name" />
-                </div>
-                <div>
-                    Board Abbreviation
-                    <Input placeholder="Board Abbreviation" />
-                </div>
-
-                <Button variant="filled" color="red">Create Board</Button>
-
+                <TextInput
+                    label="Board Name"
+                    placeholder="Board Name"
+                    withAsterisk
+                    w={250}
+                />
+                <TextInput
+                    label="Board Abbreviation"
+                    placeholder="Board Abbreviation"
+                    withAsterisk
+                    w={250}
+                />
             </Flex>
         </Container>
     )

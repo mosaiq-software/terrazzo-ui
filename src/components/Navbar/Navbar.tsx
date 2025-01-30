@@ -57,14 +57,16 @@ const Navbar = () => {
 					}}>
 					Create +
 				</button>
-				<Modal opened={opened} onClose={close} centered>
+				<Modal opened={opened} onClose={close} centered title="Create Board" >
 					<CreateBoard/>
-					<Button onClick={close}>
-						Submit
-					</Button>
-				</Modal>
+					<div style={{display:"flex", justifyContent: 'flex-end', padding: '1rem'}}>
+						<Button onClick={close} >
+							Create
+						</Button>
+					</div>
 
-				<Button variant="default" onClick={open}>
+				</Modal>
+				<Button variant="default" onClick={open} >
 					Open modal
 				</Button>
 			</div>
