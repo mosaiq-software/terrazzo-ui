@@ -41,8 +41,7 @@ const Navbar = () => {
 					}}>
 					Workspace
 				</button>
-				<button
-
+				<Button
 					className='CreateButton'
 					style={{
 						backgroundColor: " rgb(30, 111, 233)",
@@ -50,10 +49,7 @@ const Navbar = () => {
 						border: " none",
 						borderRadius: " .5rem",
 						padding: " .1rem 1.2rem",
-					}}>
-					Create +
-				</button>
-				<Button
+					}}
 					onClick={() =>
 						modals.openContextModal({
 							modal: 'board',
@@ -62,7 +58,7 @@ const Navbar = () => {
 						})
 					}
 				>
-					Open modal
+					Create +
 				</Button>
 			</div>
 			<div
