@@ -76,6 +76,7 @@ const Navbar = () => {
 					className='searchbar'
 					type='text'
 					value='Search'
+					onChange={() => {}}
 					style={{
 						backgroundColor: " hsl(0, 2%, 40%)",
 						border: " 1px solid hsl(0, 2%, 60%)",

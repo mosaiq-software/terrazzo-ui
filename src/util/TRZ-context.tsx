@@ -13,12 +13,13 @@ const TRZContext = createContext<TRZContextType | undefined>(undefined);
 const TRZProvider: React.FC<any> = ({ children }) => {
     const [githubAuthToken, setGithubAuthToken] = useState<string | null>(null);
     const [githubData, setGithubData] = useState<any | null>(null);
+
     return (
         <TRZContext.Provider value={{
             githubAuthToken,
             setGithubAuthToken,
             githubData,
-            setGithubData
+            setGithubData,
         }}>
             {children}
         </TRZContext.Provider>
