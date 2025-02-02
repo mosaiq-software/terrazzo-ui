@@ -1,16 +1,19 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
-import { useTRZ } from './TRZ-context';
+import { useTRZ } from '@trz/util/TRZ-context';
 import { notifications } from '@mantine/notifications';
-import { ClientSocketIOEvent, SocketEventPayload, SocketEventTypes, UserData } from '@mosaiq/terrazzo-common/socketTypes';
+import { ClientSE, ClientSEReplies, ClientSEReply, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
+import { Board } from '@mosaiq/terrazzo-common/types';
 
 type SocketContextType = {
-    sid: string;
-    room: string | null;
-    setRoom: (room: string | null) => void;
+    sid?: SocketId;
+    connected: boolean;
+    room: RoomId | null;
+    setRoom: (room: RoomId) => void;
     roomUsers: UserData[];
-    moveMouse: (x: number, y: number) => void;
+    moveMouse: (pos: Position) => void;
     setIdle: (idle: boolean) => void;
+    getBoardData: (boardId: string) => Promise<Board | undefined>;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -18,9 +21,10 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
 const SocketProvider: React.FC<any> = ({ children }) => {
     const trz = useTRZ();
-    const [socket, setSocket] = useState<Socket | null>(null);
-    const [room, setRoom] = useState<string | null>(null);
-    const [roomUsers, setRoomUsers] = useState<UserData[]>([]);
+    const [socket, setSocketState] = useState<Socket | null>(null);
+    const [room, setRoomState] = useState<RoomId>(null);
+    const [roomUsers, setRoomUsersState] = useState<UserData[]>([]);
+    const [connected, setConnected] = useState<boolean>(false);
 
 
     useEffect(() => {
@@ -33,15 +37,41 @@ const SocketProvider: React.FC<any> = ({ children }) => {
 
         // CREATE SOCKET CONNECTION
         const sock = io(process.env.SOCKET_URL, {
-            auth: { token: trz.githubAuthToken, room: room || window.location.pathname }
+            auth: { token: trz.githubAuthToken }
         });
-        setSocket(sock);
+
+        setSocketState(sock);
 
         // ENGINE EVENTS - provided by socket.io
-		sock.on(ClientSocketIOEvent.CONNECT, () => {
-		});
+		sock.on(ClientSocketIOEvent.CONNECT, async () => {
+            const engine = sock.io.engine;
+            setConnected(false);
+            engine.once("upgrade", () => {
+                if (engine.transport.name === "websocket") {
+                } else {
+                    notifications.show({
+                        title: 'Connection Error',
+                        message: 'An error occurred while connecting to the server. Could not upgrade to websocket',
+                        color: 'red',
+                        autoClose: 5000,
+                    })
+                    sock.disconnect();
+                }
+            });
+        });
+
+        sock.on(ClientSocketIOEvent.CONNECT_ERROR, () => {
+            setConnected(false);
+            notifications.show({
+                title: 'Connection Error',
+                message: 'An error occurred while connecting to the server',
+                color: 'red',
+                autoClose: 5000,
+            })
+        });
 
 		sock.on(ClientSocketIOEvent.DISCONNECT, () => {
+            setConnected(false);
             notifications.show({
                 title: 'Disconnected',
                 message: 'You have been disconnected from the server',
@@ -52,49 +82,74 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         sock.io.on(ClientSocketIOEvent.RECONNECT_ATTEMPT, () => {
             notifications.show({
                 title: 'Reconnecting',
-                message: 'Attempting to reconnect to the server',
+                message: 'Searching for server...',
                 color: 'blue',
                 autoClose: 5000,
             })
         });
           
         sock.io.on(ClientSocketIOEvent.RECONNECT, () => {
+            const engine = sock.io.engine;
+            setConnected(false);
             notifications.show({
-                title: 'Reconnected',
-                message: 'You have been reconnected to the server',
+                title: 'Reconnecting',
+                message: 'Server found. Attempting to reconnect',
+                color: 'blue',
+                autoClose: 5000,
+            })
+            engine.once("upgrade", () => {
+                if (engine.transport.name === "websocket") {
+
+                } else {
+                    notifications.show({
+                        title: 'Connection Error',
+                        message: 'An error occurred while connecting to the server. Could not upgrade to websocket',
+                        color: 'red',
+                        autoClose: 5000,
+                    })
+                    sock.disconnect();
+                }
+            });
+        });
+
+        // CUSTOM EVENTS - defined by us
+
+        sock.on(ServerSE.READY, (payload: ServerSEPayload[ServerSE.READY]) => {
+            setConnected(true);
+            notifications.show({
+                title: 'Connected',
+                message: 'You have been connected to the server',
                 color: 'green',
                 autoClose: 5000,
             })
         });
 
-        // CUSTOM EVENTS - defined by us
-        sock.on(SocketEventTypes.INITIALIZE, (payload: SocketEventPayload[SocketEventTypes.INITIALIZE]) => {
-            setRoomUsers(payload.roomUsers);
-        });
-
-        sock.on(SocketEventTypes.CLIENT_CONNECT, (payload: SocketEventPayload[SocketEventTypes.CLIENT_CONNECT]) => {
-            setRoomUsers(prev => prev.filter(user => {
+        sock.on(ServerSE.CLIENT_JOINED_ROOM, (payload: ServerSEPayload[ServerSE.CLIENT_JOINED_ROOM]) => {
+            setRoomUsersState(prev => prev.filter(user => {
                 return user.sid !== payload.sid;
             }).concat(payload));
         });
 
-        sock.on(SocketEventTypes.CLIENT_DISCONNECT, (payload: SocketEventPayload[SocketEventTypes.CLIENT_DISCONNECT]) => {
-            setRoomUsers(prev => prev.filter(user => {
-                return user.sid !== payload.sid;
+        sock.on(ServerSE.CLIENT_LEFT_ROOM, (payload: ServerSEPayload[ServerSE.CLIENT_LEFT_ROOM]) => {
+            setRoomUsersState(prev => prev.filter(user => {
+                return user.sid !== payload;
             }));
         });
 
-        sock.on(SocketEventTypes.MOUSE_MOVE, (payload: SocketEventPayload[SocketEventTypes.MOUSE_MOVE]) => {
-            setRoomUsers(prev => prev.map(user => {
+        sock.on(ServerSE.MOUSE_MOVE, (payload: ServerSEPayload[ServerSE.MOUSE_MOVE]) => {
+            setRoomUsersState(prev => prev.map(user => {
                 if(user.sid === payload.sid) {
-                    return { ...user, mouse: { x: payload.x, y: payload.y } };
+                    return {
+                        ...user,
+                        mouseRoomData: payload.data
+                    } as UserData;
                 }
                 return user;
             }));
         });
 
-        sock.on(SocketEventTypes.USER_IDLE, (payload: SocketEventPayload[SocketEventTypes.USER_IDLE]) => {
-            setRoomUsers(prev => prev.map(user => {
+        sock.on(ServerSE.USER_IDLE, (payload: ServerSEPayload[ServerSE.USER_IDLE]) => {
+            setRoomUsersState(prev => prev.map(user => {
                 if(user.sid === payload.sid) {
                     return { ...user, idle: payload.idle };
                 }
@@ -104,44 +159,66 @@ const SocketProvider: React.FC<any> = ({ children }) => {
 
         
         return () => {
+            setConnected(false);
             sock.disconnect();
         }
     }, [trz.githubAuthToken]);
+    
 
+    const setRoom = (room: RoomId) => {
+        setRoomState(room);
+        if (!socket) {return;}
+        socket.emit(ClientSE.SET_ROOM, room, (response: ClientSEReplies[ClientSE.SET_ROOM], error?: string) => {
+            if(error) {
+                console.error("Error changing room:", error);
+            } else {
+                setRoomUsersState(response.users);
+            }
+        });
+    }
 
-    useEffect(() => {
-        if (socket && room) {
-            socket.emit(SocketEventTypes.CHANGE_ROOM, room, (response: {error: boolean, roomUsers: UserData[]}) => {
-                if(response.error) {
-                    console.error("Error changing room:", response);
-                } else {
-                    setRoomUsers(response.roomUsers);
-                }
-            });
-        }
-    }, [room, socket]);
-
-    const moveMouse = (x: number, y: number) => {
-        if (socket) {
-            socket.emit(SocketEventTypes.MOUSE_MOVE, { x, y });
-        }
+    const moveMouse = (pos: Position) => {
+        if (!socket || !room || !connected || roomUsers.length === 0) {return;}
+        socket.volatile.emit(ClientSE.MOUSE_MOVE, pos, (response: ClientSEReplies[ClientSE.MOUSE_MOVE], error?: string) => {
+            if(error) {
+                console.error("Error moving mouse:", error);
+            }
+        });
     }
 
     const setIdle = (idle: boolean) => {
-        if (socket) {
-            socket.emit(SocketEventTypes.USER_IDLE, { idle });
-        }
+        if (!socket) {return;}
+        socket.emit(ClientSE.USER_IDLE, { idle }, (response: ClientSEReplies[ClientSE.USER_IDLE], error?: string) => {
+            if(error) {
+                console.error("Error setting idle:", error);
+            }
+        });
+    }
+
+    const getBoardData = async (boardId: string): Promise<Board | undefined> => {
+        if (!socket) {return undefined;}
+        return new Promise((resolve, reject) => {
+            socket.emit(ClientSE.GET_BOARD, boardId, (response: ClientSEReplies[ClientSE.GET_BOARD], error?: string) => {
+                if(error) {
+                    reject(error);
+                } else {
+                    resolve(response.board);
+                }
+            });
+        });
     }
 
 
     return (
         <SocketContext.Provider value={{
-            sid: socket?.id || "",
+            sid: socket?.id,
+            connected,
             room,
             setRoom,
             roomUsers,
             moveMouse,
             setIdle,
+            getBoardData
         }}>
             {children}
         </SocketContext.Provider>
