@@ -3,10 +3,10 @@ import { Badge, Box } from "@mantine/core";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowPointer } from "@fortawesome/free-solid-svg-icons";
 import { useImageColor} from "@trz/util/useImageColor";
+import { Position } from "@mosaiq/terrazzo-common/socketTypes";
 
 interface UserCursorProps {
-    x: number;
-    y: number;
+    position?: Position;
     color?: string;
     avatarUrl?: string;
     name: string;
@@ -21,11 +21,13 @@ const UserCursor = (props: UserCursorProps) => {
         setColor(imgColor);
     }, [imgColor]);
     
+    if (!props.position) { return null; }
+    
     return (
         <Box style={{
             position: "absolute",
-            left: props.x,
-            top: props.y,
+            left: props.position.x,
+            top: props.position.y,
             transform: "translate(0%, -50%)",
         }}>
             <FontAwesomeIcon icon={faArrowPointer} scale={2} color={props.idle ? IDLE_COLOR : color} />
