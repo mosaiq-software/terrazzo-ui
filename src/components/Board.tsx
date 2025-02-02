@@ -7,6 +7,7 @@ import { Container, Group } from "@mantine/core";
 import CollaborativeMouseTracker from "@trz/wrappers/collaborativeMouseTracker";
 import { useLocation } from "react-router-dom";
 import { useSocket } from "@trz/util/socket-context";
+import CreateList from "@trz/components/CreateList";
 
 /**Board Component: Holds different BoardLists
  * 
@@ -35,6 +36,7 @@ const Board = (): React.JSX.Element => {
 					<List />
 					<List />
 					<List />
+					<CreateList/>
 				</Group>
 			</Container>
 			<CollaborativeMouseTracker />
