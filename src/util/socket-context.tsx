@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTRZ } from '@trz/util/TRZ-context';
-import { notifications } from '@mantine/notifications';
-import { ClientSE, ClientSEReplies, ClientSEReply, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
+import { ClientSE, ClientSEReplies, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
 import { Board } from '@mosaiq/terrazzo-common/types';
+import { NoteType, notify } from '@trz/util/notifications';
 
 type SocketContextType = {
     sid?: SocketId;
@@ -49,12 +49,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             engine.once("upgrade", () => {
                 if (engine.transport.name === "websocket") {
                 } else {
-                    notifications.show({
-                        title: 'Connection Error',
-                        message: 'An error occurred while connecting to the server. Could not upgrade to websocket',
-                        color: 'red',
-                        autoClose: 5000,
-                    })
+                    notify(NoteType.CONNECTION_ERROR);
                     sock.disconnect();
                 }
             });
@@ -62,51 +57,26 @@ const SocketProvider: React.FC<any> = ({ children }) => {
 
         sock.on(ClientSocketIOEvent.CONNECT_ERROR, () => {
             setConnected(false);
-            notifications.show({
-                title: 'Connection Error',
-                message: 'An error occurred while connecting to the server',
-                color: 'red',
-                autoClose: 5000,
-            })
+            notify(NoteType.CONNECTION_ERROR);
         });
 
 		sock.on(ClientSocketIOEvent.DISCONNECT, () => {
             setConnected(false);
-            notifications.show({
-                title: 'Disconnected',
-                message: 'You have been disconnected from the server',
-                color: 'red',
-                autoClose: 5000,
-            })
+            notify(NoteType.DISCONNECTED);
 		});
         sock.io.on(ClientSocketIOEvent.RECONNECT_ATTEMPT, () => {
-            notifications.show({
-                title: 'Reconnecting',
-                message: 'Searching for server...',
-                color: 'blue',
-                autoClose: 5000,
-            })
+            notify(NoteType.RECONNECTING);
         });
           
         sock.io.on(ClientSocketIOEvent.RECONNECT, () => {
             const engine = sock.io.engine;
             setConnected(false);
-            notifications.show({
-                title: 'Reconnecting',
-                message: 'Server found. Attempting to reconnect',
-                color: 'blue',
-                autoClose: 5000,
-            })
+            notify(NoteType.RECONNECTING_SERVER_FOUND);
             engine.once("upgrade", () => {
                 if (engine.transport.name === "websocket") {
-
+                    notify(NoteType.CONNECTION_ESTABLISHED);
                 } else {
-                    notifications.show({
-                        title: 'Connection Error',
-                        message: 'An error occurred while connecting to the server. Could not upgrade to websocket',
-                        color: 'red',
-                        autoClose: 5000,
-                    })
+                    notify(NoteType.CONNECTION_ERROR);
                     sock.disconnect();
                 }
             });
@@ -116,12 +86,6 @@ const SocketProvider: React.FC<any> = ({ children }) => {
 
         sock.on(ServerSE.READY, (payload: ServerSEPayload[ServerSE.READY]) => {
             setConnected(true);
-            notifications.show({
-                title: 'Connected',
-                message: 'You have been connected to the server',
-                color: 'green',
-                autoClose: 5000,
-            })
         });
 
         sock.on(ServerSE.CLIENT_JOINED_ROOM, (payload: ServerSEPayload[ServerSE.CLIENT_JOINED_ROOM]) => {
