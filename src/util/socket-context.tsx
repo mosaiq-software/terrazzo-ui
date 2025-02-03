@@ -14,6 +14,7 @@ type SocketContextType = {
     moveMouse: (pos: Position) => void;
     setIdle: (idle: boolean) => void;
     getBoardData: (boardId: string) => Promise<Board | undefined>;
+    collaborativeText?: string;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -25,6 +26,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const [room, setRoomState] = useState<RoomId>(null);
     const [roomUsers, setRoomUsersState] = useState<UserData[]>([]);
     const [connected, setConnected] = useState<boolean>(false);
+    const [collaborativeText, setCollaborativeText] = useState<string>("");
 
 
     useEffect(() => {
@@ -182,7 +184,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             roomUsers,
             moveMouse,
             setIdle,
-            getBoardData
+            getBoardData,
+            collaborativeText
         }}>
             {children}
         </SocketContext.Provider>
