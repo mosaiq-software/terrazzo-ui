@@ -4,6 +4,7 @@ import { Container, Group } from "@mantine/core";
 import CollaborativeMouseTracker from "@trz/wrappers/collaborativeMouseTracker";
 import { useParams } from "react-router-dom";
 import { useSocket } from "@trz/util/socket-context";
+import CreateList from "@trz/components/CreateList";
 
 const Board = (): React.JSX.Element => {
 	const params = useParams();
@@ -33,6 +34,7 @@ const Board = (): React.JSX.Element => {
 					<List />
 					<List />
 					<List />
+					<CreateList/>
 				</Group>
 			</Container>
 			<CollaborativeMouseTracker boardId={params.boardId} />
