@@ -28,7 +28,7 @@ const Board = (): React.JSX.Element => {
 
 	return (
 		<>
-			<Container fluid maw="100%" p="lg" bg="#1d2022">
+			<Container h="100%" fluid maw="100%" p="lg" bg="#1d2022">
 				<Group h="95%" gap={20} align="flex-start" justify="flex-start" wrap="nowrap">
 					<List />
 					<List />
