@@ -6,6 +6,7 @@ import { Dashboard } from "@trz/pages/dashboard";
 import {AuthWrapper} from "@trz/wrappers/AuthWrapper";
 import Navbar from "@trz/components/Navbar";
 import Board from "@trz/components/Board";
+import Home from "@trz/components/Home";
 
 const Router = () => {
 	return (
@@ -20,6 +21,7 @@ const Router = () => {
 				<Route element={<AuthWrapper />}>
 					<Route path='/dashboard' element={<Dashboard />} />
 					<Route path='/boards/:boardId' element={<Board/>}></Route>
+					<Route path='/home' element={<Home/>} />
 				</Route>
 			</Routes>
 		</BrowserRouter>
