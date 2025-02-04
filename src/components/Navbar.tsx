@@ -4,8 +4,11 @@ import { faBell } from "@fortawesome/free-solid-svg-icons";
 
 //Components
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {Button} from "@mantine/core";
+import {modals} from "@mantine/modals";
 
 const Navbar = () => {
+
 	return (
 		<div
 			style={{
@@ -38,7 +41,7 @@ const Navbar = () => {
 					}}>
 					Workspace
 				</button>
-				<button
+				<Button
 					className='CreateButton'
 					style={{
 						backgroundColor: " rgb(30, 111, 233)",
@@ -46,9 +49,17 @@ const Navbar = () => {
 						border: " none",
 						borderRadius: " .5rem",
 						padding: " .1rem 1.2rem",
-					}}>
+					}}
+					onClick={() =>
+						modals.openContextModal({
+							modal: 'board',
+							title: 'Create Board',
+							innerProps: {},
+						})
+					}
+				>
 					Create +
-				</button>
+				</Button>
 			</div>
 			<div
 				style={{
