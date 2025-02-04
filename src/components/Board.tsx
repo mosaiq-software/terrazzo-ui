@@ -1,31 +1,29 @@
-//Utility
-import React, { useEffect } from "react";
-
-//Components
+import React, { useEffect, useState } from "react";
 import List from "@trz/components/List";
 import { Container, Group } from "@mantine/core";
 import CollaborativeMouseTracker from "@trz/wrappers/collaborativeMouseTracker";
-import { useLocation } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useSocket } from "@trz/util/socket-context";
 
-/**Board Component: Holds different BoardLists
- * 
- * State: none
- * 
- * Props: none
- */
-
 const Board = (): React.JSX.Element => {
-	const location = useLocation();
+	const params = useParams();
 	const sockCtx = useSocket();
-
-	if (!location){
-		return <p>Board not found</p>;
-	}
+	const [boardData, setBoardData] = useState<any>(null);
 
 	useEffect(() => {
-		sockCtx.setRoom(location.pathname);
-	}, [sockCtx, location]);
+		const fetchBoardData = async () => {
+			if (!params.boardId) {
+				return;
+			}
+			const boardData = await sockCtx.getBoardData(params.boardId);
+			setBoardData(boardData);
+		};
+		fetchBoardData();
+	}, [params.boardId, sockCtx.connected]);
+
+	if (!params.boardId) {
+		return <div>Board not found</div>;
+	}
 
 	return (
 		<>
@@ -37,7 +35,7 @@ const Board = (): React.JSX.Element => {
 					<List />
 				</Group>
 			</Container>
-			<CollaborativeMouseTracker />
+			<CollaborativeMouseTracker boardId={params.boardId} />
 		</>
 	);
 };

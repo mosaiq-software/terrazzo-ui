@@ -1,6 +1,7 @@
 import queryString from "query-string";
 import { callTrzApi } from "./apiUtils";
 import { LocalStorageKey } from "@mosaiq/terrazzo-common/constants";
+import { NoteType, notify } from "./notifications";
 
 /*
     Returns the URL to redirect to for GitHub login.
@@ -29,6 +30,7 @@ export const getUserAccessTokenFromGithub = async (code: string) => {
         return (response?.data?.access_token);
     } catch (error) {
         console.error("Error fetching user access token from GitHub", error);
+        notify(NoteType.GITHUB_AUTH_ERROR);
         return null;
     }
 }
@@ -41,6 +43,7 @@ export const getUserDataFromGithub = async (accessToken: string) => {
         return (response?.data);
     } catch (error) {
         console.error("Error fetching user data from GitHub", error);
+        notify(NoteType.GITHUB_DATA_ERROR);
         return null;
     }
 }
