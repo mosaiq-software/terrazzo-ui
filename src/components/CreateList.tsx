@@ -2,7 +2,7 @@
 import React from "react";
 
 //Components
-import {Button, CloseButton, Paper, TextInput, Flex} from "@mantine/core";
+import {Button, CloseButton, Paper, TextInput, Flex, FocusTrap} from "@mantine/core";
 import {useClickOutside} from "@mantine/hooks";
 import {useState} from "react";
 
@@ -42,12 +42,14 @@ const CreateList = (): React.JSX.Element => {
             }
             {visible &&
                 <Paper bg={"#121314"} w="250" radius="md" shadow="lg" ref={ref}>
-                    <TextInput placeholder="Enter list title..."
-                               value={title}
-                               onChange={(event) => setTitle(event.currentTarget.value)}
-                               error={error}
-                               p="5"
-                    />
+                    <FocusTrap>
+                        <TextInput placeholder="Enter list title..."
+                                   value={title}
+                                   onChange={(event) => setTitle(event.currentTarget.value)}
+                                   error={error}
+                                   p="5"
+                        />
+                    </FocusTrap>
                     <Flex p='5'>
                         <Button w="150"
                                 variant="light"

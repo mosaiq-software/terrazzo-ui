@@ -4,7 +4,7 @@ import React from "react";
 //Components
 import Card from "@trz/components/Card";
 import EditableTextbox from "@trz/components/EditableTextbox";
-import { Button, Group, Paper, Stack, Title, CloseButton, TextInput, Flex } from "@mantine/core";
+import { Button, Group, Paper, Stack, Title, CloseButton, TextInput, Flex, FocusTrap } from "@mantine/core";
 import {useClickOutside} from "@mantine/hooks";
 import {useState} from "react";
 
@@ -82,12 +82,14 @@ const List = (): React.JSX.Element => {
 				<Group>
 					{visible &&
 						<Paper bg={"#121314"} w="250" radius="md" shadow="lg" ref={ref}>
-							<TextInput placeholder="Enter card title..."
-									   value={CardTitle}
-									   onChange={(event) => setCardTitle(event.currentTarget.value)}
-									   error={error}
-									   p="5"
-							/>
+							<FocusTrap>
+								<TextInput placeholder="Enter card title..."
+										   value={CardTitle}
+										   onChange={(event) => setCardTitle(event.currentTarget.value)}
+										   error={error}
+										   p="5"
+								/>
+							</FocusTrap>
 							<Flex p='5'>
 								<Button w="150"
 										variant="light"
