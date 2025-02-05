@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTRZ } from '@trz/util/TRZ-context';
 import { ClientSE, ClientSEReplies, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
-import { Board } from '@mosaiq/terrazzo-common/types';
+import { Board} from '@mosaiq/terrazzo-common/types';
 import { NoteType, notify } from '@trz/util/notifications';
 
 type SocketContextType = {
@@ -11,9 +11,12 @@ type SocketContextType = {
     room: RoomId | null;
     setRoom: (room: RoomId) => void;
     roomUsers: UserData[];
+    boardData: Board | undefined;
     moveMouse: (pos: Position) => void;
     setIdle: (idle: boolean) => void;
-    getBoardData: (boardId: string) => Promise<Board | undefined>;
+    getBoardData: (boardId: string) => Promise<boolean | undefined>;
+    createBoard: (name: string, boardCode: string) => Promise<string | undefined>;
+    addList: (boardID: string, listName: string) => Promise<boolean | undefined>;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -25,6 +28,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const [room, setRoomState] = useState<RoomId>(null);
     const [roomUsers, setRoomUsersState] = useState<UserData[]>([]);
     const [connected, setConnected] = useState<boolean>(false);
+    const [boardData, setBoardData] = useState<Board>();
 
 
     useEffect(() => {
@@ -121,6 +125,16 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             }));
         });
 
+        sock.on(ServerSE.ADD_LIST, (payload: ServerSEPayload[ServerSE.ADD_LIST]) => {
+            setBoardData(prev => {
+                if(!prev) {return prev;}
+                return {
+                    ...prev,
+                    lists: prev.lists.concat(payload)
+                }
+            });
+        });
+
         
         return () => {
             setConnected(false);
@@ -159,14 +173,41 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }
 
-    const getBoardData = async (boardId: string): Promise<Board | undefined> => {
+    const getBoardData = async (boardId: string): Promise<boolean | undefined> => {
         if (!socket) {return undefined;}
         return new Promise((resolve, reject) => {
             socket.emit(ClientSE.GET_BOARD, boardId, (response: ClientSEReplies[ClientSE.GET_BOARD], error?: string) => {
                 if(error) {
                     reject(error);
                 } else {
-                    resolve(response.board);
+                    setBoardData(response.board);
+                    return true;
+                }
+            });
+        });
+    }
+
+    const createBoard = async (name: string, boardCode:string):Promise<string | undefined> => {
+        if (!socket) {return undefined;}
+        return new Promise((resolve, reject) => {
+            socket.emit(ClientSE.CREATE_BOARD, {name, boardCode}, (response: ClientSEReplies[ClientSE.CREATE_BOARD], error?: string) => {
+                if(error) {
+                    reject(error);
+                } else {
+                    resolve(response.boardID);
+                }
+            });
+        });
+    }
+
+    const addList = async (boardID:string, listName:string):Promise<boolean | undefined> => {
+        if (!socket) {return undefined;}
+        return new Promise((resolve, reject) => {
+            socket.emit(ClientSE.CREATE_LIST, {boardID, listName}, (response: ClientSEReplies[ClientSE.CREATE_LIST], error?: string) => {
+                if(error) {
+                    reject(error);
+                } else {
+                    resolve(response.success);
                 }
             });
         });
@@ -180,9 +221,12 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             room,
             setRoom,
             roomUsers,
+            boardData,
             moveMouse,
             setIdle,
-            getBoardData
+            getBoardData,
+            createBoard,
+            addList
         }}>
             {children}
         </SocketContext.Provider>

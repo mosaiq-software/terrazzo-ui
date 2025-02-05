@@ -8,6 +8,9 @@ export enum NoteType {
     CONNECTION_ESTABLISHED = 'CONNECTION_ESTABLISHED',
     GITHUB_AUTH_ERROR = 'GITHUB_AUTH_ERROR',
     GITHUB_DATA_ERROR = 'GITHUB_DATA_ERROR',
+    BOARD_DATA_ERROR = 'BOARD_DATA_ERROR',
+    BOARD_CREATION_ERROR = 'BOARD_CREATION_ERROR',
+    LIST_CREATION_ERROR = 'LIST_CREATION_ERROR',
 }
 
 const AUTO_CLOSE_TIMEOUT = 5000;
@@ -52,6 +55,21 @@ const noteMap = {
     [NoteType.GITHUB_DATA_ERROR]: {
         title: 'GitHub Data Error',
         message: 'An error occurred while fetching data from GitHub',
+        color: NoteColor.ERROR,
+    },
+    [NoteType.BOARD_DATA_ERROR]: {
+        title: 'Board Data Error',
+        message: 'An error occurred while fetching data from Board',
+        color: NoteColor.ERROR,
+    },
+    [NoteType.BOARD_CREATION_ERROR]: {
+        title: 'Board Creation Error',
+        message: 'An error occurred while creating a new board',
+        color: NoteColor.ERROR,
+    },
+    [NoteType.LIST_CREATION_ERROR]: {
+        title: 'List Creation Error',
+        message: 'An error occurred while creating a new list',
         color: NoteColor.ERROR,
     },
 }

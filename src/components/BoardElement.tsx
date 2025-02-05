@@ -1,31 +1,32 @@
-import React, { useEffect, useState } from "react";
+import React, {useEffect, useState} from "react";
 import ListElement from "@trz/components/ListElement";
-import { Container, Group } from "@mantine/core";
+import {Container, Group} from "@mantine/core";
 import CollaborativeMouseTracker from "@trz/wrappers/collaborativeMouseTracker";
-import { useParams } from "react-router-dom";
-import { useSocket } from "@trz/util/socket-context";
+import {useNavigate, useParams} from "react-router-dom";
+import {useSocket} from "@trz/util/socket-context";
 import CreateList from "@trz/components/CreateList";
-import {List} from "@mosaiq/terrazzo-common/types";
+import {Board, List} from "@mosaiq/terrazzo-common/types";
+import {NoteType, notify} from "@trz/util/notifications";
 
 
-const Board = (): React.JSX.Element => {
+const BoardElement = (): React.JSX.Element => {
 	const params = useParams();
 	const sockCtx = useSocket();
-	const [boardData, setBoardData] = useState<any>(null);
+
+	const navigate = useNavigate();
 
 	useEffect(() => {
 		const fetchBoardData = async () => {
 			if (!params.boardId) {
 				return;
 			}
-			const boardData = await sockCtx.getBoardData(params.boardId)
+			await sockCtx.getBoardData(params.boardId)
 				.catch((err) => {
 					console.error(err);
-					setBoardData({});
+					navigate("/dashboard");
+					notify(NoteType.BOARD_DATA_ERROR);
 					return
 				});
-			setBoardData(boardData);
-			console.log(boardData);
 		};
 		fetchBoardData();
 	}, [params.boardId, sockCtx.connected]);
@@ -39,7 +40,7 @@ const Board = (): React.JSX.Element => {
 			<Container h="100%" fluid maw="100%" p="lg" bg="#1d2022">
 				<Group h="95%" gap={20} align="flex-start" justify="flex-start" wrap="nowrap">
 					{
-						boardData?.lists?.map((list: List, index: number) => (
+						sockCtx.boardData?.lists?.map((list: List, index: number) => (
 							<ListElement key={index} listType={list}/>
 						))
 					}
@@ -51,4 +52,4 @@ const Board = (): React.JSX.Element => {
 	);
 };
 
-export default Board;
+export default BoardElement;
