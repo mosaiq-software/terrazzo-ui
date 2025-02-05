@@ -1,17 +1,14 @@
 // Utility
 import React from "react";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
-
-import { TRZProvider } from "@trz/util/TRZ-context";
-import { getGithubLoginUrl } from "@trz/util/githubAuth";
-import { GithubAuth } from "@trz/pages/auth/github";
-import { Dashboard } from "@trz/pages/dashboard";
-
-import { createTheme, MantineProvider, AppShell } from "@mantine/core";
 import "@mantine/core/styles.css";
-
-// Components
-import Navbar from "./components/Navbar"
+import '@mantine/notifications/styles.css';
+import { createTheme, MantineProvider } from "@mantine/core";
+import { TRZProvider } from "@trz/util/TRZ-context";
+import { SocketProvider } from "@trz/util/socket-context";
+import { Notifications } from '@mantine/notifications';
+import {ModalsProvider} from "@mantine/modals";
+import Router from "./router";
+import {CreateBoardModal} from "@trz/components/CreateBoard";
 
 // Styling
 const theme = createTheme({
@@ -24,20 +21,15 @@ const theme = createTheme({
 
 const App = () => {
 	return (
-		<MantineProvider defaultColorScheme="auto" theme={theme}>
-			<TRZProvider>
-				<BrowserRouter>
-                    <Navbar/>
-                    <Routes>
-                        <Route path='/' element={<Outlet />} />
-                        <Route path='/login' element={<p><a href={getGithubLoginUrl()}>Login with GitHub</a></p>} />
-                        <Route path='/auth' element={<Outlet />}>
-                            <Route path='github' element={<GithubAuth />} />
-                        </Route>
-                        <Route path='/dashboard' element={<Dashboard />} />
-                    </Routes>
-				</BrowserRouter>
-			</TRZProvider>
+		<MantineProvider theme={theme}>
+			<Notifications/>
+            <ModalsProvider modals={{board: CreateBoardModal}}>
+                <TRZProvider>
+                    <SocketProvider>
+                        <Router/>
+                    </SocketProvider>
+                </TRZProvider>
+            </ModalsProvider>
 		</MantineProvider>
 	);
 };
