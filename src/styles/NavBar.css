@@ -1,16 +1,32 @@
-.mosi-navbar {
-    max-width: 100%;
-    height: var(--trz-navbar-height);
-    padding: var(--mantine-spacing-md);
-    background-color: #1f1f1f;
-}
-.mosi-navbar-nav {
-    height: 100%;
+
+.trzNavigationMenuRoot {
+    position: relative;
     display: flex;
-    align-items: center;
     justify-content: space-between;
-    gap: var(--mantine-spacing-md);
+	background-color: var(--mantine-color-greyscale-1);
+    width: 100vw;
+    z-index: 1;
 }
-.fit-content {
-    width: fit-content;
+
+.trzNavigationMenuList {
+	display: flex;
+    gap: 1rem;
+    align-items: center;
+	justify-content: center;
+	padding: var(--mantine-spacing-xs);
+	border-radius: 6px;
+	list-style: none;
+	box-shadow: 0 2px 10px var(--black-a7);
+	margin: 0;
+}
+
+.trzNavigationMenuTrigger {
+	display: flex;
+    gap: var(--mantine-spacing-xs);
+    align-items: center;
+	justify-content: center;
+	padding: 8px 12px;
+    background-color: inherit;
+    border: none;
+    border-radius: 6px;
 }

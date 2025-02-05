@@ -1,4 +1,4 @@
-//Utility
+// Utility
 import React from "react";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 
@@ -7,12 +7,13 @@ import { getGithubLoginUrl } from "@trz/util/githubAuth";
 import { GithubAuth } from "@trz/pages/auth/github";
 import { Dashboard } from "@trz/pages/dashboard";
 
-import { createTheme, MantineProvider } from "@mantine/core";
+import { createTheme, MantineProvider, AppShell } from "@mantine/core";
 import "@mantine/core/styles.css";
 
-import TRZNavBar from "./components/TRZNavBar"
+// Components
+import Navbar from "./components/Navbar"
 
-//Styling
+// Styling
 const theme = createTheme({
     focusRing: "auto",
     fontSmoothing: true,
@@ -26,7 +27,7 @@ const App = () => {
 		<MantineProvider defaultColorScheme="auto" theme={theme}>
 			<TRZProvider>
 				<BrowserRouter>
-                    <TRZNavBar/>
+                    <Navbar/>
                     <Routes>
                         <Route path='/' element={<Outlet />} />
                         <Route path='/login' element={<p><a href={getGithubLoginUrl()}>Login with GitHub</a></p>} />
