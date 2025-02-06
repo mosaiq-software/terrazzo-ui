@@ -41,7 +41,9 @@ const CreateBoard = ({
             setErrorAbv("Max 3 characters")
             return;
         }
+
         sockCtx.createBoard(boardName, boardAbbreviation).then((board) => {
+            console.log("hello")
             console.log(board);
             navigate(`/boards/${board}`);
             setErrorAbv("");

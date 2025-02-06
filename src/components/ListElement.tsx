@@ -8,6 +8,8 @@ import {Button, Group, Paper, Stack, Title, CloseButton, TextInput, Flex} from "
 import {useClickOutside} from "@mantine/hooks";
 import {useState} from "react";
 import {Card, List} from "@mosaiq/terrazzo-common/types";
+import {useSocket} from "@trz/util/socket-context";
+import {NoteType, notify} from "@trz/util/notifications";
 
 interface ListElementProps {
     listType?: List
@@ -27,9 +29,10 @@ function ListElement(props: ListElementProps): React.JSX.Element {
     const [error, setError] = useState("");
     const [CardTitle, setCardTitle] = useState("");
     const ref = useClickOutside(() => setVisible(false));
+    const sockCtx = useSocket();
+
 
     function onSubmit() {
-        //Add logic for websocket later
         if (CardTitle.length < 1) {
             setError("Enter a Title")
             return;
@@ -39,7 +42,16 @@ function ListElement(props: ListElementProps): React.JSX.Element {
             setError("Max 50 characters")
             return;
         }
-        console.log(CardTitle);
+
+        sockCtx.addCard(props.listType!.id, CardTitle).then((success) => {
+            if (!success) {
+                notify(NoteType.CARD_CREATION_ERROR);
+                return;
+            }
+        }).catch((err) => {
+            console.error(err);
+        });
+
         setError("")
         setCardTitle("");
         setVisible(false);

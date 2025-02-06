@@ -11,6 +11,7 @@ export enum NoteType {
     BOARD_DATA_ERROR = 'BOARD_DATA_ERROR',
     BOARD_CREATION_ERROR = 'BOARD_CREATION_ERROR',
     LIST_CREATION_ERROR = 'LIST_CREATION_ERROR',
+    CARD_CREATION_ERROR = 'CARD_CREATION_ERROR',
 }
 
 const AUTO_CLOSE_TIMEOUT = 5000;
@@ -70,6 +71,11 @@ const noteMap = {
     [NoteType.LIST_CREATION_ERROR]: {
         title: 'List Creation Error',
         message: 'An error occurred while creating a new list',
+        color: NoteColor.ERROR,
+    },
+    [NoteType.CARD_CREATION_ERROR]: {
+        title: 'Card Creation Error',
+        message: 'An error occurred while creating a new card',
         color: NoteColor.ERROR,
     },
 }

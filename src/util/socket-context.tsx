@@ -17,6 +17,7 @@ type SocketContextType = {
     getBoardData: (boardId: string) => Promise<boolean | undefined>;
     createBoard: (name: string, boardCode: string) => Promise<string | undefined>;
     addList: (boardID: string, listName: string) => Promise<boolean | undefined>;
+    addCard: (listID: string, cardName: string) => Promise<boolean | undefined>;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -135,6 +136,24 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             });
         });
 
+        sock.on(ServerSE.ADD_CARD, (payload: ServerSEPayload[ServerSE.ADD_CARD]) => {
+            setBoardData(prev => {
+                if(!prev) {return prev;}
+                return {
+                    ...prev,
+                    lists: prev.lists.map(list => {
+                        if(list.id === payload.listId) {
+                            return {
+                                ...list,
+                                cards: list.cards.concat(payload)
+                            }
+                        }
+                        return list;
+                    })
+                }
+            });
+        });
+
         
         return () => {
             setConnected(false);
@@ -213,6 +232,20 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }
 
+    const addCard = async (listID:string, cardName:string):Promise<boolean | undefined> => {
+        if (!socket) {return undefined;}
+        return new Promise((resolve, reject) => {
+            socket.emit(ClientSE.CREATE_CARD, {listID, cardName}, (response: ClientSEReplies[ClientSE.CREATE_CARD], error?: string) => {
+                if(error) {
+                    reject(error);
+                } else {
+                    resolve(response.success);
+                }
+            });
+        });
+    }
+
+
 
     return (
         <SocketContext.Provider value={{
@@ -226,7 +259,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             setIdle,
             getBoardData,
             createBoard,
-            addList
+            addList,
+            addCard
         }}>
             {children}
         </SocketContext.Provider>

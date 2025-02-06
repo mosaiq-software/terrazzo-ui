@@ -20,7 +20,7 @@
     "@mantine/hooks": "^7.14.2",
     "@mantine/modals": "^7.16.2",
     "@mantine/notifications": "^7.16.2",
-    "@mosaiq/terrazzo-common": "../terrazzo-common/dist",
+    "@mosaiq/terrazzo-common": "1.2.1",
     "@types/react-router": "^5.1.20",
     "axios": "^1.7.9",
     "file-saver": "^2.0.5",
