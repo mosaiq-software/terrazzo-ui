@@ -14,6 +14,7 @@ import {
 	Flex,
 	MultiSelect,
 } from "@mantine/core";
+import {MarkdownTextarea} from "./MarkdownTextarea";
 
 /**ListCardDetails Component
  *
@@ -35,6 +36,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element => {
 	const members = ["Member 1", "Member 2", "Member 3"];
 	const labels = ["label 1", "label 2", "label 3"];
 	const cardNumber = "abc123";
+	const [testMarkdown, setTestMarkdown] = React.useState("## Test Markdown");
 	const description = "";
 	const activity = "";
 
@@ -79,7 +81,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element => {
 								</Stack>
 							</Grid.Col>
 						</Grid>
-
+						<MarkdownTextarea value={testMarkdown} onChange={setTestMarkdown} />
 						<Textarea label='Description' autosize maxRows={4} minRows={4} style={{ padding: "1rem" }} />
 						<Textarea label='Activity' autosize maxRows={4} minRows={4} style={{ padding: "1rem" }} />
 					</Stack>

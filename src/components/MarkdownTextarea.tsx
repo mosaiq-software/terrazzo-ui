@@ -54,6 +54,7 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
     const elements: JSX.Element[] = [];
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
+        // LineType.X BASED ON INITIAL CHARACTERS IN LINE I.E: #, -, ---, "", ...
         switch (line.type) {
             case LineType.Heading:
                 elements.push(
