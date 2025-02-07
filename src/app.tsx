@@ -1,3 +1,4 @@
+//Utility
 import React from "react";
 import "@mantine/core/styles.css";
 import '@mantine/notifications/styles.css';
@@ -7,19 +8,17 @@ import { SocketProvider } from "@trz/util/socket-context";
 import { Notifications } from '@mantine/notifications';
 import Router from "./router";
 
-
-
 const theme = createTheme({});
 
 const App = () => {
 	return (
 		<MantineProvider theme={theme}>
 			<Notifications/>
-			<TRZProvider>
-				<SocketProvider>
-					<Router/>
-				</SocketProvider>
-			</TRZProvider>
+                <TRZProvider>
+                    <SocketProvider>
+                        <Router/>
+                    </SocketProvider>
+                </TRZProvider>
 		</MantineProvider>
 	);
 };
