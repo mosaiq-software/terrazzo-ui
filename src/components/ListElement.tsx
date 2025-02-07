@@ -1,18 +1,17 @@
 // Utility
-import React from "react";
+import React, {useState} from "react";
 
 //Components
 import CardElement from "@trz/components/CardElement";
 import EditableTextbox from "@trz/components/EditableTextbox";
 import {Button, Group, Paper, Stack, Title, CloseButton, TextInput, Flex} from "@mantine/core";
 import {useClickOutside} from "@mantine/hooks";
-import {useState} from "react";
 import {Card, List} from "@mosaiq/terrazzo-common/types";
 import {useSocket} from "@trz/util/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
 
 interface ListElementProps {
-    listType?: List
+    listType: List
 }
 
 /**BoardList Component
@@ -23,27 +22,30 @@ interface ListElementProps {
  */
 
 function ListElement(props: ListElementProps): React.JSX.Element {
-    const [listTitle, setListTitle] = React.useState(props.listType?.name || "List Title");
+    const [listTitle, setListTitle] = React.useState(props.listType.name || "List Title");
 
     const [visible, setVisible] = useState(false);
     const [error, setError] = useState("");
-    const [CardTitle, setCardTitle] = useState("");
+    const [cardTitle, setCardTitle] = useState("");
     const ref = useClickOutside(() => setVisible(false));
     const sockCtx = useSocket();
 
 
     function onSubmit() {
-        if (CardTitle.length < 1) {
+        setError("")
+        setCardTitle("");
+
+        if (cardTitle.length < 1) {
             setError("Enter a Title")
             return;
         }
 
-        if (CardTitle.length > 50) {
+        if (cardTitle.length > 50) {
             setError("Max 50 characters")
             return;
         }
 
-        sockCtx.addCard(props.listType!.id, CardTitle).then((success) => {
+        sockCtx.addCard(props.listType.id, cardTitle).then((success) => {
             if (!success) {
                 notify(NoteType.CARD_CREATION_ERROR);
                 return;
@@ -51,9 +53,6 @@ function ListElement(props: ListElementProps): React.JSX.Element {
         }).catch((err) => {
             console.error(err);
         });
-
-        setError("")
-        setCardTitle("");
         setVisible(false);
     }
 
@@ -101,7 +100,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     {visible &&
                         <Paper bg={"#121314"} w="250" radius="md" shadow="lg" ref={ref}>
                             <TextInput placeholder="Enter card title..."
-                                       value={CardTitle}
+                                       value={cardTitle}
                                        onChange={(event) => setCardTitle(event.currentTarget.value)}
                                        error={error}
                                        p="5"

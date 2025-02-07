@@ -17,6 +17,8 @@ const CreateList = (): React.JSX.Element => {
     const sockCtx = useSocket();
 
     function onSubmit(){
+        setError("")
+        setTitle("");
         if(title.length < 1){
             setError("Enter a Title")
             return;
@@ -35,9 +37,6 @@ const CreateList = (): React.JSX.Element => {
         }).catch((err) => {
             console.error(err);
         });
-
-        setError("")
-        setTitle("");
         setVisible(false);
     }
 

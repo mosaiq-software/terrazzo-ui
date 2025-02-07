@@ -22,6 +22,9 @@ const CreateBoard = ({
     const navigate = useNavigate();
 
     function onSubmit() {
+        setErrorAbv("");
+        setErrorName("");
+
         if(boardName.length < 1 ){
             setErrorName("Enter a Name")
             return;
@@ -43,11 +46,8 @@ const CreateBoard = ({
         }
 
         sockCtx.createBoard(boardName, boardAbbreviation).then((board) => {
-            console.log("hello")
             console.log(board);
             navigate(`/boards/${board}`);
-            setErrorAbv("");
-            setErrorName("");
             context.closeModal(id);
         }).catch((err) => {
             console.error(err);
