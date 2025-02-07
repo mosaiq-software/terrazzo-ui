@@ -1,32 +1,53 @@
-import React, {useCallback, useEffect, useRef, useState} from "react";
+import React, {KeyboardEventHandler, useCallback, useEffect, useRef, useState} from "react";
 import {useSocket} from "@trz/util/socket-context";
-import { Box, Textarea } from "@mantine/core";
-import { useClickOutside } from '@mantine/hooks';
+import { useClickOutside, useElementSize  } from '@mantine/hooks';
 import { getCaretCoordinates } from "@trz/util/textUtils";
+import { TextBlockEvent, TextBlockId } from "@mosaiq/terrazzo-common/types";
+import {UserCaret} from '@trz/components/UserCaret';
+import { C } from "react-router/dist/production/fog-of-war-CbNQuoo8";
+import { executeTextBlockEvent } from "@mosaiq/terrazzo-common/utils/textUtils";
 
 interface CollaborativeTextAreaProps {
     maxLineLength: number;
+    textBlockId: TextBlockId;
     fontSize?: number;
     maxRows?: number;
 }
 
 export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
     const sockCtx = useSocket();
-    const [testText, setTestText] = useState("");
     const [caret, setCaret] = useState<{x:number, y:number}|undefined>(undefined);
     useClickOutside(()=>setCaret(undefined));
     const textRef = useRef<any>();
+    const { ref, width, height } = useElementSize();
+
+    useEffect(() => {
+
+        const initialize = async () => {
+            if (!sockCtx.connected) { return; }
+
+            const textBlock = await sockCtx.getTextBlockData(props.textBlockId);
+            sockCtx.setCollaborativeText(textBlock?.text);
+            sockCtx.setRoom("text-"+props.textBlockId);
+        }
+
+        initialize();
+        
+        return () => {
+            sockCtx.setRoom(null);
+            sockCtx.setCollaborativeText(undefined);
+        }
+    }, [sockCtx.connected, props.textBlockId]);
 
     useEffect(()=>{
-        updateTextArea();
-    },[])
+        resizeTextArea();
+    }, [textRef.current, sockCtx.collaborativeText])
 
-    const updateTextArea =  () => {
+    const resizeTextArea = () => {
         const element = textRef.current;
         if(!element){ return; }
         element.style.height = "";
-        element.style.height = (element.scrollHeight+(1.5*(props.fontSize??16)))+'px'; 
-        updateCaret();
+        element.style.height = (element.scrollHeight+(2*(props.fontSize??16)))+'px'; 
     }
 
     const updateCaret = async () => {
@@ -34,9 +55,32 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
         const element = textRef.current;
         if(!element){ return; }
         const coordinates = getCaretCoordinates(element, element.selectionStart);
-        setCaret({x: coordinates.left, y:coordinates.top});
+        const relativeCoords = {x: coordinates.left/width, y: coordinates.top/height}
+        setCaret(relativeCoords);
+        sockCtx.updateCaret(relativeCoords);
     }
 
+    const setCombinedRefs = (element) => {
+        (ref.current as any) = element;
+        textRef.current = element;
+    }
+
+    const onPaste = (e) => {
+        updateCaret();
+    }
+    
+    const onKeypress = (e) => {
+        const tbEvent: TextBlockEvent = {
+            id: props.textBlockId,
+            start: textRef.current.selectionStart,
+            end: textRef.current.selectionEnd,
+            inserted: e.key,
+        };
+        const updated = executeTextBlockEvent(sockCtx.collaborativeText ?? '', tbEvent);
+        sockCtx.setCollaborativeText(updated);
+        sockCtx.updateTextBlock(tbEvent);
+        updateCaret();
+    }
 
     return (
         <div style={{
@@ -46,20 +90,15 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
             
             <div style={{clear:"both"}}></div>
             <textarea 
-                ref={textRef}
-                value={testText}
-                onChange={(e)=>{
-                    setTestText(e.target.value);
-                }}
+                ref={setCombinedRefs}
+                value={sockCtx.collaborativeText}
                 dir="ltr" 
                 id="COLLAB_TEXTAREA"
                 className="collabta"
-                onMouseDown={updateTextArea}
-                onKeyUp={updateTextArea}
-                onKeyDown={updateTextArea}
-                onPaste={updateTextArea}
-                onBeforeInput={updateTextArea}
+                onPasteCapture={(e)=>onPaste(e)}
+                onKeyDown={(e)=>onKeypress(e)}
                 onBlur={()=>setCaret(undefined)}
+                onMouseDown={updateCaret}
                 style={{
                     fontFamily: "monospace",
                     fontSize: props.fontSize ?? 16,
@@ -81,40 +120,24 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
                 }}
             >
                 {
-                    caret &&
-                    <UserCursor 
-                        color="red"
-                        x={caret.x}
-                        y={caret.y}
-                    />
+                    caret && <UserCaret x={caret.x*width} y={caret.y*height} idle={false} color={"black"} />
+                }
+                {
+                    sockCtx.roomUsers.map((user)=>{
+                        if(!user || !user.textRoomData){ return null; }
+                        return (
+                            <UserCaret 
+                                x={user.textRoomData.caret.x*width}
+                                y={user.textRoomData.caret.y*height}
+                                idle={user.idle}
+                                avatarUrl={user.avatarUrl}
+                                name={user.fullName}
+                            />
+                        );
+                    })
                 }
 
             </div>
         </div>
-    )
-}
-
-interface UserCursorProps {
-    color: string;
-    x: number;
-    y: number;
-}
-const UserCursor = (props: UserCursorProps) => {
-    return (
-        <Box
-            pos="absolute"
-            top={props.y+2}
-            left={props.x}
-            w="2px"
-            h="1lh"
-            bg={props.color}
-            display="inline-block"
-            style={{
-                height: '100%',
-                lineHeight: "1",
-                fontFamily: 'monospace',
-                zIndex: 10
-            }}
-        />
     )
 }

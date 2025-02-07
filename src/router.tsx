@@ -16,12 +16,13 @@ const Router = () => {
 			<ModalsProvider modals={{board: CreateBoardModal}}>
 				<Navbar/>
 				<Routes>
-					<Route path='/' element={<CollaborativeTextArea maxLineLength={40} maxRows={20}/>}/>
+					<Route path='/' element={<Outlet/>}/>
 					<Route path='/login' element={<p><a href={getGithubLoginUrl()}>Login with GitHub</a></p>} />
 					<Route path='/auth' element={<Outlet />}>
 						<Route path='github' element={<GithubAuth />} />
 					</Route>
 					<Route element={<AuthWrapper />}>
+						<Route path='/text' element={<CollaborativeTextArea maxLineLength={40} maxRows={20} textBlockId="6f77a4b2-990e-46be-8810-3813aba7d1f6"/>} />
 						<Route path='/dashboard' element={<Dashboard />} />
 						<Route path='/boards/:boardId' element={<BoardElement/>}></Route>
 					</Route>

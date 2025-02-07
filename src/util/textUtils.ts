@@ -1,3 +1,6 @@
+export const IDLE_TIMEOUT_MS = 1000 * 60 * 3;
+export const MOUSE_UPDATE_THROTTLE_MS = 250;
+
 const CSS_TA_PROPERTIES = [
     'direction',  // RTL support
     'boxSizing',
@@ -94,4 +97,15 @@ export const getCaretCoordinates = (element:HTMLTextAreaElement, position:number
     document.body.removeChild(div);
     
     return coordinates;
+}
+
+export const interceptPaste = (e:ClipboardEvent) => {
+    e.preventDefault();
+    let pastedText:string|undefined = undefined;
+    if ((window as any).clipboardData && (window as any).clipboardData.getData) { // IE
+        pastedText = (window as any).clipboardData.getData('Text');
+    } else if (e.clipboardData && e.clipboardData.getData) {
+        pastedText = e.clipboardData.getData('text/plain');
+    }
+    return pastedText;
 }

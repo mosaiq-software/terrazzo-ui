@@ -2,8 +2,12 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTRZ } from '@trz/util/TRZ-context';
 import { ClientSE, ClientSEReplies, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
-import { Board} from '@mosaiq/terrazzo-common/types';
+import { Board, TextBlock, TextBlockEvent, TextBlockId} from '@mosaiq/terrazzo-common/types';
 import { NoteType, notify } from '@trz/util/notifications';
+import { resolve } from 'path';
+import { useIdle, useThrottledCallback } from '@mantine/hooks';
+import { IDLE_TIMEOUT_MS, MOUSE_UPDATE_THROTTLE_MS } from './textUtils';
+import { executeTextBlockEvent } from '@mosaiq/terrazzo-common/utils/textUtils';
 
 type SocketContextType = {
     sid?: SocketId;
@@ -18,7 +22,11 @@ type SocketContextType = {
     createBoard: (name: string, boardCode: string) => Promise<string | undefined>;
     addList: (boardID: string, listName: string) => Promise<boolean | undefined>;
     addCard: (listID: string, cardName: string) => Promise<boolean | undefined>;
-    collaborativeText?: string;
+    setCollaborativeText: (text: string|undefined) => void;
+    collaborativeText: string | undefined;
+    getTextBlockData: (textBlockId: TextBlockId) => Promise<TextBlock | undefined>;
+    updateTextBlock: (event: TextBlockEvent) => void;
+    updateCaret: (pos:Position) => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -26,13 +34,17 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
 const SocketProvider: React.FC<any> = ({ children }) => {
     const trz = useTRZ();
+    const idle = useIdle(IDLE_TIMEOUT_MS);
     const [socket, setSocketState] = useState<Socket | null>(null);
     const [room, setRoomState] = useState<RoomId>(null);
     const [roomUsers, setRoomUsersState] = useState<UserData[]>([]);
     const [connected, setConnected] = useState<boolean>(false);
     const [boardData, setBoardData] = useState<Board>();
-    const [collaborativeText, setCollaborativeText] = useState<string>("");
+    const [collaborativeText, setCollaborativeText] = useState<string | undefined>(undefined);
 
+    useEffect(() => {
+        setIdle(idle);
+    }, [idle]);
 
     useEffect(() => {
         if (!process.env.SOCKET_URL) {
@@ -156,6 +168,28 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             });
         });
 
+        sock.on(ServerSE.UPDATE_TEXT_BLOCK, (payload: ServerSEPayload[ServerSE.UPDATE_TEXT_BLOCK]) => {
+            if (!payload) {
+                return;
+            }
+            setCollaborativeText((prev)=>{
+                const updated = executeTextBlockEvent(prev ?? '', payload);
+                return updated;
+            });
+        });
+
+        sock.on(ServerSE.TEXT_CARET, (payload: ServerSEPayload[ServerSE.TEXT_CARET]) => {
+            setRoomUsersState(prev => prev.map(user => {
+                if(user.sid === payload.sid) {
+                    return {
+                        ...user,
+                        textRoomData: {caret: payload.caret}
+                    } as UserData;
+                }
+                return user;
+            }));
+        });
+
         
         return () => {
             setConnected(false);
@@ -175,7 +209,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             }
         });
     }
-
+    
     const moveMouse = (pos: Position) => {
         if (!socket || !room || !connected || roomUsers.length === 0) {return;}
         socket.volatile.emit(ClientSE.MOUSE_MOVE, pos, (response: ClientSEReplies[ClientSE.MOUSE_MOVE], error?: string) => {
@@ -184,6 +218,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             }
         });
     }
+    const throttledMoveMouse = useThrottledCallback(moveMouse, MOUSE_UPDATE_THROTTLE_MS);
 
     const setIdle = (idle: boolean) => {
         if (!socket) {return;}
@@ -247,6 +282,42 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }
 
+    const getTextBlockData = async (textBlockId:TextBlockId): Promise<TextBlock | undefined> => {
+        if(!socket) {return undefined;}
+        return new Promise((resolve, reject)=>{
+            socket.emit(ClientSE.GET_TEXT_BLOCK, textBlockId, (response: ClientSEReplies[ClientSE.GET_TEXT_BLOCK], error?:string)=>{
+                if(error) {
+                    reject(error);
+                } else{
+                    resolve(response);
+                }
+            });
+        });
+    };
+
+    const updateTextBlock = async (textBlockEvent:TextBlockEvent) => {
+        if(!socket) {return undefined;}
+        return new Promise((resolve, reject)=>{
+            socket.emit(ClientSE.UPDATE_TEXT_BLOCK, textBlockEvent, (response: ClientSEReplies[ClientSE.UPDATE_TEXT_BLOCK], error?:string)=>{
+                if (error){
+                    reject(error);
+                } else {
+                    resolve(undefined);
+                }
+            });
+        });
+    };
+
+    const updateCaret = (pos: Position): void => {
+        if (!socket || !room || !connected || roomUsers.length === 0) {return;}
+        socket.volatile.emit(ClientSE.TEXT_CARET, pos, (response: ClientSEReplies[ClientSE.TEXT_CARET], error?: string) => {
+            if(error) {
+                console.error("Error moving mouse:", error);
+            }
+        });
+    }
+    const throttledUpdateCaret = useThrottledCallback(updateCaret, MOUSE_UPDATE_THROTTLE_MS);
+
 
 
     return (
@@ -257,13 +328,17 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             setRoom,
             roomUsers,
             boardData,
-            moveMouse,
+            moveMouse: throttledMoveMouse,
             setIdle,
             getBoardData,
             createBoard,
             addList,
             addCard,
-            collaborativeText
+            setCollaborativeText,
+            collaborativeText,
+            getTextBlockData,
+            updateTextBlock,
+            updateCaret: throttledUpdateCaret
         }}>
             {children}
         </SocketContext.Provider>

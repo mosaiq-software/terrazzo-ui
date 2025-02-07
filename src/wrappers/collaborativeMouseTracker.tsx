@@ -8,23 +8,16 @@ interface CollaborativeMouseTrackerProps {
     boardId: string;
 }
 const CollaborativeMouseTracker = (props: CollaborativeMouseTrackerProps) => {
-    const IDLE_TIMEOUT_MS = 1000 * 60 * 3;
-    const MOUSE_UPDATE_THROTTLE_MS = 250;
     const { x, y } = useMouse();
-    const idle = useIdle(IDLE_TIMEOUT_MS);
     const sockCtx = useSocket();
 
-    const throttledMoveMouse = useThrottledCallback(sockCtx.moveMouse, MOUSE_UPDATE_THROTTLE_MS);
     useEffect(() => {
-        throttledMoveMouse({ x, y });
+        sockCtx.moveMouse({ x, y });
     }, [x, y]);
-    useEffect(() => {
-        sockCtx.setIdle(idle);
-    }, [idle]);
 
     useEffect(() => {
         if (!sockCtx.connected) { return; }
-        sockCtx.setRoom(props.boardId);
+        sockCtx.setRoom("mouse-"+props.boardId);
         return () => {
             sockCtx.setRoom(null);
         }
