@@ -8,6 +8,8 @@ export enum NoteType {
     CONNECTION_ESTABLISHED = 'CONNECTION_ESTABLISHED',
     GITHUB_AUTH_ERROR = 'GITHUB_AUTH_ERROR',
     GITHUB_DATA_ERROR = 'GITHUB_DATA_ERROR',
+    CLIPBOARD_COPY_ERROR = 'CLIPBOARD_COPY_ERROR',
+    CLIPBOARD_PASTE_ERROR = 'CLIPBOARD_PASTE_ERROR'
 }
 
 const AUTO_CLOSE_TIMEOUT = 5000;
@@ -54,6 +56,16 @@ const noteMap = {
         message: 'An error occurred while fetching data from GitHub',
         color: NoteColor.ERROR,
     },
+    [NoteType.CLIPBOARD_COPY_ERROR]: {
+        title: 'Error copying text',
+        message: 'Make sure the browser has this permission enabled',
+        color: NoteColor.ERROR
+    },
+    [NoteType.CLIPBOARD_PASTE_ERROR]: {
+        title: 'Error pasting text',
+        message: 'Make sure the browser has this permission enabled',
+        color: NoteColor.ERROR
+    }
 }
 
 export const notify = (note: NoteType) => {

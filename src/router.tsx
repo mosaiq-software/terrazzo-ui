@@ -13,7 +13,7 @@ const Router = () => {
 		<BrowserRouter>
 		<Navbar/>
 			<Routes>
-				<Route path='/' element={<CollaborativeTextArea />} />
+				<Route path='/' element={<CollaborativeTextArea maxLineLength={50} fontSize={18}/>} />
 				<Route path='/login' element={<p><a href={getGithubLoginUrl()}>Login with GitHub</a></p>} />
 				<Route path='/auth' element={<Outlet />}>
 					<Route path='github' element={<GithubAuth />} />
