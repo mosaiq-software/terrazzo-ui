@@ -32,7 +32,7 @@ const CollaborativeMouseTracker = (props: CollaborativeMouseTrackerProps) => {
 
     return (
         sockCtx.roomUsers.map((user) => {
-            if (user.sid === sockCtx.sid) { return null; }
+            if (user.sid === sockCtx.sid || !user.mouseRoomData) { return null; }
             return (
                 <UserCursor
                     key={user.sid}
