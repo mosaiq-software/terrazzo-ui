@@ -16,7 +16,7 @@ const Router = () => {
 			<ModalsProvider modals={{board: CreateBoardModal}}>
 				<Navbar/>
 				<Routes>
-					<Route path='/' element={<Outlet />} />
+					<Route path='/' element={<CollaborativeTextArea maxLineLength={40} maxRows={20}/>}/>
 					<Route path='/login' element={<p><a href={getGithubLoginUrl()}>Login with GitHub</a></p>} />
 					<Route path='/auth' element={<Outlet />}>
 						<Route path='github' element={<GithubAuth />} />

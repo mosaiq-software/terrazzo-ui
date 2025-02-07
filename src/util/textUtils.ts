@@ -1,263 +1,97 @@
-import { NoteType, notify } from "./notifications";
+const CSS_TA_PROPERTIES = [
+    'direction',  // RTL support
+    'boxSizing',
+    'width',  // on Chrome and IE, exclude the scrollbar, so the mirror div wraps exactly as the textarea does
+    'height',
+    'overflowX',
+    'overflowY',  // copy the scrollbar for IE
+    
+    'borderTopWidth',
+    'borderRightWidth',
+    'borderBottomWidth',
+    'borderLeftWidth',
+    'borderStyle',
+    
+    'paddingTop',
+    'paddingRight',
+    'paddingBottom',
+    'paddingLeft',
+    
+    // https://developer.mozilla.org/en-US/docs/Web/CSS/font
+    'fontStyle',
+    'fontVariant',
+    'fontWeight',
+    'fontStretch',
+    'fontSize',
+    'fontSizeAdjust',
+    'lineHeight',
+    'fontFamily',
+    
+    'textAlign',
+    'textTransform',
+    'textIndent',
+    'textDecoration',  // might not make a difference, but better be safe
+    
+    'letterSpacing',
+    'wordSpacing',
+    
+    'tabSize',
+    'MozTabSize'
+    
+    ];
 
-export interface Line {
-    length:number;
-    chars: {char:string, pos:number}[]
-    hardWrap:boolean;
-    eol: number;
-}
-export interface CursorPos {
-    true: number;
-    line:number;
-    column:number;
-}
-
-export const ALLOWED_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!@#$%^&*()`~-_=+{}[];:'\",.<>/?\\| \n";
-export const TAB_SPACES = "    ";
-export const MULTI_CLICK_SPACING_THRESHOLD_MS = 500;
-
-/*
-    Break down a full raw text block into renderable lines
-*/
-export const getLines = (text:string, maxLineLength:number):Line[] => {    
-    // break it apart by hard linebreaks
-    const hardLines = text.split('\n');
-    const lines:Line[] = [];
-    let charNum = 0;
-
-    for (let i = 0; i < hardLines.length; i++) {
-        lines.push({
-            length: 0,
-            chars: [],
-            hardWrap:false,
-            eol: 1,
-        });
-
-        // split tokens by whitespace. Using regex not space char b/c we want to keep " " space strings as elements of the array
-        const tokens = hardLines[i].split(/(\s)/);
-        for (let i = 0; i < tokens.length; i++) {
-            if(tokens[i].length === 0){
-                continue;
-            }
-            let line = lines[lines.length-1];
-            const words = splitLongWord(tokens[i], maxLineLength);
-            
-            // now, need to take each word and add it to the line. If the word can fit into the line, add it, else start a new line
-            for (let w = 0; w < words.length; w++) {
-                line = lines[lines.length-1];
-                const word = words[w];
-                const chars = [...word].map((c)=>{
-                    charNum++;
-                    return { char: c, pos: charNum-1 };
-                });
-
-                if (line.length + word.length <= maxLineLength) {
-                    line.length += word.length;
-                    line.chars.push(...chars);
-                    line.eol = line.chars[line.chars.length-1].pos+1;
-                } else {
-                    // if its a space at the start of a new line, ignore it. We dont want spaces starting lines
-                    if( word === " "){
-                        continue;
-                    }
-                    lines.push({
-                        length: word.length,
-                        chars: chars,
-                        hardWrap: false,
-                        eol: chars[chars.length-1].pos+1
-                    });
-                }
-            }
-        }
-
-        // set the last line to be hard wrapped since it was originally broken by a \n
-        lines[lines.length-1].hardWrap = true;
-        lines[lines.length-1].eol = charNum;
-        charNum++; // account for \n
+export const getCaretCoordinates = (element:HTMLTextAreaElement, position:number) => {
+    const isBrowser = (typeof window !== 'undefined');
+    const isFirefox = (isBrowser && (window as any).mozInnerScreenX != null);
+    if(!isBrowser) {
+        throw new Error('Not a browser!');
     }
-    return lines;
-}
+    
+    // mirrored div
+    const div = document.createElement('div');
+    div.id = 'input-textarea-caret-position-mirror-div';
+    document.body.appendChild(div);
+    
+    const style = div.style;
+    const computed = (window as any).getComputedStyle? getComputedStyle(element) : (element as any).currentStyle;  // currentStyle for IE < 9
+    
+    // default textarea styles
+    style.whiteSpace = 'pre-wrap';
+    if (element.nodeName !== 'INPUT'){
+        style.wordWrap = 'break-word';  // only for textarea-s
+    }
 
-/*
-    Split a long word into chunks
-    This is for wrapping words longer than the line max length
-*/
-export const splitLongWord = (word: string, chunkSizes:number) => {
-    const chunks: string[] = [];
-    while (word.length) {
-        const chunk = word.slice(0, chunkSizes);
-        word = word.substring(chunkSizes);
-        chunks.push(chunk);
+    // position off-screen
+    style.position = 'absolute';  // required to return coordinates properly
+    style.visibility = 'hidden';  // not 'display: none' because we want rendering
+    
+    // transfer the element's properties to the div
+    CSS_TA_PROPERTIES.forEach(function (prop) {
+        style[prop] = computed[prop];
+    });
+    
+    if (isFirefox && element.scrollHeight > parseInt(computed.height)) {
+        // Firefox lies about the overflow property for textareas: https://bugzilla.mozilla.org/show_bug.cgi?id=984275
+        style.overflowY = 'scroll';
+    } else {
+        style.overflow = 'hidden';  // for Chrome to not render a scrollbar; IE keeps overflowY = 'scroll'
     }
-    return chunks;
-}
-
-/*
-    Check if a point lies between 2 numbers
-*/
-export const pointIsBetween = (point:number, start?:number, end?:number, ) => {
-    if (end === undefined || start === undefined){
-        return false;
-    }
-    if (end > start) {
-        return start <= point && point < end;
-    }
-    return end <= point && point < start;
-}
-
-/*
-    ensure that every character in the string is a valid input character
-*/
-export const isValidInputString = (input: string) => {
-    return true; // need better way to validate. Should clean the string too. Like making emojis into their :+1: form and curly quotes to straight quotes
-    for (let i = 0; i < input.length; i++) {
-        if (ALLOWED_CHARS.indexOf(input[i]) === -1) {
-            return false;
-        }
-    }
-    return true;
-}
-
-
-export const printLines = (lines:Line[],text:string) => {
-    let a = "";
-    for (let line of lines) {
-        for (let c of line.chars) {
-            a += ` ${c.char.replace("\n","/n").replace(" ","_")}${c.pos} `;
-        }
-        a += ` =${line.eol}\n`
-    }
-    console.log(text.replace("\n","/n").replace(" ","_"))
-    console.log(a);
-}
-
-/*
-    Get the true position of the cursor in the text based on line/col
-*/
-export const getCursorTruePosition = (L:Line[], cursor?: CursorPos):CursorPos|undefined => {
-    if (!cursor || cursor.line < 0 || cursor.line >= L.length || cursor.column < 0) {
-        return undefined;
-    }
-    if(cursor.column >= L[cursor.line].chars.length){
-        return {
-            true: L[cursor.line].eol,
-            line: cursor.line,
-            column: cursor.column,
-        };
-    }
-    return {
-        true: L[cursor.line].chars[cursor.column].pos,
-        line: cursor.line,
-        column: cursor.column,
+    
+    div.textContent = element.value.substring(0, position);
+    const span = document.createElement('span');
+    // Wrapping must be replicated *exactly*, including when a long word gets
+    // onto the next line, with whitespace at the end of the line before (#7).
+    // The  *only* reliable way to do that is to copy the *entire* rest of the
+    // textarea's content into the <span> created at the caret position.
+    span.textContent = element.value.substring(position) || '.';  // || because a completely empty faux span doesn't render at all
+    div.appendChild(span);
+    
+    const coordinates = {
+        top: span.offsetTop + parseInt(computed['borderTopWidth']),
+        left: span.offsetLeft + parseInt(computed['borderLeftWidth'])
     };
-}
-
-/*
-    Get the line/col of the cursor based on the true position of it in the text
-*/
-export const getCursorPseudoPosition = (L:Line[], truePos:number): CursorPos | undefined => {
-    for (let l = 0; l < L.length; l++) {
-        for (let c = 0; c < L[l].chars.length; c++) {
-            if (L[l].chars[c].pos === truePos) {
-                return {
-                    true: truePos,
-                    line: l,
-                    column: c
-                }
-            }
-        }
-        if (L[l].eol === truePos) {
-            return {
-                true: truePos,
-                line: l,
-                column: L[l].length
-            }
-        }
-    }
-    return undefined;
-}
-
-/*
-    Get the position of the cursor shifted up/down a line
-*/
-export const getVerticalLineShift = (L:Line[], direction:1|-1, cursor:CursorPos, targetCol?:number):CursorPos => {
-    const targetLine = cursor.line + direction;
-    if (targetLine < 0) {
-        return {true:0, line:0, column:0};
-    }
-    if (targetLine >= L.length) {
-        return {true: L[L.length-1].eol , line: L.length-1, column: L[L.length-1].length};
-    }
-    const line = L[targetLine];
-    const c = {
-        true: 0,
-        line: targetLine,
-        column: clamp((targetCol ?? cursor.column), 0, line.length)
-    };
-    return getCursorTruePosition(L, c) ?? c;
-}
-
-/*
-    Given the index of a character, find the word (space delimited) its in
-*/
-export const getWordBounds = (truePos:number, text:string): {start:number, end:number} => {
-    const endString = text.substring(truePos);
-    let end = Math.min(negOneTo(endString.indexOf(" ")), negOneTo(endString.indexOf("\n")));
-    end = end >= 10E10 ? text.length : end + truePos;
-    const startString = text.substring(0,end);
-    let start = Math.max((startString.lastIndexOf(" ")), startString.lastIndexOf("\n"));
-    start = start === -1 ? 0 : start+1;
-    return {start, end};
-}
-
-export const diff = (a:number, b:number) => {
-    return Math.max(a,b) - Math.min(a,b);
-}
-
-export const clamp = (x:number, min:number, max:number) => {
-    return Math.max(min, Math.min(x, max));
-}
-
-export const negOneTo = (value:number, to?:number) => {
-    if(value === -1)
-        return to ?? 10E10;
-    return value;
-}
-
-export const minCursor = (ca:CursorPos, cb:CursorPos):CursorPos => {
-    if (ca.true <= cb.true){
-        return ca;
-    }
-    return cb;
-}
-
-export const maxCursor = (ca:CursorPos, cb:CursorPos):CursorPos => {
-    if (ca.true >= cb.true){
-        return ca;
-    }
-    return cb;
-}
-
-export const copyTextToClipboard = async (text:string) => {
-    try {
-        await navigator.clipboard.writeText(text);
-    } catch (error:any) {
-        console.error(error);
-        notify(NoteType.CLIPBOARD_COPY_ERROR);
-    }
-}
-
-export const pasteTextFromClipboard = async ():Promise<string|undefined> => {
-    try {
-        const text = await navigator.clipboard.readText();
-        return text;
-    } catch (error:any) {
-        console.error(error);
-        notify(NoteType.CLIPBOARD_COPY_ERROR);
-        return undefined;
-    }
-}
-
-export const getTextSelection = (text:string, from:CursorPos, to:CursorPos):string => {
-    return text.substring(minCursor(from,to).true, maxCursor(from,to).true);
+    
+    document.body.removeChild(div);
+    
+    return coordinates;
 }
