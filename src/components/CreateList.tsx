@@ -1,10 +1,12 @@
 //Utility
-import React from "react";
+import React, {useState} from "react";
 
 //Components
 import {Button, CloseButton, Paper, TextInput, Flex, FocusTrap} from "@mantine/core";
 import {useClickOutside} from "@mantine/hooks";
-import {useState} from "react";
+import {useSocket} from "@trz/util/socket-context";
+import {NoteType, notify} from "@trz/util/notifications";
+
 
 const CreateList = (): React.JSX.Element => {
 
@@ -12,9 +14,11 @@ const CreateList = (): React.JSX.Element => {
     const [error, setError] = useState("");
     const [title, setTitle] = useState("");
     const ref = useClickOutside(() => setVisible(false));
+    const sockCtx = useSocket();
 
     function onSubmit(){
-        //Add logic for websocket later
+        setError("")
+        setTitle("");
         if(title.length < 1){
             setError("Enter a Title")
             return;
@@ -24,9 +28,15 @@ const CreateList = (): React.JSX.Element => {
             setError("Max 50 characters")
             return;
         }
-        console.log(title);
-        setError("")
-        setTitle("");
+
+        sockCtx.addList(sockCtx.boardData!.id, title).then((success) => {
+            if(!success){
+                notify(NoteType.LIST_CREATION_ERROR);
+                return;
+            }
+        }).catch((err) => {
+            console.error(err);
+        });
         setVisible(false);
     }
 

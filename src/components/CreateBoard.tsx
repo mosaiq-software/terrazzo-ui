@@ -5,6 +5,9 @@ import React, {useState} from "react";
 import {TextInput, Container, Flex, Button} from "@mantine/core";
 import {getHotkeyHandler} from "@mantine/hooks";
 import {ContextModalProps} from "@mantine/modals";
+import {useSocket} from "@trz/util/socket-context";
+import {useNavigate} from "react-router-dom";
+import {NoteType, notify} from "@trz/util/notifications";
 
 const CreateBoard = ({
                          context,
@@ -14,40 +17,43 @@ const CreateBoard = ({
 
     const [boardName, setBoardName] = React.useState("");
     const [boardAbbreviation, setBoardAbbreviation] = React.useState("");
-    const [errorBoardName, setErrorBoardName] = useState("");
-    const [errorBoardAbv, setErrorBoardAbv] = useState("");
+    const [errorName, setErrorName] = useState("");
+    const [errorAbv, setErrorAbv] = useState("");
+    const sockCtx = useSocket();
+    const navigate = useNavigate();
 
     function onSubmit() {
-        //Add logic for websocket later
-        setErrorBoardName("");
-        setErrorBoardAbv("");
+        setErrorAbv("");
+        setErrorName("");
 
         if(boardName.length < 1){
-            setErrorBoardName("Enter a Title");
+            setErrorName("Enter a Title");
             if(boardAbbreviation.length < 1){
-                setErrorBoardAbv("Enter an abbreviation");
+                setErrorName("Enter an abbreviation");
             }
             return;
         }
         if(boardName.length > 50){
-            setErrorBoardName("Max 50 characters");
+            setErrorName("Max 50 characters");
             return;
         }
         if(boardAbbreviation.length < 1){
-            setErrorBoardAbv("Enter a Title");
+            setErrorAbv("Enter a Title");
             return;
         }
         if(boardAbbreviation.length > 4){
-            setErrorBoardAbv("Max 3 characters");
+            setErrorAbv("Max 3 characters");
             return;
         }
-
-        setBoardName("");
-        setBoardAbbreviation("");
-        console.log('Board Created');
-        console.log(boardName);
-        console.log(boardAbbreviation);
-        context.closeModal(id);
+        sockCtx.createBoard(boardName, boardAbbreviation).then((board) => {
+            console.log(board);
+            navigate(`/boards/${board}`);
+            context.closeModal(id);
+        }).catch((err) => {
+            console.error(err);
+            navigate(`/dashboard`);
+            notify(NoteType.BOARD_CREATION_ERROR);
+        });
     }
 
     return (
@@ -66,16 +72,16 @@ const CreateBoard = ({
                     value={boardName}
                     onChange={(event) => setBoardName(event.currentTarget.value)}
                     data-autofocus
-                    error={errorBoardName}
+                    error={errorName}
                 />
                 <TextInput
                     label="Board Abbreviation"
                     placeholder="Board Abbreviation"
                     withAsterisk
+                    error = {errorAbv}
                     w={250}
                     value={boardAbbreviation}
                     onChange={(event) => setBoardAbbreviation(event.currentTarget.value)}
-                    error={errorBoardAbv}
                 />
             </Flex>
 
