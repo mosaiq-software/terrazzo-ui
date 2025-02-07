@@ -36,7 +36,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element => {
 	const members = ["Member 1", "Member 2", "Member 3"];
 	const labels = ["label 1", "label 2", "label 3"];
 	const cardNumber = "abc123";
-	const [testMarkdown, setTestMarkdown] = React.useState("## Test Markdown");
+	const [testMarkdown, setTestMarkdown] = React.useState("## Test Markdown rendering");
 	const description = "";
 	const activity = "";
 

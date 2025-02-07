@@ -1,10 +1,64 @@
 import React from 'react';
-import { Button, Container, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder } from '@mantine/core';
+import { Box, Button, Container, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder,  } from '@mantine/core';
+import { CodeHighlight } from '@mantine/code-highlight';
 
 interface MarkdownTextareaProps {
     value: string;
     onChange(value: string): void;
 }
+
+
+const exampleCode = `
+// VisuallyHidden component source code
+
+import {
+  Box,
+  BoxProps,
+  StylesApiProps,
+  factory,
+  ElementProps,
+  useProps,
+  useStyles,
+  Factory,
+} from '../../core';
+import classes from './VisuallyHidden.module.css';
+
+export type VisuallyHiddenStylesNames = 'root';
+
+export interface VisuallyHiddenProps
+  extends BoxProps,
+    StylesApiProps<VisuallyHiddenFactory>,
+    ElementProps<'div'> {}
+
+export type VisuallyHiddenFactory = Factory<{
+  props: VisuallyHiddenProps;
+  ref: HTMLDivElement;
+  stylesNames: VisuallyHiddenStylesNames;
+}>;
+
+const defaultProps: Partial<VisuallyHiddenProps> = {};
+
+export const VisuallyHidden = factory<VisuallyHiddenFactory>((_props, ref) => {
+  const props = useProps('VisuallyHidden', defaultProps, _props);
+  const { classNames, className, style, styles, unstyled, vars, ...others } = props;
+
+  const getStyles = useStyles<VisuallyHiddenFactory>({
+    name: 'VisuallyHidden',
+    classes,
+    props,
+    className,
+    style,
+    classNames,
+    styles,
+    unstyled,
+  });
+
+  return <Box component="span" ref={ref} {...getStyles('root')} {...others} />;
+});
+
+VisuallyHidden.classes = classes;
+VisuallyHidden.displayName = '@mantine/core/VisuallyHidden';
+`;
 
 export const MarkdownTextarea = (props:MarkdownTextareaProps) => {
     const [editing, setEditing] = React.useState(false);
@@ -76,6 +130,25 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
             case LineType.LineBreak:
                 elements.push(<br key={i} />);
                 break;
+            case LineType.CodeBlock:
+                elements.push(
+                        <Box>
+                            <CodeHighlight
+                              code={exampleCode}
+                              key={i}
+                              language='tsx'
+                              copyLabel="Copy button code"
+                              copiedLabel="Copied!"
+                            //   mt="md"
+                              />
+
+                        </Box>
+
+
+
+
+                );
+                break;
             case LineType.Paragraph:
             default:
                 elements.push(
@@ -90,9 +163,25 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
     return elements;
 }
 
+
+// add code block style
+//  1. import from mantine
+//  2. add to switch statement in renderLineContentStyle with mantine code block component
+//  3. add to delimiter array
+//
+//
+//  detect ``` count how many lines till ```
+//
+//
+//
+//
+// //
+
+
 const renderLineContent = (content: LineContent[]): JSX.Element[] => {
     const elements: JSX.Element[] = [];
     for (let i = 0; i < content.length; i++) {
+        console.log(content[i]);
         const item = content[i];
         if (item.text === '') {
             continue;
@@ -104,9 +193,9 @@ const renderLineContent = (content: LineContent[]): JSX.Element[] => {
             case LineContentStyle.Italic:
                 elements.push(<Text span inherit key={i} fs={'italic'}>{item.text}</Text>);
                 break;
-            case LineContentStyle.InlineCode:
-                elements.push(<Text span inherit key={i} style={{ fontFamily: 'monospace', backgroundColor: '#f5f5f5', padding: '2px 4px', borderRadius: '4px' }}>{item.text}</Text>);
-                break;
+            // case LineContentStyle.InlineCode:
+            //     elements.push(<Text span inherit key={i} style={{ fontFamily: 'monospace', backgroundColor: '#f5f5f5', padding: '2px 4px', borderRadius: '4px' }}>{item.text}</Text>);
+            //     break;
             case LineContentStyle.Subscript:
                 elements.push(<Text span inherit key={i} style={{ verticalAlign: 'sub' }}>{item.text}</Text>);
                 break;
@@ -151,8 +240,10 @@ const extractLineData = (line: string): Line => {
         return lineObject;
     } else if (line.trim() === '---') {
         lineObject.type = LineType.HorizontalRule;
+        console.log(lineObject)
         return lineObject;
     }
+
 
     // TEXT BLOCK FORMATTING
     let lineText = line;
@@ -166,6 +257,26 @@ const extractLineData = (line: string): Line => {
         lineObject.type = LineType.ListItem;
         const listContent = line.replace(/^- */, '');
         lineText = listContent;
+    } else if (line.startsWith('```')) {
+        lineObject.type = LineType.CodeBlock;
+        const codeContent = line.replace(/^``` */, '');
+        // need to determine how many lines the code block is and add that many lines to the code block
+            // for loop through lines till you find another ``` and add those lines to the code block
+            // counter for lines staring at 0, when you find another ``` break and add those lines to the code block
+        // need to determine language of code block, after first ``` user needs to type language i.e ```js, ```python, ```tsx
+        // below is the format you will need to to set the line text
+//  if (lineText.length < 3) {
+//     lineObject.content.push({
+//         text: lineText,
+//         style: LineContentStyle.Text,
+//     });
+//     return lineObject;
+// }
+
+
+        // this just works on one line right now:
+        lineText = codeContent;
+        // return lineObject;
     }
 
     // INLINE FORMATTING
