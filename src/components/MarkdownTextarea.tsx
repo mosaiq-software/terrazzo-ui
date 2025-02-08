@@ -8,57 +8,7 @@ interface MarkdownTextareaProps {
 }
 
 
-const exampleCode = `
-// VisuallyHidden component source code
 
-import {
-  Box,
-  BoxProps,
-  StylesApiProps,
-  factory,
-  ElementProps,
-  useProps,
-  useStyles,
-  Factory,
-} from '../../core';
-import classes from './VisuallyHidden.module.css';
-
-export type VisuallyHiddenStylesNames = 'root';
-
-export interface VisuallyHiddenProps
-  extends BoxProps,
-    StylesApiProps<VisuallyHiddenFactory>,
-    ElementProps<'div'> {}
-
-export type VisuallyHiddenFactory = Factory<{
-  props: VisuallyHiddenProps;
-  ref: HTMLDivElement;
-  stylesNames: VisuallyHiddenStylesNames;
-}>;
-
-const defaultProps: Partial<VisuallyHiddenProps> = {};
-
-export const VisuallyHidden = factory<VisuallyHiddenFactory>((_props, ref) => {
-  const props = useProps('VisuallyHidden', defaultProps, _props);
-  const { classNames, className, style, styles, unstyled, vars, ...others } = props;
-
-  const getStyles = useStyles<VisuallyHiddenFactory>({
-    name: 'VisuallyHidden',
-    classes,
-    props,
-    className,
-    style,
-    classNames,
-    styles,
-    unstyled,
-  });
-
-  return <Box component="span" ref={ref} {...getStyles('root')} {...others} />;
-});
-
-VisuallyHidden.classes = classes;
-VisuallyHidden.displayName = '@mantine/core/VisuallyHidden';
-`;
 
 export const MarkdownTextarea = (props:MarkdownTextareaProps) => {
     const [editing, setEditing] = React.useState(false);
@@ -106,8 +56,58 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
     });
 
     const elements: JSX.Element[] = [];
+
+    // for multiline code blocks
+    let insideCodeBlock = false;
+    let codeBlockLines: string[] = [];
+    let codeBlockLanguage = 'tsx';
+
+
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
+
+        if (line.type === LineType.CodeBlockToggle) {
+            if (insideCodeBlock) {
+                // Closing a code block
+                elements.push(
+                    <Box key={`code-${i}`}>
+                        <CodeHighlight
+                            code={codeBlockLines.join('\n')}
+                            language={codeBlockLanguage}
+                            copyLabel="Copy"
+                            copiedLabel="Copied!"
+                        />
+                    </Box>
+                );
+                insideCodeBlock = false;
+                codeBlockLines = [];
+            } else {
+                // Opening a code block
+                insideCodeBlock = true;
+                codeBlockLanguage = line.language || 'tsx';
+            }
+            continue;
+        }
+
+        //  Edge case if a single line of code is marked as multiline code by user -__-
+        if (line.type === LineType.CodeBlockContent) {
+
+            elements.push(
+                <CodeHighlight
+                    key={`inline-code-${i}`}
+                    code={line.content[0].text}
+                    language={line.language || 'tsx'}
+                    copyLabel="Copy"
+                    copiedLabel="Copied!"
+                />
+            );
+            continue;
+        }
+
+        if (insideCodeBlock) {
+            codeBlockLines.push(line.line);
+            continue;
+        }
         // LineType.X BASED ON INITIAL CHARACTERS IN LINE I.E: #, -, ---, "", ...
         switch (line.type) {
             case LineType.Heading:
@@ -130,25 +130,6 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
             case LineType.LineBreak:
                 elements.push(<br key={i} />);
                 break;
-            case LineType.CodeBlock:
-                elements.push(
-                        <Box>
-                            <CodeHighlight
-                              code={exampleCode}
-                              key={i}
-                              language='tsx'
-                              copyLabel="Copy button code"
-                              copiedLabel="Copied!"
-                            //   mt="md"
-                              />
-
-                        </Box>
-
-
-
-
-                );
-                break;
             case LineType.Paragraph:
             default:
                 elements.push(
@@ -162,20 +143,6 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
 
     return elements;
 }
-
-
-// add code block style
-//  1. import from mantine
-//  2. add to switch statement in renderLineContentStyle with mantine code block component
-//  3. add to delimiter array
-//
-//
-//  detect ``` count how many lines till ```
-//
-//
-//
-//
-// //
 
 
 const renderLineContent = (content: LineContent[]): JSX.Element[] => {
@@ -193,9 +160,9 @@ const renderLineContent = (content: LineContent[]): JSX.Element[] => {
             case LineContentStyle.Italic:
                 elements.push(<Text span inherit key={i} fs={'italic'}>{item.text}</Text>);
                 break;
-            // case LineContentStyle.InlineCode:
-            //     elements.push(<Text span inherit key={i} style={{ fontFamily: 'monospace', backgroundColor: '#f5f5f5', padding: '2px 4px', borderRadius: '4px' }}>{item.text}</Text>);
-            //     break;
+            case LineContentStyle.InlineCode:
+                elements.push(<Text span inherit key={i} style={{ fontFamily: 'monospace', backgroundColor: '#f5f5f5', padding: '2px 4px', borderRadius: '4px' }}>{item.text}</Text>);
+                break;
             case LineContentStyle.Subscript:
                 elements.push(<Text span inherit key={i} style={{ verticalAlign: 'sub' }}>{item.text}</Text>);
                 break;
@@ -217,6 +184,8 @@ const renderLineContent = (content: LineContent[]): JSX.Element[] => {
 }
 
 const INDENT_SPACES = '  ';
+
+
 const extractLineData = (line: string): Line => {
     const lineObject: Line = {
         line,
@@ -234,7 +203,32 @@ const extractLineData = (line: string): Line => {
     }
     line = line.trim();
 
-    //  FULL BLOCK FORMATTING
+
+    // Edge case if a single line of code is marked as multiline code by user
+    if (line.startsWith('```') && line.endsWith('```') && line.length > 3) {
+        const codeContent = line.slice(3, -3).trim();
+        return {
+            line,
+            type: LineType.CodeBlockContent,
+            indentLevel: 0,
+            language: 'tsx',
+            content: [{ text: codeContent, style: LineContentStyle.InlineCode }],
+        };
+    }
+
+    // Multiline code blocks
+    if (line.startsWith('```')) {
+        const codeLanguage = line.replace(/^``` */, ''); // Extract language (if any)
+        return {
+            line,
+            type: LineType.CodeBlockToggle, // Special type for toggling code blocks
+            indentLevel: 0,
+            language: codeLanguage,
+            content: [],
+        };
+    }
+
+    //  FULL LINE BLOCK FORMATTING
     if(line === '') {
         lineObject.type = LineType.LineBreak;
         return lineObject;
@@ -257,26 +251,6 @@ const extractLineData = (line: string): Line => {
         lineObject.type = LineType.ListItem;
         const listContent = line.replace(/^- */, '');
         lineText = listContent;
-    } else if (line.startsWith('```')) {
-        lineObject.type = LineType.CodeBlock;
-        const codeContent = line.replace(/^``` */, '');
-        // need to determine how many lines the code block is and add that many lines to the code block
-            // for loop through lines till you find another ``` and add those lines to the code block
-            // counter for lines staring at 0, when you find another ``` break and add those lines to the code block
-        // need to determine language of code block, after first ``` user needs to type language i.e ```js, ```python, ```tsx
-        // below is the format you will need to to set the line text
-//  if (lineText.length < 3) {
-//     lineObject.content.push({
-//         text: lineText,
-//         style: LineContentStyle.Text,
-//     });
-//     return lineObject;
-// }
-
-
-        // this just works on one line right now:
-        lineText = codeContent;
-        // return lineObject;
     }
 
     // INLINE FORMATTING
@@ -332,6 +306,7 @@ const extractLineData = (line: string): Line => {
     ] as [string, LineContentStyle][];
     let contents = rootContents;
     for (let i = 0; i < delimiters.length; i++) {
+        //              TEXT CONTENT, SPLIT BY DELIMITER, STYLE TO BE APPLIED
         splitByDelimiter(contents, delimiters[i][0], delimiters[i][1]);
     }
     lineObject.content = contents;
@@ -349,6 +324,10 @@ enum LineType {
     HorizontalRule = 'horizontalRule',
     ListItem = 'listItem',
     LineBreak = 'lineBreak',
+    CodeBlockToggle = 'codeBlockToggle',
+    CodeBlockStart = 'codeBlockStart',
+    CodeBlockEnd = 'codeBlockEnd',
+    CodeBlockContent = 'codeBlockContent',
 }
 
 enum LineContentStyle {
@@ -368,6 +347,7 @@ interface Line {
     indentLevel: number;
     content: LineContent[];
     headingLevel?: number;
+    language?: string;
 }
 
 interface LineContent {
