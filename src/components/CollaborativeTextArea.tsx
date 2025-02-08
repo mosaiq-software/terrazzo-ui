@@ -110,6 +110,10 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
     
     const onKeypress = (e:KeyboardEvent) => {
         if (e.ctrlKey || e.metaKey || e.altKey) {
+            if (e.key === 's'){
+                // catch save event, cant break some habits..
+                e.preventDefault();
+            }
             return;
         }
 
