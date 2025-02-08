@@ -1,7 +1,7 @@
 import { TextBlockEvent } from '@mosaiq/terrazzo-common/types';
 import { useState } from 'react';
 
-function useBuffer<T>() {
+export function useBuffer<T>() {
     const [buffer, setBuffer] = useState<T[]>([]);
 
     const drain = (): T[] => {

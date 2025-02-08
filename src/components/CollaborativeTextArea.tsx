@@ -1,4 +1,4 @@
-import React, {KeyboardEventHandler, useCallback, useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {useSocket} from "@trz/util/socket-context";
 import { useClickOutside, useElementSize, useClipboard } from '@mantine/hooks';
 import { getCaretCoordinates, interceptPaste, TAB_CHAR } from "@trz/util/textUtils";
@@ -6,6 +6,7 @@ import { TextBlockEvent, TextBlockId } from "@mosaiq/terrazzo-common/types";
 import {UserCaret} from '@trz/components/UserCaret';
 import { executeTextBlockEvent } from "@mosaiq/terrazzo-common/utils/textUtils";
 import { Position } from "@mosaiq/terrazzo-common/socketTypes";
+import { useBuffer } from '@trz/util/useBuffer';
 
 interface CollaborativeTextAreaProps {
     maxLineLength: number;
@@ -21,6 +22,7 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
     const [textCaret, setTextCaret] = useState<Position | undefined>(undefined);
     const { ref, width, height } = useElementSize();
     const clipboard = useClipboard();
+    const {drain, push} = useBuffer();
 
     useEffect(() => {
 
@@ -74,7 +76,11 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
         sockCtx.updateCaret(undefined, undefined);
     }
 
-    const emitTextEvent = (event: TextBlockEvent) => {
+    const enqueueTextEvent = (event: TextBlockEvent) => {
+        
+    }
+
+    const emitTextEvents = () => {
         const {updated, selectionStart} = executeTextBlockEvent(sockCtx.collaborativeText ?? '', event, sockCtx.collabCaretSelStart);
         sockCtx.setCollaborativeText(updated);
         sockCtx.updateTextBlock(event);
@@ -91,7 +97,7 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
         };
         const text = sockCtx.collaborativeText.substring(Math.min(tbEvent.start, tbEvent.end), Math.max(tbEvent.start, tbEvent.end));
         clipboard.copy(text);
-        emitTextEvent(tbEvent);
+        enqueueTextEvent(tbEvent);
     }
 
     const onPaste = (e: ClipboardEvent) => {
@@ -105,7 +111,7 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
             end: textRef.current.selectionEnd,
             inserted: clip,
         };
-        emitTextEvent(tbEvent);
+        enqueueTextEvent(tbEvent);
     }
     
     const onKeypress = (e:KeyboardEvent) => {
@@ -129,30 +135,30 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
                 e.preventDefault();
                 if (tbEvent.start === tbEvent.end)
                     tbEvent.end++;
-                emitTextEvent(tbEvent);
+                enqueueTextEvent(tbEvent);
                 return;
             case 'Backspace':
                 e.preventDefault();
                 if (tbEvent.start === tbEvent.end)
                     tbEvent.start--;
-                emitTextEvent(tbEvent);
+                enqueueTextEvent(tbEvent);
                 return;
             case 'Enter':
                 case 'Return':
                     e.preventDefault();
                     tbEvent.inserted = '\n';
-                    emitTextEvent(tbEvent);
+                    enqueueTextEvent(tbEvent);
                     return;
             case 'Tab':
                 e.preventDefault();
                 tbEvent.inserted = TAB_CHAR;
-                emitTextEvent(tbEvent);
+                enqueueTextEvent(tbEvent);
                 return;
             default:
                 if (e.key.length === 1) {
                     e.preventDefault();
                     tbEvent.inserted = e.key;
-                    emitTextEvent(tbEvent);
+                    enqueueTextEvent(tbEvent);
                 }
         }
 
