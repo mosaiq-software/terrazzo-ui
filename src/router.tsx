@@ -5,7 +5,9 @@ import { GithubAuth } from "@trz/pages/auth/github";
 import { Dashboard } from "@trz/pages/dashboard";
 import {AuthWrapper} from "@trz/wrappers/AuthWrapper";
 import Navbar from "@trz/components/Navbar";
-import Board from "@trz/components/Board";
+import BoardElement from "@trz/components/BoardElement";
+import {CreateBoardModal} from "@trz/components/CreateBoard";
+import {ModalsProvider} from "@mantine/modals";
 
 const Router = () => {
 	const [isVisible, setVisible] = useState(false);
@@ -14,18 +16,20 @@ const Router = () => {
 	};
 	return (
 		<BrowserRouter>
-		<Navbar openSettings={openSettings}/>
-			<Routes>
-				<Route path='/' element={<Outlet />} />
-				<Route path='/login' element={<p><a href={getGithubLoginUrl()}>Login with GitHub</a></p>} />
-				<Route path='/auth' element={<Outlet />}>
-					<Route path='github' element={<GithubAuth />} />
-				</Route>
-				<Route element={<AuthWrapper />}>
-					<Route path='/dashboard' element={<Dashboard />} />
-					<Route path='/boards/:boardId' element={<Board isVisible={isVisible} onClose={()=>setVisible(false)}/>}></Route>
-				</Route>
-			</Routes>
+			<ModalsProvider modals={{board: CreateBoardModal}}>
+				<Navbar/>
+				<Routes>
+					<Route path='/' element={<Outlet />} />
+					<Route path='/login' element={<p><a href={getGithubLoginUrl()}>Login with GitHub</a></p>} />
+					<Route path='/auth' element={<Outlet />}>
+						<Route path='github' element={<GithubAuth />} />
+					</Route>
+					<Route element={<AuthWrapper />}>
+						<Route path='/dashboard' element={<Dashboard />} />
+						<Route path='/boards/:boardId' element={<BoardElement/>}></Route>
+					</Route>
+				</Routes>
+			</ModalsProvider>
 		</BrowserRouter>
 	);
 };
