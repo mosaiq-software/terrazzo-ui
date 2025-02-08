@@ -1,12 +1,11 @@
 import React, {useEffect, useRef, useState} from "react";
 import {useSocket} from "@trz/util/socket-context";
-import { useClickOutside, useElementSize, useClipboard } from '@mantine/hooks';
+import { useClickOutside, useElementSize, useClipboard, useThrottledCallback } from '@mantine/hooks';
 import { getCaretCoordinates, interceptPaste, TAB_CHAR } from "@trz/util/textUtils";
 import { TextBlockEvent, TextBlockId } from "@mosaiq/terrazzo-common/types";
 import {UserCaret} from '@trz/components/UserCaret';
 import { executeTextBlockEvent } from "@mosaiq/terrazzo-common/utils/textUtils";
 import { Position } from "@mosaiq/terrazzo-common/socketTypes";
-import { useBuffer } from '@trz/util/useBuffer';
 
 interface CollaborativeTextAreaProps {
     maxLineLength: number;
@@ -22,7 +21,6 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
     const [textCaret, setTextCaret] = useState<Position | undefined>(undefined);
     const { ref, width, height } = useElementSize();
     const clipboard = useClipboard();
-    const {drain, push} = useBuffer();
 
     useEffect(() => {
 
@@ -54,7 +52,7 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
     }
 
     const updateCaret = async (selectionStart?: number) => {
-        await new Promise((resolve)=>setTimeout(resolve,0))
+        await new Promise((resolve)=>setTimeout(resolve,0));
         const element = textRef.current as HTMLTextAreaElement;
         if(!element){ return; }
         if(selectionStart !== undefined) {
@@ -77,15 +75,43 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
     }
 
     const enqueueTextEvent = (event: TextBlockEvent) => {
-        
+        eventBufferPush(event);
+        emitTextEvents();
     }
 
-    const emitTextEvents = () => {
-        const {updated, selectionStart} = executeTextBlockEvent(sockCtx.collaborativeText ?? '', event, sockCtx.collabCaretSelStart);
-        sockCtx.setCollaborativeText(updated);
-        sockCtx.updateTextBlock(event);
-        updateCaret(sockCtx.collabCaretSelStart ? selectionStart : undefined);
+    const aggregateTextBlockEvents = (events: TextBlockEvent[]): TextBlockEvent | undefined=> {
+        if (events.length === 0){
+            return undefined;
+        }
+
+        let event = events[0];
+
+        for (let i = 1; i < events.length; i++) {
+            const next = events[i];
+            if (event.id !== next.id) {
+                throw new Error("Mismatched event ids in aggregate " + event.id +" != " + next.id);
+            }
+        //     event = {
+        //         id: event.id,
+        //         start: ,
+        //         end: ,
+        //         inserted: ,
+        //     };
+        }
     }
+
+    const emitTextEvents = useThrottledCallback( async () => {
+        await new Promise((resolve)=>setTimeout(resolve,0));
+        const events = eventBufferDrain();
+        const text = sockCtx.collaborativeText ?? '';
+        console.log(events);
+        
+        // const {updated, selectionStart} = executeTextBlockEvent(sockCtx.collaborativeText ?? '', event, sockCtx.collabCaretSelStart);
+        // sockCtx.setCollaborativeText(updated);
+        // sockCtx.updateTextBlock(event);
+        // updateCaret(sockCtx.collabCaretSelStart ? selectionStart : undefined);
+
+    }, 3000);
 
     const onCut = (e: ClipboardEvent) => {
         if(!sockCtx.collaborativeText) {return;}
