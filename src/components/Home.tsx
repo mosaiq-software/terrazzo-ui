@@ -1,7 +1,7 @@
 //Utility
 import React from "react";
 //Components
-import {Box, Group, Paper, Text, ScrollArea, Title, Flex, UnstyledButton, Divider} from "@mantine/core";
+import {Box, Group, Paper, Text, ScrollArea, Title, Flex, UnstyledButton, Divider, Select} from "@mantine/core";
 
 const Home = (): React.JSX.Element => {
     return (
@@ -10,6 +10,7 @@ const Home = (): React.JSX.Element => {
             <Box w='100vw'
                  pl='15vh'
                  mih='100vh'>
+                <ViewsSelect/>
                 <HomeList/>
                 <Divider mt='40'/>
                 <HomeList/>
@@ -43,8 +44,6 @@ const HomeList = (): React.JSX.Element => {
             </Group>
             <Group w='87vw'>
                 <AddHomeListCard/>
-                <HomeListCard/>
-                <HomeListCard/>
                 <HomeListCard/>
                 <HomeListCard/>
                 <HomeListCard/>
@@ -87,6 +86,33 @@ const AddHomeListCard = (): React.JSX.Element => {
             </Paper>
         </UnstyledButton>
     );
+}
+
+const ViewsSelect = (): React.JSX.Element => {
+    return (
+        <Box pt='5vh'
+             maw='100'
+            >
+            <Select data={['All Views', 'Workspace views?', 'Mosaiq']}
+                    defaultValue='All Views'
+                    styles={() => ({
+                        input: {
+                            backgroundColor: '#121314', // Background color of the select box
+                            color: 'white', // Text color
+                            borderColor: '#1d2022', // Border color
+                        },
+                        dropdown: {
+                            backgroundColor: '#121314', // Background color of the dropdown
+                            color: 'white', // Text color of the dropdown items
+                        },
+                        option: {
+                            backgroundColor: '#121314', // Background color of the dropdown items
+                            color: 'white', // Text color of the dropdown items
+                        }
+                    })}
+            />
+        </Box>
+    )
 }
 
 export default Home;
