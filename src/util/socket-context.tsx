@@ -24,7 +24,7 @@ type SocketContextType = {
     setCollaborativeText: (text: string|undefined) => void;
     collaborativeText: string | undefined;
     getTextBlockData: (textBlockId: TextBlockId) => Promise<TextBlock | undefined>;
-    updateTextBlock: (event: TextBlockEvent) => void;
+    updateTextBlock: (events: TextBlockEvent[]) => Promise<string | undefined>;
     updateCaret: (pos:Position | undefined, selectionStart: number | undefined) => void;
     collabCaretSelStart: number | undefined;
 }
@@ -173,14 +173,18 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             if (!payload) {
                 return;
             }
-            setCollaborativeText((prev)=>{
-                let caret
-                setCollabCaretSelStart((prev)=>{
-                    caret = prev;
+            setCollaborativeText((prevText)=>{
+                let text = prevText;
+                setCollabCaretSelStart((prevCaret)=>{
+                    let caret = prevCaret;
+                    for (let event of payload.events){
+                        const {updated, selectionStart} = executeTextBlockEvent(text ?? '', event, caret);
+                        text = updated;
+                        caret = selectionStart;
+                    }
                     return caret;
                 })
-                const {updated, selectionStart} = executeTextBlockEvent(prev ?? '', payload, caret);
-                return updated;
+                return payload.updated;
             });
         });
 
@@ -301,14 +305,14 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     };
 
-    const updateTextBlock = async (textBlockEvent:TextBlockEvent) => {
+    const updateTextBlock = async (textBlockEvents:TextBlockEvent[]): Promise<string | undefined> => {
         if(!socket) {return undefined;}
         return new Promise((resolve, reject)=>{
-            socket.emit(ClientSE.UPDATE_TEXT_BLOCK, textBlockEvent, (response: ClientSEReplies[ClientSE.UPDATE_TEXT_BLOCK], error?:string)=>{
+            socket.emit(ClientSE.UPDATE_TEXT_BLOCK, textBlockEvents, (response: ClientSEReplies[ClientSE.UPDATE_TEXT_BLOCK], error?:string)=>{
                 if (error){
                     reject(error);
                 } else {
-                    resolve(undefined);
+                    resolve(response);
                 }
             });
         });

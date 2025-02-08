@@ -21,6 +21,7 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
     const [textCaret, setTextCaret] = useState<Position | undefined>(undefined);
     const { ref, width, height } = useElementSize();
     const clipboard = useClipboard();
+    const [eventsQueue, setEventsQueue] = useState<TextBlockEvent[]>([]);
 
     useEffect(() => {
 
@@ -51,6 +52,11 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
         element.style.height = (element.scrollHeight+(2*(props.fontSize??16)))+'px'; 
     }
 
+    const setCombinedRefs = (element) => {
+        (ref.current as any) = element;
+        textRef.current = element;
+    }
+
     const updateCaret = async (selectionStart?: number) => {
         await new Promise((resolve)=>setTimeout(resolve,0));
         const element = textRef.current as HTMLTextAreaElement;
@@ -65,53 +71,33 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
         setTextCaret(relativeCoords);
     }
 
-    const setCombinedRefs = (element) => {
-        (ref.current as any) = element;
-        textRef.current = element;
+    const enqueueTextEvent = (event: TextBlockEvent) => {
+        const {updated, selectionStart} = executeTextBlockEvent(sockCtx.collaborativeText ?? '', event, sockCtx.collabCaretSelStart);
+        sockCtx.setCollaborativeText(updated);
+        updateCaret(sockCtx.collabCaretSelStart ? selectionStart : undefined);
+
+        setEventsQueue([...eventsQueue, event]);
+        emitTextEvents();
     }
+
+    const updateText = useThrottledCallback(async(events: TextBlockEvent[])=>{
+        const update = await sockCtx.updateTextBlock(events);
+        console.log(update);
+        sockCtx.setCollaborativeText(update);
+    },10);
+
+    const emitTextEvents = useThrottledCallback(() => {
+        console.log("emit");
+        // TODO get this working so that it handles each keypress correctly and move the mouse right, queues them up, then sends them to the backend in batches.
+        setEventsQueue((q)=>{
+            updateText(q);
+            return [];
+        });
+    }, 3000);
 
     const onBlur = () => {
         sockCtx.updateCaret(undefined, undefined);
     }
-
-    const enqueueTextEvent = (event: TextBlockEvent) => {
-        eventBufferPush(event);
-        emitTextEvents();
-    }
-
-    const aggregateTextBlockEvents = (events: TextBlockEvent[]): TextBlockEvent | undefined=> {
-        if (events.length === 0){
-            return undefined;
-        }
-
-        let event = events[0];
-
-        for (let i = 1; i < events.length; i++) {
-            const next = events[i];
-            if (event.id !== next.id) {
-                throw new Error("Mismatched event ids in aggregate " + event.id +" != " + next.id);
-            }
-        //     event = {
-        //         id: event.id,
-        //         start: ,
-        //         end: ,
-        //         inserted: ,
-        //     };
-        }
-    }
-
-    const emitTextEvents = useThrottledCallback( async () => {
-        await new Promise((resolve)=>setTimeout(resolve,0));
-        const events = eventBufferDrain();
-        const text = sockCtx.collaborativeText ?? '';
-        console.log(events);
-        
-        // const {updated, selectionStart} = executeTextBlockEvent(sockCtx.collaborativeText ?? '', event, sockCtx.collabCaretSelStart);
-        // sockCtx.setCollaborativeText(updated);
-        // sockCtx.updateTextBlock(event);
-        // updateCaret(sockCtx.collabCaretSelStart ? selectionStart : undefined);
-
-    }, 3000);
 
     const onCut = (e: ClipboardEvent) => {
         if(!sockCtx.collaborativeText) {return;}
