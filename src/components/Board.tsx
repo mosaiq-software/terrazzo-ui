@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import List from "@trz/components/List";
 import { Container, Group } from "@mantine/core";
+import Settings from './Settings';
 import CollaborativeMouseTracker from "@trz/wrappers/collaborativeMouseTracker";
 import { useParams } from "react-router-dom";
 import { useSocket } from "@trz/util/socket-context";
 import CreateList from "@trz/components/CreateList";
 
-const Board = (): React.JSX.Element => {
+const Board = ({isVisible, onClose}): React.JSX.Element => {
 	const params = useParams();
 	const sockCtx = useSocket();
 	const [boardData, setBoardData] = useState<any>(null);
@@ -25,7 +26,7 @@ const Board = (): React.JSX.Element => {
 	if (!params.boardId) {
 		return <div>Board not found</div>;
 	}
-
+	console.log(boardData);
 	return (
 		<>
 			<Container h="100%" fluid maw="100%" p="lg" bg="#1d2022">
@@ -35,6 +36,7 @@ const Board = (): React.JSX.Element => {
 					<List />
 					<List />
 					<CreateList/>
+					<Settings boardData={boardData} isVisible={isVisible} onClose={onClose} />
 				</Group>
 			</Container>
 			<CollaborativeMouseTracker boardId={params.boardId} />

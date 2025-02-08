@@ -7,8 +7,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {Button} from "@mantine/core";
 import {modals} from "@mantine/modals";
 
-const Navbar = () => {
-
+const Navbar = ({openSettings}) => {
 	return (
 		<div
 			style={{
@@ -98,6 +97,25 @@ const Navbar = () => {
 						color: "white",
 					}}>
 					F
+				</button>
+				<button
+					className='settingsIcon'
+					style={{
+						display: "flex",
+						justifyContent: " center",
+						backgroundColor: " hsl(0, 2%, 40%)",
+						borderRadius: " 70%",
+						cursor: "pointer",
+						border: " none",
+						height: " 35px",
+						width: " 35px",
+						margin: " 0",
+						padding: " 0",
+						fontSize: " 22px",
+						color: "white",
+					}}
+					onClick={openSettings}>
+					...
 				</button>
 			</div>
 		</div>
