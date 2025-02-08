@@ -1,20 +1,24 @@
 //Utility
-import React from "react";
+import React, {useState} from "react";
 
 //Components
-import {Button, CloseButton, Paper, TextInput, Flex} from "@mantine/core";
-import {useClickOutside} from "@mantine/hooks";
-import {useState} from "react";
+import {Button, CloseButton, Paper, TextInput, Flex, FocusTrap} from "@mantine/core";
+import {useClickOutside, getHotkeyHandler} from "@mantine/hooks";
+import {useSocket} from "@trz/util/socket-context";
+import {NoteType, notify} from "@trz/util/notifications";
+
 
 const CreateList = (): React.JSX.Element => {
 
     const [visible, setVisible] = useState(false);
     const [error, setError] = useState("");
     const [title, setTitle] = useState("");
-    const ref = useClickOutside(() => setVisible(false));
+    const ref = useClickOutside(() => onBlur());
+    const sockCtx = useSocket();
 
     function onSubmit(){
-        //Add logic for websocket later
+        setError("")
+        setTitle("");
         if(title.length < 1){
             setError("Enter a Title")
             return;
@@ -24,10 +28,22 @@ const CreateList = (): React.JSX.Element => {
             setError("Max 50 characters")
             return;
         }
-        console.log(title);
-        setError("")
-        setTitle("");
+
+        sockCtx.addList(sockCtx.boardData!.id, title).then((success) => {
+            if(!success){
+                notify(NoteType.LIST_CREATION_ERROR);
+                return;
+            }
+        }).catch((err) => {
+            console.error(err);
+        });
         setVisible(false);
+    }
+
+    function onBlur(){
+        setTitle("");
+        setError("");
+        setVisible((v) => !v)
     }
 
     return (
@@ -41,13 +57,22 @@ const CreateList = (): React.JSX.Element => {
                 </Button>
             }
             {visible &&
-                <Paper bg={"#121314"} w="250" radius="md" shadow="lg" ref={ref}>
-                    <TextInput placeholder="Enter list title..."
-                               value={title}
-                               onChange={(event) => setTitle(event.currentTarget.value)}
-                               error={error}
-                               p="5"
-                    />
+                <Paper bg={"#121314"}
+                       w="250"
+                       radius="md"
+                       shadow="lg"
+                       ref={ref}
+                       onKeyDown={getHotkeyHandler([
+                           ['Enter', onSubmit]
+                ])}>
+                    <FocusTrap>
+                        <TextInput placeholder="Enter list title..."
+                                   value={title}
+                                   onChange={(event) => setTitle(event.currentTarget.value)}
+                                   error={error}
+                                   p="5"
+                        />
+                    </FocusTrap>
                     <Flex p='5'>
                         <Button w="150"
                                 variant="light"
@@ -55,7 +80,7 @@ const CreateList = (): React.JSX.Element => {
                         >
                             Create List
                         </Button>
-                        <CloseButton onClick={() => setVisible((v) => !v)}
+                        <CloseButton onClick={onBlur}
                                      size='lg'/>
                     </Flex>
                 </Paper>

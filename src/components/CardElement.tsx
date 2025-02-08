@@ -7,6 +7,12 @@ import React from "react";
 import CardDetails from "@trz/components/CardDetails";
 import { useTRZ } from "@trz/util/TRZ-context";
 import { C } from "react-router/dist/production/fog-of-war-CbNQuoo8";
+import {Card, List} from "@mosaiq/terrazzo-common/types";
+
+
+interface CardElementProps {
+	cardType: Card
+}
 
 /**ListCard Component
  *
@@ -15,7 +21,7 @@ import { C } from "react-router/dist/production/fog-of-war-CbNQuoo8";
  * Props: none
  */
 
-const Card = (): React.JSX.Element => {
+const CardElement = (props: CardElementProps): React.JSX.Element => {
 	const [opened, {open, close}] = useDisclosure(false);
 	const MAX_USERS = 3;
 	const testUsers = Array.from({ length: 1 }).map((_, index) => ({
@@ -32,8 +38,8 @@ const Card = (): React.JSX.Element => {
 					<Pill size="xs" color='blue'>To Do</Pill>
 					<Pill size="xs" color='red'>In Progress</Pill>
 				</Pill.Group>
-				<Title order={6} lineClamp={1} c="#ffffff">Test Title</Title>
-				<Text size='sm' c="#878787">TRZ-33</Text>
+				<Title order={6} lineClamp={1} c="#ffffff">{props.cardType.name}</Title>
+				<Text size='sm' c="#878787">{props.cardType.cardNumber}</Text>
 				<Group>
 					{/* icons for info abt the card */}
 				</Group>
@@ -71,4 +77,4 @@ const Card = (): React.JSX.Element => {
 		</>
 	);
 };
-export default Card;
+export default CardElement;
