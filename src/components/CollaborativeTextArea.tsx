@@ -73,13 +73,6 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
         sockCtx.updateCaret(undefined, undefined);
     }
 
-    // const setSelection = (selectionStart: number, selectionEnd: number, maxLen: number) => {
-    //     const element = textRef.current as HTMLTextAreaElement;
-    //     if(!element){ return; }
-    //     element.selectionStart = Math.max(0, Math.min(selectionStart, selectionEnd, maxLen))
-    //     element.selectionEnd = Math.min(Math.max(selectionStart, selectionEnd, 0), maxLen);
-    // }
-
     const emitTextEvent = (event: TextBlockEvent) => {
         const {updated, selectionStart} = executeTextBlockEvent(sockCtx.collaborativeText ?? '', event, sockCtx.collabCaretSelStart);
         sockCtx.setCollaborativeText(updated);
