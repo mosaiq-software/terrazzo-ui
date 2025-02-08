@@ -3,7 +3,7 @@ import React, {useState} from "react";
 
 //Components
 import {Button, CloseButton, Paper, TextInput, Flex, FocusTrap} from "@mantine/core";
-import {useClickOutside} from "@mantine/hooks";
+import {useClickOutside, getHotkeyHandler} from "@mantine/hooks";
 import {useSocket} from "@trz/util/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
 
@@ -13,7 +13,7 @@ const CreateList = (): React.JSX.Element => {
     const [visible, setVisible] = useState(false);
     const [error, setError] = useState("");
     const [title, setTitle] = useState("");
-    const ref = useClickOutside(() => setVisible(false));
+    const ref = useClickOutside(() => onBlur());
     const sockCtx = useSocket();
 
     function onSubmit(){
@@ -40,6 +40,12 @@ const CreateList = (): React.JSX.Element => {
         setVisible(false);
     }
 
+    function onBlur(){
+        setTitle("");
+        setError("");
+        setVisible((v) => !v)
+    }
+
     return (
         <>
             {!visible &&
@@ -51,7 +57,14 @@ const CreateList = (): React.JSX.Element => {
                 </Button>
             }
             {visible &&
-                <Paper bg={"#121314"} w="250" radius="md" shadow="lg" ref={ref}>
+                <Paper bg={"#121314"}
+                       w="250"
+                       radius="md"
+                       shadow="lg"
+                       ref={ref}
+                       onKeyDown={getHotkeyHandler([
+                           ['Enter', onSubmit]
+                ])}>
                     <FocusTrap>
                         <TextInput placeholder="Enter list title..."
                                    value={title}
@@ -67,7 +80,7 @@ const CreateList = (): React.JSX.Element => {
                         >
                             Create List
                         </Button>
-                        <CloseButton onClick={() => setVisible((v) => !v)}
+                        <CloseButton onClick={onBlur}
                                      size='lg'/>
                     </Flex>
                 </Paper>

@@ -4,8 +4,8 @@ import React, {useState} from "react";
 //Components
 import CardElement from "@trz/components/CardElement";
 import EditableTextbox from "@trz/components/EditableTextbox";
-import {Button, Group, Paper, Stack, Title, CloseButton, TextInput, Flex} from "@mantine/core";
-import {useClickOutside} from "@mantine/hooks";
+import {Button, Group, Paper, Stack, Title, CloseButton, TextInput, Flex, FocusTrap} from "@mantine/core";
+import {useClickOutside, getHotkeyHandler} from "@mantine/hooks";
 import {Card, List} from "@mosaiq/terrazzo-common/types";
 import {useSocket} from "@trz/util/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
@@ -27,9 +27,8 @@ function ListElement(props: ListElementProps): React.JSX.Element {
     const [visible, setVisible] = useState(false);
     const [error, setError] = useState("");
     const [cardTitle, setCardTitle] = useState("");
-    const ref = useClickOutside(() => setVisible(false));
+    const ref = useClickOutside(() => onBlur());
     const sockCtx = useSocket();
-
 
     function onSubmit() {
         setError("")
@@ -54,6 +53,12 @@ function ListElement(props: ListElementProps): React.JSX.Element {
             console.error(err);
         });
         setVisible(false);
+    }
+
+    function onBlur(){
+        setCardTitle("");
+        setError("");
+        setVisible((v) => !v)
     }
 
     return (
@@ -98,13 +103,22 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 }
                 <Group>
                     {visible &&
-                        <Paper bg={"#121314"} w="250" radius="md" shadow="lg" ref={ref}>
-                            <TextInput placeholder="Enter card title..."
-                                       value={cardTitle}
-                                       onChange={(event) => setCardTitle(event.currentTarget.value)}
-                                       error={error}
-                                       p="5"
-                            />
+                        <Paper bg={"#121314"}
+                               w="250"
+                               radius="md"
+                               shadow="lg"
+                               ref={ref}
+                               onKeyDown={getHotkeyHandler([
+                                   ['Enter', onSubmit]
+                        ])}>
+                            <FocusTrap>
+                                <TextInput placeholder="Enter card title..."
+                                           value={cardTitle}
+                                           onChange={(event) => setCardTitle(event.currentTarget.value)}
+                                           error={error}
+                                           p="5"
+                                />
+                            </FocusTrap>
                             <Flex p='5'>
                                 <Button w="150"
                                         variant="light"
@@ -112,7 +126,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                                 >
                                     Create Card
                                 </Button>
-                                <CloseButton onClick={() => setVisible((v) => !v)}
+                                <CloseButton onClick={onBlur}
                                              size='lg'/>
                             </Flex>
                         </Paper>

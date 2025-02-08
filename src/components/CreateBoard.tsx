@@ -29,7 +29,7 @@ const CreateBoard = ({
         if(boardName.length < 1){
             setErrorName("Enter a Title");
             if(boardAbbreviation.length < 1){
-                setErrorName("Enter an abbreviation");
+                setErrorAbv("Enter an abbreviation");
             }
             return;
         }
@@ -38,7 +38,7 @@ const CreateBoard = ({
             return;
         }
         if(boardAbbreviation.length < 1){
-            setErrorAbv("Enter a Title");
+            setErrorAbv("Enter an Abbreviation");
             return;
         }
         if(boardAbbreviation.length > 4){
@@ -57,7 +57,9 @@ const CreateBoard = ({
     }
 
     return (
-        <Container>
+        <Container onKeyDown={getHotkeyHandler([
+            ['Enter', onSubmit]
+        ])}>
             <Flex
                 direction="column"
                 justify="center"
@@ -86,10 +88,7 @@ const CreateBoard = ({
             </Flex>
 
             <Button fullWidth mt="md"
-                    onClick={onSubmit}
-                    onKeyDown={getHotkeyHandler([
-                        ['mod+Enter', onSubmit]
-                    ])}>
+                    onClick={onSubmit}>
                 Create Board
             </Button>
         </Container>
