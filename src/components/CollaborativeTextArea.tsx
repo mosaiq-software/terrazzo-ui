@@ -120,22 +120,24 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
         };
 
         switch (e.key) {
-            case 'Enter':
-            case 'Return':
-                e.preventDefault();
-                tbEvent.inserted = '\n';
-                emitTextEvent(tbEvent);
-                return;
             case 'Delete':
                 e.preventDefault();
-                tbEvent.end++;
+                if (tbEvent.start === tbEvent.end)
+                    tbEvent.end++;
                 emitTextEvent(tbEvent);
                 return;
             case 'Backspace':
                 e.preventDefault();
-                tbEvent.start--;
+                if (tbEvent.start === tbEvent.end)
+                    tbEvent.start--;
                 emitTextEvent(tbEvent);
                 return;
+            case 'Enter':
+                case 'Return':
+                    e.preventDefault();
+                    tbEvent.inserted = '\n';
+                    emitTextEvent(tbEvent);
+                    return;
             case 'Tab':
                 e.preventDefault();
                 tbEvent.inserted = TAB_CHAR;
