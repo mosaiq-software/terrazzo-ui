@@ -72,7 +72,7 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
                 elements.push(
                     <Box key={`code-${i}`}>
                         <CodeHighlight
-                            code={codeBlockLines.join('\n')}
+                            code={codeBlockLines.join('\n') + '\n'}
                             language={codeBlockLanguage}
                             copyLabel="Copy"
                             copiedLabel="Copied!"
@@ -84,6 +84,7 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
             } else {
                 // Opening a code block
                 insideCodeBlock = true;
+                codeBlockLines.push("\n");
                 codeBlockLanguage = line.language || 'tsx';
             }
             continue;
@@ -205,6 +206,7 @@ const extractLineData = (line: string): Line => {
 
 
     // Edge case if a single line of code is marked as multiline code by user
+
     if (line.startsWith('```') && line.endsWith('```') && line.length > 3) {
         const codeContent = line.slice(3, -3).trim();
         return {
