@@ -1,5 +1,6 @@
 export const IDLE_TIMEOUT_MS = 1000 * 60 * 3;
 export const MOUSE_UPDATE_THROTTLE_MS = 250;
+export const TAB_CHAR = '    ';
 
 const CSS_TA_PROPERTIES = [
     'direction',  // RTL support

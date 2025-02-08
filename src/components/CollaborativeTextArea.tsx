@@ -1,11 +1,11 @@
 import React, {KeyboardEventHandler, useCallback, useEffect, useRef, useState} from "react";
 import {useSocket} from "@trz/util/socket-context";
-import { useClickOutside, useElementSize  } from '@mantine/hooks';
-import { getCaretCoordinates } from "@trz/util/textUtils";
+import { useClickOutside, useElementSize, useClipboard } from '@mantine/hooks';
+import { getCaretCoordinates, interceptPaste, TAB_CHAR } from "@trz/util/textUtils";
 import { TextBlockEvent, TextBlockId } from "@mosaiq/terrazzo-common/types";
 import {UserCaret} from '@trz/components/UserCaret';
-import { C } from "react-router/dist/production/fog-of-war-CbNQuoo8";
 import { executeTextBlockEvent } from "@mosaiq/terrazzo-common/utils/textUtils";
+import { Position } from "@mosaiq/terrazzo-common/socketTypes";
 
 interface CollaborativeTextAreaProps {
     maxLineLength: number;
@@ -16,10 +16,10 @@ interface CollaborativeTextAreaProps {
 
 export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
     const sockCtx = useSocket();
-    const [caret, setCaret] = useState<{x:number, y:number}|undefined>(undefined);
-    useClickOutside(()=>setCaret(undefined));
     const textRef = useRef<any>();
+    const [textCaret, setTextCaret] = useState<Position | undefined>(undefined);
     const { ref, width, height } = useElementSize();
+    const clipboard = useClipboard();
 
     useEffect(() => {
 
@@ -50,14 +50,18 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
         element.style.height = (element.scrollHeight+(2*(props.fontSize??16)))+'px'; 
     }
 
-    const updateCaret = async () => {
+    const updateCaret = async (selectionStart?: number) => {
         await new Promise((resolve)=>setTimeout(resolve,0))
-        const element = textRef.current;
+        const element = textRef.current as HTMLTextAreaElement;
         if(!element){ return; }
+        if(selectionStart !== undefined) {
+            element.selectionStart = selectionStart;
+            element.selectionEnd = selectionStart;
+        }
         const coordinates = getCaretCoordinates(element, element.selectionStart);
         const relativeCoords = {x: coordinates.left/width, y: coordinates.top/height}
-        setCaret(relativeCoords);
-        sockCtx.updateCaret(relativeCoords);
+        sockCtx.updateCaret(relativeCoords, selectionStart ?? element.selectionStart);
+        setTextCaret(relativeCoords);
     }
 
     const setCombinedRefs = (element) => {
@@ -65,29 +69,104 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
         textRef.current = element;
     }
 
-    const onPaste = (e) => {
-        updateCaret();
+    const onBlur = () => {
+        sockCtx.updateCaret(undefined, undefined);
     }
-    
-    const onKeypress = (e) => {
+
+    // const setSelection = (selectionStart: number, selectionEnd: number, maxLen: number) => {
+    //     const element = textRef.current as HTMLTextAreaElement;
+    //     if(!element){ return; }
+    //     element.selectionStart = Math.max(0, Math.min(selectionStart, selectionEnd, maxLen))
+    //     element.selectionEnd = Math.min(Math.max(selectionStart, selectionEnd, 0), maxLen);
+    // }
+
+    const emitTextEvent = (event: TextBlockEvent) => {
+        const {updated, selectionStart} = executeTextBlockEvent(sockCtx.collaborativeText ?? '', event, sockCtx.collabCaretSelStart);
+        sockCtx.setCollaborativeText(updated);
+        sockCtx.updateTextBlock(event);
+        updateCaret(sockCtx.collabCaretSelStart ? selectionStart : undefined);
+    }
+
+    const onCut = (e: ClipboardEvent) => {
+        if(!sockCtx.collaborativeText) {return;}
         const tbEvent: TextBlockEvent = {
             id: props.textBlockId,
             start: textRef.current.selectionStart,
             end: textRef.current.selectionEnd,
-            inserted: e.key,
+            inserted: '',
         };
-        const updated = executeTextBlockEvent(sockCtx.collaborativeText ?? '', tbEvent);
-        sockCtx.setCollaborativeText(updated);
-        sockCtx.updateTextBlock(tbEvent);
-        updateCaret();
+        const text = sockCtx.collaborativeText.substring(Math.min(tbEvent.start, tbEvent.end), Math.max(tbEvent.start, tbEvent.end));
+        clipboard.copy(text);
+        emitTextEvent(tbEvent);
     }
+
+    const onPaste = (e: ClipboardEvent) => {
+        const clip = interceptPaste(e);
+        if(!clip) {
+            return;
+        }
+        const tbEvent: TextBlockEvent = {
+            id: props.textBlockId,
+            start: textRef.current.selectionStart,
+            end: textRef.current.selectionEnd,
+            inserted: clip,
+        };
+        emitTextEvent(tbEvent);
+    }
+    
+    const onKeypress = (e:KeyboardEvent) => {
+        if (e.ctrlKey || e.metaKey || e.altKey) {
+            return;
+        }
+
+        const tbEvent: TextBlockEvent = {
+            id: props.textBlockId,
+            start: textRef.current.selectionStart,
+            end: textRef.current.selectionEnd,
+            inserted: '',
+        };
+
+        switch (e.key) {
+            case 'Enter':
+            case 'Return':
+                e.preventDefault();
+                tbEvent.inserted = '\n';
+                emitTextEvent(tbEvent);
+                return;
+            case 'Delete':
+                e.preventDefault();
+                tbEvent.end++;
+                emitTextEvent(tbEvent);
+                return;
+            case 'Backspace':
+                e.preventDefault();
+                tbEvent.start--;
+                emitTextEvent(tbEvent);
+                return;
+            case 'Tab':
+                e.preventDefault();
+                tbEvent.inserted = TAB_CHAR;
+                emitTextEvent(tbEvent);
+                return;
+            default:
+                if (e.key.length === 1) {
+                    e.preventDefault();
+                    tbEvent.inserted = e.key;
+                    emitTextEvent(tbEvent);
+                }
+        }
+
+        updateCaret();
+
+    }
+
+    useClickOutside(onBlur);
 
     return (
         <div style={{
             width: "fit-content",
             position: "relative"
         }}>
-            
             <div style={{clear:"both"}}></div>
             <textarea 
                 ref={setCombinedRefs}
@@ -95,15 +174,16 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
                 dir="ltr" 
                 id="COLLAB_TEXTAREA"
                 className="collabta"
-                onPasteCapture={(e)=>onPaste(e)}
-                onKeyDown={(e)=>onKeypress(e)}
-                onBlur={()=>setCaret(undefined)}
-                onMouseDown={updateCaret}
+                onKeyDown={(e) => onKeypress(e as any)}
+                onMouseDown={(e) => updateCaret()}
+                onCut={(e) => onCut(e as any)}
+                onPaste={(e) => onPaste(e as any)}
+                onBlur={onBlur}
                 style={{
                     fontFamily: "monospace",
                     fontSize: props.fontSize ?? 16,
-                    color: "transparent",
-                    textShadow: "0px 0px 0px black",
+                    // color: "transparent",
+                    // textShadow: "0px 0px 0px black",
                     resize: "none",
                     position: "absolute"
                 }}
@@ -120,13 +200,14 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
                 }}
             >
                 {
-                    caret && <UserCaret x={caret.x*width} y={caret.y*height} idle={false} color={"black"} />
+                    // textCaret && <UserCaret x={textCaret.x*width} y={textCaret.y*height} idle={false} color={"black"} />
                 }
                 {
-                    sockCtx.roomUsers.map((user)=>{
-                        if(!user || !user.textRoomData){ return null; }
+                    sockCtx.roomUsers.map((user, i)=>{
+                        if(!user?.textRoomData?.caret ){ return null; }
                         return (
-                            <UserCaret 
+                            <UserCaret
+                                key={'usercaret'+i}
                                 x={user.textRoomData.caret.x*width}
                                 y={user.textRoomData.caret.y*height}
                                 idle={user.idle}

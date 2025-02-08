@@ -4,7 +4,6 @@ import { useTRZ } from '@trz/util/TRZ-context';
 import { ClientSE, ClientSEReplies, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
 import { Board, TextBlock, TextBlockEvent, TextBlockId} from '@mosaiq/terrazzo-common/types';
 import { NoteType, notify } from '@trz/util/notifications';
-import { resolve } from 'path';
 import { useIdle, useThrottledCallback } from '@mantine/hooks';
 import { IDLE_TIMEOUT_MS, MOUSE_UPDATE_THROTTLE_MS } from './textUtils';
 import { executeTextBlockEvent } from '@mosaiq/terrazzo-common/utils/textUtils';
@@ -26,7 +25,8 @@ type SocketContextType = {
     collaborativeText: string | undefined;
     getTextBlockData: (textBlockId: TextBlockId) => Promise<TextBlock | undefined>;
     updateTextBlock: (event: TextBlockEvent) => void;
-    updateCaret: (pos:Position) => void;
+    updateCaret: (pos:Position | undefined, selectionStart: number | undefined) => void;
+    collabCaretSelStart: number | undefined;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -41,6 +41,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const [connected, setConnected] = useState<boolean>(false);
     const [boardData, setBoardData] = useState<Board>();
     const [collaborativeText, setCollaborativeText] = useState<string | undefined>(undefined);
+    const [collabCaretSelStart, setCollabCaretSelStart] = useState<number | undefined>(undefined);
 
     useEffect(() => {
         setIdle(idle);
@@ -173,7 +174,12 @@ const SocketProvider: React.FC<any> = ({ children }) => {
                 return;
             }
             setCollaborativeText((prev)=>{
-                const updated = executeTextBlockEvent(prev ?? '', payload);
+                let caret
+                setCollabCaretSelStart((prev)=>{
+                    caret = prev;
+                    return caret;
+                })
+                const {updated, selectionStart} = executeTextBlockEvent(prev ?? '', payload, caret);
                 return updated;
             });
         });
@@ -222,7 +228,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
 
     const setIdle = (idle: boolean) => {
         if (!socket) {return;}
-        socket.emit(ClientSE.USER_IDLE, { idle }, (response: ClientSEReplies[ClientSE.USER_IDLE], error?: string) => {
+        socket.emit(ClientSE.USER_IDLE, idle, (response: ClientSEReplies[ClientSE.USER_IDLE], error?: string) => {
             if(error) {
                 console.error("Error setting idle:", error);
             }
@@ -308,15 +314,18 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     };
 
-    const updateCaret = (pos: Position): void => {
+    const updateCaret = (pos: Position | undefined, selectionStart: number |  undefined): void => {
+        setCollabCaretSelStart(selectionStart);
+        syncUpdatedCaret(pos);
+    }
+    const syncUpdatedCaret = useThrottledCallback((pos?: Position) => {
         if (!socket || !room || !connected || roomUsers.length === 0) {return;}
         socket.volatile.emit(ClientSE.TEXT_CARET, pos, (response: ClientSEReplies[ClientSE.TEXT_CARET], error?: string) => {
             if(error) {
                 console.error("Error moving mouse:", error);
             }
         });
-    }
-    const throttledUpdateCaret = useThrottledCallback(updateCaret, MOUSE_UPDATE_THROTTLE_MS);
+    }, MOUSE_UPDATE_THROTTLE_MS);
 
 
 
@@ -338,7 +347,9 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             collaborativeText,
             getTextBlockData,
             updateTextBlock,
-            updateCaret: throttledUpdateCaret
+            updateCaret,
+            collabCaretSelStart
+
         }}>
             {children}
         </SocketContext.Provider>
