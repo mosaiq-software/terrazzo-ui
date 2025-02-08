@@ -12,6 +12,7 @@ interface CollaborativeTextAreaProps {
     textBlockId: TextBlockId;
     fontSize?: number;
     maxRows?: number;
+    showOwnCursorAsCustom?: boolean; // should the cursor be a custom one (T) or the default browser one (F/u).
 }
 
 export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
@@ -177,10 +178,10 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
                 style={{
                     fontFamily: "monospace",
                     fontSize: props.fontSize ?? 16,
-                    // color: "transparent",
-                    // textShadow: "0px 0px 0px black",
                     resize: "none",
-                    position: "absolute"
+                    position: "absolute",
+                    color: props.showOwnCursorAsCustom ? "transparent" : 'unset',
+                    textShadow: props.showOwnCursorAsCustom ? "0px 0px 0px black" : 'none',
                 }}
                 wrap={"soft"}
                 cols={props.maxLineLength}
@@ -195,7 +196,7 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
                 }}
             >
                 {
-                    // textCaret && <UserCaret x={textCaret.x*width} y={textCaret.y*height} idle={false} color={"black"} />
+                    props.showOwnCursorAsCustom && textCaret && <UserCaret x={textCaret.x*width} y={textCaret.y*height} idle={false} color={"black"} />
                 }
                 {
                     sockCtx.roomUsers.map((user, i)=>{
