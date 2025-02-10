@@ -3,7 +3,7 @@
     position: relative;
     display: flex;
     justify-content: space-between;
-	background-color: var(--mantine-color-greyscale-1);
+	background-color: var(--mantine-color-gray-8);
     width: 100vw;
     z-index: 1;
 }
@@ -21,12 +21,11 @@
 }
 
 .trzNavigationMenuTrigger {
-	display: flex;
-    gap: var(--mantine-spacing-xs);
-    align-items: center;
-	justify-content: center;
-	padding: 8px 12px;
+    color: var(--mantine-color-text);
     background-color: inherit;
-    border: none;
-    border-radius: 6px;
+}
+
+.trzNavigationMenuTrigger:hover {
+    color: var(--mantine-color-text);
+    background-color: var(--mantine-color-blue-9);
 }

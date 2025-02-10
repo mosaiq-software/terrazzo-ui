@@ -1,0 +1,23 @@
+{
+  "endOfLine": "lf",
+  "editor.formatOnSave": true,
+  "editor.formatOnType": true,
+  "[javascript]": {
+    "semi": true,
+    "singleQuote": "single-quote",
+    "trailingComa": "es5",
+    "bracketSpacing": true,
+    "bracketSameLine": true,
+    "arrowParens": "always",
+    "htmlWhitespaceSensitivity": "none",
+    "embeddedLanguageFormatting": "auto"
+  },
+  "overrides": [
+    {
+      "files": ["*.html", "*.js", "*.cjs", "*.mjs"],
+      "options": {
+        "tabWidth": 4
+      }
+    }
+  ]
+}

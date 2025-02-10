@@ -1,0 +1,16 @@
+:root {
+    color-scheme: var(--mantine-color-scheme);
+    --trz-bg-primary: var(--mantine-color-gray-9);
+}
+
+body {
+    font-family: var(--mantine-font-family);
+    font-size: var(--mantine-font-size-md);
+    line-height: var(--mantine-line-height);
+    background-color: var(--mantine-color-body);
+    color: var(--mantine-color-text);
+    background-color: var(--trz-bg-primary);
+
+    -webkit-font-smoothing: var(--mantine-webkit-font-smoothing);
+    -moz-osx-font-smoothing: var(--mantine-moz-font-smoothing);
+}
