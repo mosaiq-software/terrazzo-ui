@@ -136,14 +136,15 @@ function ListElement(props: ListElementProps): React.JSX.Element {
 
             {!visible &&
                 <Button w="100%"
-                        variant="light"
-                        onClick={() => setVisible((v) => !v)}
-                >
-                    Add Card +
+                        h="50"
+                        justify="left"
+                        color='#121314'
+                        onClick={() => setVisible((v) => !v)}>
+                    + Add Card
                 </Button>
             }
         </Paper>
     );
-};
+}
 
 export default ListElement;

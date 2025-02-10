@@ -1,7 +1,7 @@
 //Utility
 import React from "react";
 //Components
-import {Box, Group, Paper, Text, ScrollArea, Title, Flex, UnstyledButton, Divider, Select} from "@mantine/core";
+import {Box, Group, Paper, Text, ScrollArea, Title, Flex, UnstyledButton, Divider, Select, Button} from "@mantine/core";
 
 const Home = (): React.JSX.Element => {
     return (
@@ -10,30 +10,49 @@ const Home = (): React.JSX.Element => {
             <Box w='100vw'
                  pl='15vh'
                  mih='100vh'>
-                <ViewsSelect/>
-                <HomeList/>
-                <Divider mt='40'/>
-                <HomeList/>
-                <Divider mt='40'/>
-                <HomeList/>
-                <Divider mt='40'/>
-                <HomeList/>
-                <Divider mt='40'/>
-                <Divider mt='40'/>
+                <YourBoards/>
+                <Title c='white' order={2} pb='25'>Your Workspaces</Title>
+                <WorkspaceBoards/>
+                <WorkspaceBoards/>
+                <WorkspaceBoards/>
+                <Divider mt='100'/>
             </Box>
         </ScrollArea>
     );
 }
 
-const HomeList = (): React.JSX.Element => {
+const YourBoards = (): React.JSX.Element => {
     return (
         <>
-            <Group pt='50'>
+            <Group pt='50'
+                   justify='space-between'>
+                <Title order={2}
+                       c='white'
+                       p='10'>
+                    Your Boards</Title>
+                <ViewBoardButtons/>
+            </Group>
+            <Divider maw='94%' color='#5B5857' mt='20'/>
+            <Group w='87vw'
+                   pb='25'>
+                <AddHomeListCard/>
+                <HomeListCard/>
+                <HomeListCard/>
+                <HomeListCard/>
+            </Group>
+        </>
+    );
+}
+
+const WorkspaceBoards = (): React.JSX.Element => {
+    return (
+        <>
+            <Group pt='10'>
                 <Title order={2}
                        c='white'
                        p='10'
-                       pr='61vw'>
-                    Your Boards</Title>
+                       pr='63vw'>
+                    Terrazzo</Title>
                 <Flex justify='flex-end'
                       gap='3em'
                       c='white'>
@@ -42,6 +61,7 @@ const HomeList = (): React.JSX.Element => {
                     <Text>Settings</Text>
                 </Flex>
             </Group>
+            <Divider maw='94%' color='#5B5857'/>
             <Group w='87vw'>
                 <AddHomeListCard/>
                 <HomeListCard/>
@@ -49,7 +69,7 @@ const HomeList = (): React.JSX.Element => {
                 <HomeListCard/>
             </Group>
         </>
-    );
+    )
 }
 
 const HomeListCard = (): React.JSX.Element => {
@@ -88,30 +108,35 @@ const AddHomeListCard = (): React.JSX.Element => {
     );
 }
 
-const ViewsSelect = (): React.JSX.Element => {
+const ViewBoardButtons = (): React.JSX.Element => {
     return (
-        <Box pt='5vh'
-             maw='100'
-            >
+        <Group pr='100'>
             <Select data={['All Views', 'Workspace views?', 'Mosaiq']}
                     defaultValue='All Views'
                     styles={() => ({
                         input: {
-                            backgroundColor: '#121314', // Background color of the select box
+                            backgroundColor: '#27292E', // Background color of the select box
                             color: 'white', // Text color
                             borderColor: '#1d2022', // Border color
                         },
                         dropdown: {
-                            backgroundColor: '#121314', // Background color of the dropdown
+                            backgroundColor: '#27292E', // Background color of the dropdown
                             color: 'white', // Text color of the dropdown items
                         },
                         option: {
-                            backgroundColor: '#121314', // Background color of the dropdown items
+                            backgroundColor: '#27292E', // Background color of the dropdown items
                             color: 'white', // Text color of the dropdown items
                         }
                     })}
             />
-        </Box>
+            <Divider orientation='vertical' color='gray'/>
+            <Button size='compact-md' color='#27292E'>Recent</Button>
+            <Button size='compact-md' color='#27292E'>Newest</Button>
+            <Button size='compact-md' color='#27292E'>Oldest</Button>
+            <Divider orientation='vertical' color='gray'/>
+            <Button size='compact-md' color='#27292E'>Grid</Button>
+            <Button size='compact-md' color='#27292E'>List</Button>
+        </Group>
     )
 }
 

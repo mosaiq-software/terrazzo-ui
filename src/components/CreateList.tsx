@@ -50,8 +50,11 @@ const CreateList = (): React.JSX.Element => {
         <>
             {!visible &&
                 <Button w="250"
+                        h="50"
+                        radius={"md"}
                         onClick={() => setVisible((v) => !v)}
                         color={"#121314"}
+                        justify="left"
                 >
                     + Add List
                 </Button>
