@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import queryString from "query-string";
-import { useTRZ } from "@trz/util/TRZ-context";
+import { DEFAULT_NO_AUTH_ROUTE, useTRZ } from "@trz/util/TRZ-context";
 import { Loader } from "@mantine/core";
 import { useNavigate } from 'react-router-dom';
 import { NoteType, notify } from "@trz/util/notifications";
@@ -16,18 +16,22 @@ export const GithubAuth = () => {
 
     useEffect(() => {
         let strictIgnore = false;
-        const fetchData = async (code: string) => {
-            await new Promise((resolve)=>setTimeout(resolve, 0));
-            if(strictIgnore){return;}
+        const fetchData = async (code: any) => {
+            await new Promise((resolve)=>setTimeout(resolve, 50));
+            if(strictIgnore){
+                return;
+            }
+            if(!code || typeof code !== "string"){
+                navigate(DEFAULT_NO_AUTH_ROUTE);
+                return;
+            }
             const {route, success} = await trz.githubLogin(code);
             if(!success) {
                 notify(NoteType.GITHUB_AUTH_ERROR);
             }
             navigate(route);
         };
-        if(code && typeof code === "string") {
-            fetchData(code);
-        }
+        fetchData(code);
         return ()=>{
             strictIgnore = true;
         }
@@ -36,4 +40,4 @@ export const GithubAuth = () => {
     return (
         <Loader />
     );
-};
+}

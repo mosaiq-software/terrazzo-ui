@@ -20,6 +20,9 @@ const TRZProvider: React.FC<any> = ({ children }) => {
     const [loginRouteDestination, setLoginRouteDestination] = useSessionStorage({ key: "loginRouteDestination" });
 
     const githubLogin = async (code: string | undefined): Promise<{route:string, success:boolean}> => {
+        if(githubAuthToken && githubData){
+            return {route: window.location.pathname, success: true};
+        }
         const {authToken, data} = await tryLoginWithGithub(code);
         if(!authToken || !data) {
             setLoginRouteDestination(window.location.pathname);
