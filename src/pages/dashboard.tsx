@@ -9,23 +9,6 @@ interface DashboardProps {
 }
 export const Dashboard = (props: DashboardProps) => {
     const trz = useTRZ();
-    const navigate = useNavigate();
-
-    React.useEffect(() => {
-        const tryLogin = async () => {
-            const {authToken, data} = await tryLoginWithGithub();
-            if (authToken && data) {
-                trz.setGithubAuthToken(authToken);
-                trz.setGithubData(data);
-            } else {
-                navigate("/login");
-            }
-        }
-        if (!trz.githubAuthToken || !trz.githubData){
-            tryLogin();
-            return;
-        }
-    }, []);
 
     return (
         <div>
