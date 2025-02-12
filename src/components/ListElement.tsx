@@ -5,7 +5,7 @@ import React, {useEffect, useState} from "react";
 import CardElement from "@trz/components/CardElement";
 import EditableTextbox from "@trz/components/EditableTextbox";
 import {Button, Group, Paper, Stack, Title, CloseButton, TextInput, Flex, FocusTrap} from "@mantine/core";
-import {useClickOutside, getHotkeyHandler} from "@mantine/hooks";
+import {useClickOutside, getHotkeyHandler, useInViewport} from "@mantine/hooks";
 import {Card, List} from "@mosaiq/terrazzo-common/types";
 import {useSocket} from "@trz/util/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
@@ -27,9 +27,10 @@ function ListElement(props: ListElementProps): React.JSX.Element {
     const [visible, setVisible] = useState(false);
     const [error, setError] = useState("");
     const [cardTitle, setCardTitle] = useState("");
-    const ref = useClickOutside(() => onBlur());
+    const clickOutsideRef = useClickOutside(() => onBlur());
     const sockCtx = useSocket();
-
+    const { ref:inViewportRef, inViewport } = useInViewport();
+    
     function onSubmit() {
         setError("")
         setCardTitle("");
@@ -88,6 +89,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 minWidth: "250px",
                 maxWidth: "250px"
             }}
+            ref={inViewportRef}
         >
             <Group
                 justify="space-between"
@@ -116,7 +118,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 }}
             >
                 {
-                    props.listType?.cards.map((card:Card, index) => (
+                    inViewport && props.listType?.cards.map((card:Card, index) => (
 						<CardElement key={index} cardType={card}/>
 					))
                 }
@@ -127,7 +129,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                             w="250"
                             radius="md"
                             shadow="lg"
-                            ref={ref}
+                            ref={clickOutsideRef}
                             onKeyDown={getHotkeyHandler([['Enter', onSubmit]])}
                         >
                             <FocusTrap>
