@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
-import { useMouse, useIdle } from '@mantine/hooks';
+import { useMouse } from '@mantine/hooks';
 import { useSocket } from "@trz/util/socket-context";
 import UserCursor from "@trz/components/UserCursor";
-import { useThrottledCallback } from "@mantine/hooks";
 
 interface CollaborativeMouseTrackerProps {
     boardId: string;
