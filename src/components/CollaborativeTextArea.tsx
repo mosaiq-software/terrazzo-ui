@@ -4,13 +4,13 @@ import { useClickOutside, useElementSize, useClipboard } from '@mantine/hooks';
 import { interceptPaste, TAB_CHAR } from "@trz/util/textUtils";
 import { TextBlockEvent, TextBlockId } from "@mosaiq/terrazzo-common/types";
 import {UserCaret} from '@trz/components/UserCaret';
-import { Position } from "@mosaiq/terrazzo-common/socketTypes";
+import { Position, RoomType } from "@mosaiq/terrazzo-common/socketTypes";
+import { getRoomCode } from "@mosaiq/terrazzo-common/utils/socketUtils";
 
 interface CollaborativeTextAreaProps {
     maxLineLength: number;
     textBlockId: TextBlockId;
     fontSize?: number;
-    maxRows?: number;
     showOwnCursorAsCustom?: boolean; // should the cursor be a custom one (T) or the default browser one (F/u).
 }
 
@@ -25,7 +25,7 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
             if (!sockCtx.connected) { return; }
 
             sockCtx.initializeTextBlockData(props.textBlockId);
-            sockCtx.setRoom("text-"+props.textBlockId);
+            sockCtx.setRoom(getRoomCode(RoomType.TEXT, props.textBlockId));
         }
         initialize();
         return () => {
@@ -147,8 +147,9 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
     
     return (
         <div style={{
-            width: "fit-content",
-            position: "relative"
+            position: "relative",
+            width: textAreaSize.x,
+            height: textAreaSize.y,
         }}>
             <div style={{clear:"both"}}></div>
             <textarea 
@@ -177,8 +178,6 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
             <div
                 style={{
                     position: "absolute",
-                    width: "100%",
-                    height: "100%",
                     top: 0,
                     left: 0,
                 }}
