@@ -3,6 +3,7 @@ import React, {useState} from "react";
 
 //Components
 import {TextInput, Container, Flex, Button} from "@mantine/core";
+import {getHotkeyHandler} from "@mantine/hooks";
 import {ContextModalProps} from "@mantine/modals";
 import {useSocket} from "@trz/util/socket-context";
 import {useNavigate} from "react-router-dom";
@@ -25,26 +26,25 @@ const CreateBoard = ({
         setErrorAbv("");
         setErrorName("");
 
-        if(boardName.length < 1 ){
-            setErrorName("Enter a Name")
+        if(boardName.length < 1){
+            setErrorName("Enter a Title");
+            if(boardAbbreviation.length < 1){
+                setErrorAbv("Enter an abbreviation");
+            }
             return;
         }
-
-        if(boardName.length > 50 ){
-            setErrorName("Max 50 characters")
+        if(boardName.length > 50){
+            setErrorName("Max 50 characters");
             return;
         }
-
         if(boardAbbreviation.length < 1){
-            setErrorAbv("Enter an Abbreviation")
+            setErrorAbv("Enter an Abbreviation");
             return;
         }
-
-        if(boardAbbreviation.length > 3){
-            setErrorAbv("Max 3 characters")
+        if(boardAbbreviation.length > 4){
+            setErrorAbv("Max 3 characters");
             return;
         }
-
         sockCtx.createBoard(boardName, boardAbbreviation).then((board) => {
             navigate(`/boards/${board}`);
             context.closeModal(id);
@@ -56,7 +56,9 @@ const CreateBoard = ({
     }
 
     return (
-        <Container>
+        <Container onKeyDown={getHotkeyHandler([
+            ['Enter', onSubmit]
+        ])}>
             <Flex
                 direction="column"
                 justify="center"
@@ -67,10 +69,11 @@ const CreateBoard = ({
                     label="Board Name"
                     placeholder="Board Name"
                     withAsterisk
-                    error = {errorName}
                     w={250}
                     value={boardName}
                     onChange={(event) => setBoardName(event.currentTarget.value)}
+                    data-autofocus
+                    error={errorName}
                 />
                 <TextInput
                     label="Board Abbreviation"
@@ -83,7 +86,8 @@ const CreateBoard = ({
                 />
             </Flex>
 
-            <Button fullWidth mt="md" onClick={onSubmit}>
+            <Button fullWidth mt="md"
+                    onClick={onSubmit}>
                 Create Board
             </Button>
         </Container>
