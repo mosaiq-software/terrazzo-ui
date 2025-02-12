@@ -1,7 +1,5 @@
 import React from "react";
 import { useTRZ } from "@trz/util/TRZ-context";
-import { tryLoginWithGithub } from "@trz/util/githubAuth";
-import { useNavigate } from "react-router-dom";
 
 
 interface DashboardProps {

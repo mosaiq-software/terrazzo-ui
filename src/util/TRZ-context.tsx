@@ -1,25 +1,44 @@
 import React, { createContext, useContext, useState } from 'react';
+import { tryLoginWithGithub } from './githubAuth';
+import { readSessionStorageValue, useSessionStorage } from '@mantine/hooks';
+import { NoteType, notify } from './notifications';
 
 type TRZContextType = {
     githubAuthToken: string | null;
-    setGithubAuthToken: (code: string) => void;
     githubData: any | null;
-    setGithubData: (data: any) => void;
+    githubLogin: (code: string | undefined) => Promise<{route:string, success:boolean}>;
 }
 
 const TRZContext = createContext<TRZContextType | undefined>(undefined);
 
+export const DEFAULT_AUTHED_ROUTE = "/dashboard";
+export const DEFAULT_NO_AUTH_ROUTE = "/login"
 
 const TRZProvider: React.FC<any> = ({ children }) => {
     const [githubAuthToken, setGithubAuthToken] = useState<string | null>(null);
     const [githubData, setGithubData] = useState<any | null>(null);
+    const [loginRouteDestination, setLoginRouteDestination] = useSessionStorage({ key: "loginRouteDestination" });
+
+    const githubLogin = async (code: string | undefined): Promise<{route:string, success:boolean}> => {
+        const {authToken, data} = await tryLoginWithGithub(code);
+        if(!authToken || !data) {
+            setLoginRouteDestination(window.location.pathname);
+            return {route: DEFAULT_NO_AUTH_ROUTE, success:false};
+        }
+
+        setGithubAuthToken(authToken);
+        setGithubData(data);
+
+        const route = readSessionStorageValue({key: "loginRouteDestination"});
+        setLoginRouteDestination('');
+        return {route:(route as string) || DEFAULT_AUTHED_ROUTE, success:true};
+    }
 
     return (
         <TRZContext.Provider value={{
             githubAuthToken,
-            setGithubAuthToken,
             githubData,
-            setGithubData,
+            githubLogin
         }}>
             {children}
         </TRZContext.Provider>
