@@ -1,14 +1,11 @@
-// Utility
 import React from "react";
-import { faBell } from "@fortawesome/free-solid-svg-icons";
-
-//Components
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {Button} from "@mantine/core";
 import {modals} from "@mantine/modals";
+import { FaBell } from "react-icons/fa";
+import { useTRZ } from "@trz/util/TRZ-context";
 
 const Navbar = () => {
-
+	const trz = useTRZ();
 	return (
 		<div
 			style={{
@@ -81,7 +78,7 @@ const Navbar = () => {
 						color: "hsl(0, 2%, 60%)",
 					}}
 				/>
-				<FontAwesomeIcon icon={faBell} className='fa-xl' />
+				<FaBell />
 				<button
 					className='profilieIcon'
 					style={{
@@ -96,7 +93,9 @@ const Navbar = () => {
 						padding: " 0",
 						fontSize: " 22px",
 						color: "white",
-					}}>
+					}}
+					onClick={()=>trz.logoutAll()}
+				>
 					F
 				</button>
 			</div>
