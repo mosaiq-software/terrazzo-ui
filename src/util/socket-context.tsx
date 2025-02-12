@@ -18,6 +18,7 @@ type SocketContextType = {
     createBoard: (name: string, boardCode: string) => Promise<string | undefined>;
     addList: (boardID: string, listName: string) => Promise<boolean | undefined>;
     addCard: (listID: string, cardName: string) => Promise<boolean | undefined>;
+    updateListTitle: (listID: string, newName: string) => Promise<boolean | undefined>;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -154,6 +155,24 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             });
         });
 
+        sock.on(ServerSE.UPDATE_LIST_TITLE, (payload: ServerSEPayload[ServerSE.UPDATE_LIST_TITLE]) => {
+            setBoardData(prev => {
+                if(!prev) {return prev;}
+                return {
+                    ...prev,
+                    lists: prev.lists.map(list => {
+                        if(list.id === payload.listID) {
+                            return {
+                                ...list,
+                                name: payload.title
+                            }
+                        }
+                        return list;
+                    })
+                }
+            });
+        });
+
         
         return () => {
             setConnected(false);
@@ -245,6 +264,19 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }
 
+    const updateListTitle = async (listID:string, title:string):Promise<boolean | undefined> => {
+        if (!socket) {return undefined;}
+        return new Promise((resolve, reject) => {
+            socket.emit(ClientSE.UPDATE_LIST_TITLE, {listID, title}, (response: ClientSEReplies[ClientSE.UPDATE_LIST_TITLE], error?: string) => {
+                if(error) {
+                    reject(error);
+                } else {
+                    resolve(response.success);
+                }
+            });
+        });
+    }
+
 
 
     return (
@@ -260,7 +292,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             getBoardData,
             createBoard,
             addList,
-            addCard
+            addCard,
+            updateListTitle
         }}>
             {children}
         </SocketContext.Provider>
