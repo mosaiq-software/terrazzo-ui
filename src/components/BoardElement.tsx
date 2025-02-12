@@ -43,15 +43,20 @@ const BoardElement = (): React.JSX.Element => {
 				maw="100%" 
 				p="lg" 
 				bg="#1d2022"
+				style={{
+					overflowX: "scroll"
+				}}
 			>
-				<Group 
-					h="95%"
-					gap={20}
-					align="flex-start"
-					justify="flex-start"
-					wrap="nowrap"
+				<CollaborativeMouseTracker 
+					boardId={params.boardId}
 					style={{
-						overflowX: "scroll"
+						height: "95%",
+						width: "fit-content",
+						display: "flex",
+						gap: "20px",
+						alignItems: "flex-start",
+						justifyContent: "flex-start",
+						flexWrap: "nowrap",
 					}}
 				>
 					{
@@ -60,9 +65,8 @@ const BoardElement = (): React.JSX.Element => {
 						))
 					}
 					<CreateList/>
-				</Group>
+				</CollaborativeMouseTracker>
 			</Container>
-			<CollaborativeMouseTracker boardId={params.boardId} />
 		</>
 	);
 };
