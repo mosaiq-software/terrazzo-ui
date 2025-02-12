@@ -18,7 +18,7 @@ const UserCursor = (props: UserCursorProps) => {
     const IDLE_COLOR = "#afafaf";
     const imgColor = useImageColor(props.avatarUrl);
     React.useEffect(() => {
-        setColor(imgColor);
+        setColor(imgColor ?? props.color ?? "black");
     }, [imgColor]);
     
     if (!props.position) { return null; }
