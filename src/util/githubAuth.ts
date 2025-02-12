@@ -2,6 +2,7 @@ import queryString from "query-string";
 import { callTrzApi } from "./apiUtils";
 import { LocalStorageKey } from "@mosaiq/terrazzo-common/constants";
 import { NoteType, notify } from "./notifications";
+import { readSessionStorageValue } from "@mantine/hooks";
 
 /*
     Returns the URL to redirect to for GitHub login.
@@ -72,6 +73,11 @@ export const tryLoginWithGithub = async (callbackCode?:string): Promise<{authTok
     if (!data) {
         return {authToken: null, data: null};
     }
-    localStorage.setItem(LocalStorageKey.GITHUB_ACCESS_TOKEN, authToken);
+    const remember = readSessionStorageValue({key: "remember-me"});
+    if(remember === "true"){
+        localStorage.setItem(LocalStorageKey.GITHUB_ACCESS_TOKEN, authToken);
+    } else {
+        localStorage.removeItem(LocalStorageKey.GITHUB_ACCESS_TOKEN);
+    }
     return {authToken, data};
 }
