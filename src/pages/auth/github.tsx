@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import queryString from "query-string";
 import { tryLoginWithGithub } from "@trz/util/githubAuth";
 import { useTRZ } from "@trz/util/TRZ-context";
@@ -17,8 +17,15 @@ export const GithubAuth = () => {
     });
     const urlParams = queryString.parse(window.location.search);
     const code = urlParams.code;
-    React.useEffect(() => {
+
+    useEffect(() => {
+        let strictIgnore = false;
         const fetchData = async (code: string) => {
+            await new Promise((resolve)=>setTimeout(resolve, 0));
+            if(strictIgnore){
+                return;
+            }
+            console.log("login")
             const {authToken, data} = await tryLoginWithGithub(code);
             if(authToken && data) {
                 trz.setGithubAuthToken(authToken);
@@ -30,6 +37,9 @@ export const GithubAuth = () => {
         };
         if(code && typeof code === "string") {
             fetchData(code);
+        }
+        return ()=>{
+            strictIgnore = true;
         }
     }, [code]);
 

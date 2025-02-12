@@ -26,8 +26,11 @@ export const getGithubLoginUrl = () => {
 */
 export const getUserAccessTokenFromGithub = async (code: string) => {
     try {
-        const response = await callTrzApi(`/user/github/auth?code=${code}`, "GET");
-        return (response?.data?.access_token);
+        const {json, status} = await callTrzApi(`/user/github/auth?code=${code}`, "GET");
+        if(status !== 200){
+            throw new Error("Invalid status code "+status);
+        }
+        return (json?.access_token);
     } catch (error) {
         console.error("Error fetching user access token from GitHub", error);
         notify(NoteType.GITHUB_AUTH_ERROR);
@@ -39,8 +42,11 @@ export const getUserAccessTokenFromGithub = async (code: string) => {
 */
 export const getUserDataFromGithub = async (accessToken: string) => {
     try {
-        const response = await callTrzApi(`/user/github/userdata?access_token=${accessToken}`, "GET");
-        return (response?.data);
+        const {json, status} = await callTrzApi(`/user/github/userdata?access_token=${accessToken}`, "GET");
+        if(status !== 200){
+            throw new Error("Invalid status code "+status);
+        }
+        return (json);
     } catch (error) {
         console.error("Error fetching user data from GitHub", error);
         notify(NoteType.GITHUB_DATA_ERROR);

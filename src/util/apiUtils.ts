@@ -20,9 +20,21 @@ export const callTrzApi = async (endpoint: string, method: string, body?: any) =
         });
         if (!response) {
             console.error(`Error calling ${endpoint} with method ${method}`);
-            return null;
+            return {
+                status: 500,
+                json: undefined
+            }
         }
-        return response;
+        let json:any = await response.text();
+        try {
+            json = JSON.parse(json);
+        } catch (error: any){
+
+        }
+        return {
+            status: response.status,
+            json: json,
+        }
     } catch (error) {
         console.error(`Error calling ${endpoint} with method ${method}`, error);
         throw error;

@@ -17,7 +17,12 @@ export const AuthWrapper = () => {
     const currentRoute = window.location.pathname;
 
     useEffect(() => {
+        let strictIgnore = false;
         const tryLogin = async () => {
+            await new Promise((resolve)=>setTimeout(resolve, 0));
+            if(strictIgnore){
+                return;
+            }
             const {authToken, data} = await tryLoginWithGithub();
             if (authToken && data) {
                 trz.setGithubAuthToken(authToken);
@@ -30,6 +35,9 @@ export const AuthWrapper = () => {
         if (!trz.githubAuthToken || !trz.githubData || currentRoute !== "/login") {
             tryLogin();
             return;
+        }
+        return ()=>{
+            strictIgnore = true;
         }
     }, []);
 
