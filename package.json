@@ -5,7 +5,8 @@
   "repository": "https://github.com/mosaiq-software/terrazzo-ui",
   "scripts": {
     "test": "test",
-    "start": "webpack serve --open",
+    "start": "webpack serve",
+    "start:open": "webpack serve -- open",
     "build": "webpack --mode production",
     "prepare": "husky",
     "after-push": "node ./scripts/after-push.mjs",
