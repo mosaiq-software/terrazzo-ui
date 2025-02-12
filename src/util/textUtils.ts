@@ -1,5 +1,15 @@
+import { Position } from "@mosaiq/terrazzo-common/socketTypes";
+import { TextBlockEvent } from "@mosaiq/terrazzo-common/types";
+export interface TextObject {
+    text: string;
+    caret: number | undefined;
+    relative: Position | undefined,
+    queue: TextBlockEvent[],
+}
+
 export const IDLE_TIMEOUT_MS = 1000 * 60 * 3;
 export const MOUSE_UPDATE_THROTTLE_MS = 250;
+export const TEXT_EVENT_EMIT_THROTTLE_MS = 100;
 export const TAB_CHAR = '    ';
 
 const CSS_TA_PROPERTIES = [

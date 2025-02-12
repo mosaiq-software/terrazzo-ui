@@ -5,7 +5,7 @@ import { ClientSE, ClientSEReplies, ClientSocketIOEvent, Position, RoomId, Serve
 import { Board, TextBlock, TextBlockEvent, TextBlockId} from '@mosaiq/terrazzo-common/types';
 import { NoteType, notify } from '@trz/util/notifications';
 import { useIdle, useThrottledCallback } from '@mantine/hooks';
-import { IDLE_TIMEOUT_MS, MOUSE_UPDATE_THROTTLE_MS } from './textUtils';
+import { getCaretCoordinates, IDLE_TIMEOUT_MS, MOUSE_UPDATE_THROTTLE_MS, TEXT_EVENT_EMIT_THROTTLE_MS, TextObject } from './textUtils';
 import { executeTextBlockEvent } from '@mosaiq/terrazzo-common/utils/textUtils';
 
 type SocketContextType = {
@@ -21,12 +21,11 @@ type SocketContextType = {
     createBoard: (name: string, boardCode: string) => Promise<string | undefined>;
     addList: (boardID: string, listName: string) => Promise<boolean | undefined>;
     addCard: (listID: string, cardName: string) => Promise<boolean | undefined>;
-    setCollaborativeText: (text: string|undefined) => void;
-    collaborativeText: string | undefined;
-    getTextBlockData: (textBlockId: TextBlockId) => Promise<TextBlock | undefined>;
-    updateTextBlock: (events: TextBlockEvent[]) => Promise<string | undefined>;
-    updateCaret: (pos:Position | undefined, selectionStart: number | undefined) => void;
-    collabCaretSelStart: number | undefined;
+    initializeTextBlockData: (textBlockId: TextBlockId) => Promise<void>;
+    collaborativeTextObject: TextObject;
+    setCollaborativeTextObject: React.Dispatch<React.SetStateAction<TextObject>>;
+    receiveCollabTextEvent: (event: TextBlockEvent, element: HTMLTextAreaElement | undefined, emit: boolean) => void;
+    syncCaretPosition: (element: HTMLTextAreaElement | undefined) => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -40,8 +39,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const [roomUsers, setRoomUsersState] = useState<UserData[]>([]);
     const [connected, setConnected] = useState<boolean>(false);
     const [boardData, setBoardData] = useState<Board>();
-    const [collaborativeText, setCollaborativeText] = useState<string | undefined>(undefined);
-    const [collabCaretSelStart, setCollabCaretSelStart] = useState<number | undefined>(undefined);
+    const [collaborativeTextObject, setCollaborativeTextObject] = useState<TextObject>({text: '', caret: undefined, relative: undefined, queue:[]});
 
     useEffect(() => {
         setIdle(idle);
@@ -173,19 +171,9 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             if (!payload) {
                 return;
             }
-            setCollaborativeText((prevText)=>{
-                let text = prevText;
-                setCollabCaretSelStart((prevCaret)=>{
-                    let caret = prevCaret;
-                    for (let event of payload.events){
-                        const {updated, selectionStart} = executeTextBlockEvent(text ?? '', event, caret);
-                        text = updated;
-                        caret = selectionStart;
-                    }
-                    return caret;
-                })
-                return payload.updated;
-            });
+            for (let event of payload.events){
+                receiveCollabTextEvent(event, undefined, false);
+            }
         });
 
         sock.on(ServerSE.TEXT_CARET, (payload: ServerSEPayload[ServerSE.TEXT_CARET]) => {
@@ -292,9 +280,9 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }
 
-    const getTextBlockData = async (textBlockId:TextBlockId): Promise<TextBlock | undefined> => {
+    const initializeTextBlockData = async (textBlockId:TextBlockId): Promise<void> => {
         if(!socket) {return undefined;}
-        return new Promise((resolve, reject)=>{
+        const text: TextBlock | undefined = await new Promise((resolve, reject)=>{
             socket.emit(ClientSE.GET_TEXT_BLOCK, textBlockId, (response: ClientSEReplies[ClientSE.GET_TEXT_BLOCK], error?:string)=>{
                 if(error) {
                     reject(error);
@@ -303,9 +291,75 @@ const SocketProvider: React.FC<any> = ({ children }) => {
                 }
             });
         });
+        setCollaborativeTextObject({
+            text: text?.text ?? '',
+            caret: undefined,
+            relative: undefined,
+            queue: [],
+        });
     };
 
-    const updateTextBlock = async (textBlockEvents:TextBlockEvent[]): Promise<string | undefined> => {
+    const receiveCollabTextEvent = (event: TextBlockEvent, element: HTMLTextAreaElement | undefined, emit: boolean) => {
+        setCollaborativeTextObject((prev)=>{
+            const {updated, selectionStart} = executeTextBlockEvent(prev.text, event, prev.caret);
+            const a = {
+                text: updated,
+                caret: selectionStart,
+                relative: prev.relative,
+                queue: [...(prev.queue), event],
+            };
+            const tick = async ()=>{
+                await new Promise((resolve)=>setTimeout(resolve, 0));
+                throttledEmitTextEvents();
+            }
+            if(emit){
+                tick();
+            }
+            return a;
+        });
+        updateCaretPosition(element, true);
+    }
+
+    const syncCaretPosition = (element: HTMLTextAreaElement | undefined) => {
+        updateCaretPosition(element);
+    }
+
+    const updateCaretPosition = async (element: HTMLTextAreaElement | undefined, useKnownPosition?: boolean): Promise<void> => {
+        await new Promise((resolve)=>setTimeout(resolve, 0));
+        if(!element){ 
+            return;
+        }
+        setCollaborativeTextObject((prev)=>{
+            if(prev.caret !== undefined && useKnownPosition) {
+                element.selectionStart = prev.caret;
+                element.selectionEnd = prev.caret;
+            }
+            const width = element.getBoundingClientRect().width;
+            const height = element.getBoundingClientRect().height;
+            const coordinates = getCaretCoordinates(element, element.selectionStart);
+            const relativeCoords = {x: coordinates.left/width, y: coordinates.top/height}
+    
+            const a = {
+                ...prev,
+                caret: element.selectionStart,
+                relative: relativeCoords,
+            };
+            syncUpdatedCaret(relativeCoords);
+            return a;
+        });
+    }
+
+    const throttledEmitTextEvents = useThrottledCallback(()=>{
+        emitTextBlockEvents(collaborativeTextObject.queue);
+        setCollaborativeTextObject((prev) => {
+            return {
+                ...prev,
+                queue: []
+            }
+        });
+    }, TEXT_EVENT_EMIT_THROTTLE_MS);
+
+    const emitTextBlockEvents = async (textBlockEvents:TextBlockEvent[]): Promise<string | undefined> => {
         if(!socket) {return undefined;}
         return new Promise((resolve, reject)=>{
             socket.emit(ClientSE.UPDATE_TEXT_BLOCK, textBlockEvents, (response: ClientSEReplies[ClientSE.UPDATE_TEXT_BLOCK], error?:string)=>{
@@ -318,19 +372,14 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     };
 
-    const updateCaret = (pos: Position | undefined, selectionStart: number |  undefined): void => {
-        setCollabCaretSelStart(selectionStart);
-        syncUpdatedCaret(pos);
-    }
     const syncUpdatedCaret = useThrottledCallback((pos?: Position) => {
         if (!socket || !room || !connected || roomUsers.length === 0) {return;}
         socket.volatile.emit(ClientSE.TEXT_CARET, pos, (response: ClientSEReplies[ClientSE.TEXT_CARET], error?: string) => {
             if(error) {
-                console.error("Error moving mouse:", error);
+                console.error("Error moving caret:", error);
             }
         });
     }, MOUSE_UPDATE_THROTTLE_MS);
-
 
 
     return (
@@ -347,13 +396,11 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             createBoard,
             addList,
             addCard,
-            setCollaborativeText,
-            collaborativeText,
-            getTextBlockData,
-            updateTextBlock,
-            updateCaret,
-            collabCaretSelStart
-
+            initializeTextBlockData,
+            collaborativeTextObject,
+            setCollaborativeTextObject,
+            receiveCollabTextEvent,
+            syncCaretPosition
         }}>
             {children}
         </SocketContext.Provider>
