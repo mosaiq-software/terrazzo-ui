@@ -78,15 +78,15 @@ function ListElement(props: ListElementProps): React.JSX.Element {
     return (
         <Paper
             bg="#121314"
-            //h="90vh"
-            w="250"
             radius="md"
             shadow="lg"
             style={{
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
-                alignItems: "stretch"
+                alignItems: "stretch",
+                minWidth: "250px",
+                maxWidth: "250px"
             }}
         >
             <Group
@@ -94,8 +94,13 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 align="center"
                 p="xs"
             >
-                <EditableTextbox value={listTitle} onChange={onTitleChange} placeholder="Click to edit!" type="title"
-                                 titleProps={{order: 6, c: "#ffffff"}}/>
+                <EditableTextbox 
+                    value={listTitle}
+                    onChange={onTitleChange}
+                    placeholder="Click to edit!"
+                    type="title"
+                    titleProps={{order: 6, c: "#ffffff"}}
+                />
                 <Button variant="subtle" c="#ffffff" h="xs"><Title order={6} c="#ffffff">•••</Title></Button>
             </Group>
             <Stack
@@ -117,31 +122,35 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 }
                 <Group>
                     {visible &&
-                        <Paper bg={"#121314"}
-                               w="250"
-                               radius="md"
-                               shadow="lg"
-                               ref={ref}
-                               onKeyDown={getHotkeyHandler([
-                                   ['Enter', onSubmit]
-                        ])}>
+                        <Paper 
+                            bg={"#121314"}
+                            w="250"
+                            radius="md"
+                            shadow="lg"
+                            ref={ref}
+                            onKeyDown={getHotkeyHandler([['Enter', onSubmit]])}
+                        >
                             <FocusTrap>
-                                <TextInput placeholder="Enter card title..."
-                                           value={cardTitle}
-                                           onChange={(event) => setCardTitle(event.currentTarget.value)}
-                                           error={error}
-                                           p="5"
+                                <TextInput
+                                    placeholder="Enter card title..."
+                                    value={cardTitle}
+                                    onChange={(event) => setCardTitle(event.currentTarget.value)}
+                                    error={error}
+                                    p="5"
                                 />
                             </FocusTrap>
                             <Flex p='5'>
-                                <Button w="150"
-                                        variant="light"
-                                        onClick={onSubmit}
+                                <Button 
+                                    w="150"
+                                    variant="light"
+                                    onClick={onSubmit}
                                 >
                                     Create Card
                                 </Button>
-                                <CloseButton onClick={onBlur}
-                                             size='lg'/>
+                                <CloseButton 
+                                    onClick={onBlur}
+                                    size='lg'
+                                />
                             </Flex>
                         </Paper>
                     }
@@ -149,9 +158,10 @@ function ListElement(props: ListElementProps): React.JSX.Element {
             </Stack>
 
             {!visible &&
-                <Button w="100%"
-                        variant="light"
-                        onClick={() => setVisible((v) => !v)}
+                <Button 
+                    w="100%"
+                    variant="light"
+                    onClick={() => setVisible((v) => !v)}
                 >
                     Add Card +
                 </Button>
