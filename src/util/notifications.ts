@@ -12,6 +12,7 @@ export enum NoteType {
     BOARD_CREATION_ERROR = 'BOARD_CREATION_ERROR',
     LIST_CREATION_ERROR = 'LIST_CREATION_ERROR',
     CARD_CREATION_ERROR = 'CARD_CREATION_ERROR',
+    LIST_UPDATE_ERROR = 'LIST_UPDATE_ERROR',
     CLIPBOARD_COPY_ERROR = 'CLIPBOARD_COPY_ERROR',
     CLIPBOARD_PASTE_ERROR = 'CLIPBOARD_PASTE_ERROR'
 }
@@ -78,6 +79,11 @@ const noteMap = {
     [NoteType.CARD_CREATION_ERROR]: {
         title: 'Card Creation Error',
         message: 'An error occurred while creating a new card',
+        color: NoteColor.ERROR,
+    },
+    [NoteType.LIST_UPDATE_ERROR]: {
+        title: 'List Update Error',
+        message: 'An error occurred while updating the list',
         color: NoteColor.ERROR,
     },
     [NoteType.CLIPBOARD_COPY_ERROR]: {
