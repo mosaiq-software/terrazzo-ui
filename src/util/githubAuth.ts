@@ -81,3 +81,22 @@ export const tryLoginWithGithub = async (callbackCode?:string): Promise<{authTok
     }
     return {authToken, data};
 }
+
+/*
+    Get the user's access token from GitHub using the one-time code from the URL.
+*/
+export const revokeUserAccessToGithubAuth = async (access_token: string) => {
+    try {
+        if(!access_token){
+            return;
+        }
+        const {json, status} = await callTrzApi(`/user/github/revoke/${access_token}`, "DELETE");
+        if(status !== 200){
+            throw new Error("Invalid status code "+status);
+        }
+    } catch (error) {
+        console.error("Error revoking user access from GitHub", error);
+        notify(NoteType.GITHUB_AUTH_ERROR);
+        return null;
+    }
+}

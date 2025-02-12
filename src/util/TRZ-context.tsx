@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useState } from 'react';
-import { tryLoginWithGithub } from './githubAuth';
+import { revokeUserAccessToGithubAuth, tryLoginWithGithub } from './githubAuth';
 import { readSessionStorageValue, useSessionStorage } from '@mantine/hooks';
-import { NoteType, notify } from './notifications';
+import { LocalStorageKey } from '@mosaiq/terrazzo-common/constants';
 
 type TRZContextType = {
     githubAuthToken: string | null;
     githubData: any | null;
     githubLogin: (code: string | undefined) => Promise<{route:string, success:boolean}>;
+    logoutAll: () => void;
 }
 
 const TRZContext = createContext<TRZContextType | undefined>(undefined);
@@ -37,11 +38,23 @@ const TRZProvider: React.FC<any> = ({ children }) => {
         return {route:(route as string) || DEFAULT_AUTHED_ROUTE, success:true};
     }
 
+    const logoutAll = async () => {
+        if(githubAuthToken) {
+            await revokeUserAccessToGithubAuth(githubAuthToken);
+        }
+        localStorage.removeItem(LocalStorageKey.GITHUB_ACCESS_TOKEN);
+        setGithubAuthToken(null);
+        setGithubData(null);
+
+        window.location.pathname = DEFAULT_NO_AUTH_ROUTE;
+    }
+
     return (
         <TRZContext.Provider value={{
             githubAuthToken,
             githubData,
-            githubLogin
+            githubLogin,
+            logoutAll,
         }}>
             {children}
         </TRZContext.Provider>

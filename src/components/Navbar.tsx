@@ -2,9 +2,10 @@ import React from "react";
 import {Button} from "@mantine/core";
 import {modals} from "@mantine/modals";
 import { FaBell } from "react-icons/fa";
+import { useTRZ } from "@trz/util/TRZ-context";
 
 const Navbar = () => {
-
+	const trz = useTRZ();
 	return (
 		<div
 			style={{
@@ -92,7 +93,9 @@ const Navbar = () => {
 						padding: " 0",
 						fontSize: " 22px",
 						color: "white",
-					}}>
+					}}
+					onClick={()=>trz.logoutAll()}
+				>
 					F
 				</button>
 			</div>
