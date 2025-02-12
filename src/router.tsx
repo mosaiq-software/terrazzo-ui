@@ -8,6 +8,7 @@ import Navbar from "@trz/components/Navbar";
 import BoardElement from "@trz/components/BoardElement";
 import {CreateBoardModal} from "@trz/components/CreateBoard";
 import {ModalsProvider} from "@mantine/modals";
+import { CollaborativeTextArea } from "./components/CollaborativeTextArea";
 
 const Router = () => {
 	return (
@@ -15,12 +16,13 @@ const Router = () => {
 			<ModalsProvider modals={{board: CreateBoardModal}}>
 				<Navbar/>
 				<Routes>
-					<Route path='/' element={<Outlet />} />
+					<Route path='/' element={<Outlet/>}/>
 					<Route path='/login' element={<p><a href={getGithubLoginUrl()}>Login with GitHub</a></p>} />
 					<Route path='/auth' element={<Outlet />}>
 						<Route path='github' element={<GithubAuth />} />
 					</Route>
 					<Route element={<AuthWrapper />}>
+						<Route path='/text' element={<CollaborativeTextArea maxLineLength={40} maxRows={20} textBlockId="6f77a4b2-990e-46be-8810-3813aba7d1f6" />} />
 						<Route path='/dashboard' element={<Dashboard />} />
 						<Route path='/boards/:boardId' element={<BoardElement/>}></Route>
 					</Route>
