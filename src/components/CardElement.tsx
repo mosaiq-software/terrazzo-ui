@@ -12,7 +12,6 @@ interface CardElementProps {
 }
 const CardElement = (props: CardElementProps): React.JSX.Element => {
 	const [opened, {open, close}] = useDisclosure(false);
-	const MAX_USERS = 3;
 	const testUsers = Array.from({ length: 1 }).map((_, index) => ({
 		name: "John Doe",
 		url: "https://avatars.githubusercontent.com/u/47070087?v=4"
@@ -24,11 +23,19 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 				onClick={open}
 			>
 				<Pill.Group>
-					<Pill size="xs" color='blue'>To Do</Pill>
-					<Pill size="xs" color='red'>In Progress</Pill>
+					<Pill size="xs" bg='blue'>To Do</Pill>
+					<Pill size="xs" bg='red'>In Progress</Pill>
 				</Pill.Group>
-				<Title order={6} lineClamp={1} c="#ffffff">{props.cardType.name}</Title>
-				<Text size='sm' c="#878787">{props.cardType.cardNumber}</Text>
+				<Title 
+					order={5} 
+					lineClamp={7} 
+					c="#ffffff"
+					style={{
+						wordWrap: "break-word",
+						textWrap: "wrap"
+					}}
+				>{props.cardType.name}</Title>
+				<Text size='xs' c="#878787">{"TRZ"} - {props.cardType.cardNumber}</Text>
 				<Group>
 					{/* icons for info abt the card */}
 				</Group>

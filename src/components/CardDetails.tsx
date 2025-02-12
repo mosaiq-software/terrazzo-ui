@@ -9,6 +9,7 @@ import {
 	Modal,
 	Text,
 	MultiSelect,
+	Pill,
 } from "@mantine/core";
 import { CollaborativeTextArea } from "./CollaborativeTextArea";
 import { Card } from "@mosaiq/terrazzo-common/types";
@@ -88,9 +89,10 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element => {
 									</Stack>
 								</Grid.Col>
 								<Grid.Col span={4}>
-									<Stack align='left'>
-										<MultiSelect label='Labels' data={[]} style={{ margin: ".2rem" }} />
-									</Stack>
+									<Pill.Group>
+										<Pill size="xs" bg='blue'>To Do</Pill>
+										<Pill size="xs" bg='red'>In Progress</Pill>
+									</Pill.Group>
 								</Grid.Col>
 							</Grid>
 							<CollaborativeTextArea textBlockId={props.card.descriptionTextBlockId} maxLineLength={66} />
