@@ -1,32 +1,21 @@
-//Utility
-import { useDisclosure } from "@mantine/hooks";
-import { Avatar, Group, Paper, Pill, Text, Title, Tooltip } from "@mantine/core";
 import React from "react";
+import { useDisclosure } from "@mantine/hooks";
+import { Group, Paper, Pill, Text, Title } from "@mantine/core";
 
-//Components
 import CardDetails from "@trz/components/CardDetails";
-import { useTRZ } from "@trz/util/TRZ-context";
-import { C } from "react-router/dist/production/fog-of-war-CbNQuoo8";
-import {Card, List} from "@mosaiq/terrazzo-common/types";
+import {Card} from "@mosaiq/terrazzo-common/types";
+import { AvatarRow } from "./AvatarRow";
 
 
 interface CardElementProps {
 	cardType: Card
 }
-
-/**ListCard Component
- *
- * State => showDetails => boolean toggle functionality to show card details
- *
- * Props: none
- */
-
 const CardElement = (props: CardElementProps): React.JSX.Element => {
 	const [opened, {open, close}] = useDisclosure(false);
 	const MAX_USERS = 3;
 	const testUsers = Array.from({ length: 1 }).map((_, index) => ({
 		name: "John Doe",
-		avatar: "https://avatars.githubusercontent.com/u/47070087?v=4"
+		url: "https://avatars.githubusercontent.com/u/47070087?v=4"
 	}))
 
 	return (
@@ -43,35 +32,11 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 				<Group>
 					{/* icons for info abt the card */}
 				</Group>
-				<Avatar.Group spacing="sm" style={{ justifyContent: "flex-end" }}>
-					{
-						// only take the first n users
-						testUsers.slice(0, MAX_USERS).map((user, index) =>
-							<Tooltip key={index} label={user.name} position="bottom" withArrow radius="lg">
-								<Avatar src={user.avatar} size="sm" />
-							</Tooltip>
-						)
-					}
-					{
-						// if there are more than n users, show a +{n} avatar
-						testUsers.length > MAX_USERS && (
-							<Tooltip position="bottom" withArrow radius="lg"
-								label={
-									testUsers.slice(MAX_USERS).map((user, index) =>
-										<Text key={index}>{user.name}</Text>
-									)
-								}
-							>
-								<Avatar size="sm">+{testUsers.length - 3}</Avatar>
-							</Tooltip>
-						)
-								
-					}
-				</Avatar.Group>
+				<AvatarRow users={testUsers} maxUsers={3}/>
 			</Paper>
 			{
 				opened && (
-					<CardDetails id={123} open={opened} toggle={close} />
+					<CardDetails card={props.cardType} open={opened} toggle={close} boardCode={"TRZ"}/>
 				)
 			}
 		</>
