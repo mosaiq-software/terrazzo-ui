@@ -22,6 +22,7 @@ module.exports= () => {
             static: path.resolve(__dirname, "public"),
             liveReload: true
         },
+        devtool: 'source-map',
         resolve: {
             extensions: ['.ts','.tsx','.js'],
             modules: ['node_modules'],

@@ -9,7 +9,14 @@ export const useImageColor = (src?: string, type?: imageColorType) => {
     React.useMemo(() => {
         if (src) {
             try {
-                Vibrant.from(src).getPalette().then((palette) => setColor((palette[type || "Vibrant"])?.hex || undefined));
+                Vibrant.from(src).getPalette()
+                    .catch(()=>{
+                        console.error("Error getting palette");
+                        setColor(undefined);
+                    })
+                    .then((palette) =>{
+                        setColor((palette[type || "Vibrant"])?.hex || undefined);
+                    });
             } catch (error) {
                 console.error(error);
                 setColor(undefined);
