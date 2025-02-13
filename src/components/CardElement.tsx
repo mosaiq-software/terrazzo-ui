@@ -1,10 +1,9 @@
 import React from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { Group, Paper, Pill, Text, Title } from "@mantine/core";
-
 import CardDetails from "@trz/components/CardDetails";
 import {Card} from "@mosaiq/terrazzo-common/types";
-import { AvatarRow } from "./AvatarRow";
+import { AvatarRow } from "@trz/components/AvatarRow";
 
 
 interface CardElementProps {

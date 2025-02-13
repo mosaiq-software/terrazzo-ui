@@ -8,13 +8,12 @@ import {
 	Menu,
 	Modal,
 	Text,
-	MultiSelect,
 	Pill,
 } from "@mantine/core";
-import { CollaborativeTextArea } from "./CollaborativeTextArea";
+import { CollaborativeTextArea } from "@trz/components/CollaborativeTextArea";
 import { Card } from "@mosaiq/terrazzo-common/types";
-import { AvatarRow } from './AvatarRow';
-import EditableTextbox from "./EditableTextbox";
+import { AvatarRow } from '@trz/components/AvatarRow';
+import EditableTextbox from "@trz/components/EditableTextbox";
 
 interface CardDetailsProps {
 	boardCode: string;
