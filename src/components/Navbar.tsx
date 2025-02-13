@@ -1,10 +1,10 @@
 import React from "react"
 import { Slot } from "@radix-ui/react-slot"
-import { AvatarIcon } from "@tabler/icons-react"
-import { Title, ActionIcon, Button, Autocomplete } from "@mantine/core"
+import { Title, ActionIcon, Button, Menu } from "@mantine/core"
 import { useViewportSize } from "@mantine/hooks"
 
 import "../styles/Navbar.css"
+import Autocomplete from "./Autocomplete"
 import { r } from "react-router/dist/production/route-data-DuV3tXo2"
 
 
@@ -29,26 +29,39 @@ const Navbar = () => {
     return (
         <nav className="trzNavigationMenuRoot">
             <ul className="trzNavigationMenuList">
-                <li className="trzNavigationMenuItem">
-                    <Title order={3}>Terrazzo</Title>
+                <li className="trzNavigationMenuItem" id="trzLogo">
+                    <NavbarTrigger asChild>
+                        <Button
+                            variant="unstyled">
+                            <Title order={3}>Terrazzo</Title>
+                        </Button>
+                    </NavbarTrigger>
                 </li>
             </ul>
             <ul className="trzNavigationMenuList">
                 <li className="trzNavigationMenuItem">
                     <Autocomplete
+                        id="trzAutocomplete"
                         placeholder="Search"
                         value={value}
                         onChange={setValue}/>
                 </li>
                 <li className="trzNavigationMenuItem">
                     <NavbarTrigger asChild>
-                        <ActionIcon 
-                            variant="unstyled"
-                            size="lg"
-                            radius="100"
-                            aria-label="Account">
-                            T
-                        </ActionIcon>
+                        <Menu withArrow>
+                            <Menu.Target>
+                                <ActionIcon 
+                                    variant="unstyled"
+                                    size="lg"
+                                    radius="100"
+                                    aria-label="Account">
+                                    T
+                                </ActionIcon>
+                            </Menu.Target>
+                            <Menu.Dropdown>
+                                <Menu.Label>Account</Menu.Label>
+                            </Menu.Dropdown>
+                        </Menu>
                     </NavbarTrigger>
                 </li>
             </ul>

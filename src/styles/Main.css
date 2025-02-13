@@ -1,6 +1,6 @@
 :root {
     color-scheme: var(--mantine-color-scheme);
-    --trz-bg-primary: var(--mantine-color-gray-9);
+    --trz-bg-primary: var(--mantine-color-gray-8);
 }
 
 body {

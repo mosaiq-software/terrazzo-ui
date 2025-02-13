@@ -1,9 +1,13 @@
 
+#trzLogo {
+    z-index: 1000;
+}
+
 .trzNavigationMenuRoot {
     position: relative;
     display: flex;
     justify-content: space-between;
-	background-color: var(--mantine-color-gray-8);
+	background-color: inherit;
     width: 100vw;
     z-index: 1;
 }
@@ -20,12 +24,23 @@
 	margin: 0;
 }
 
-.trzNavigationMenuTrigger {
+#trzAutocomplete {
+    width: 10rem;
+    background-color: inherit;
+}
+#trzAutocomplete:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+#trzAutocomplete:focus {
+    width: 25rem;
+}
+
+.trzButton {
     color: var(--mantine-color-text);
     background-color: inherit;
 }
 
-.trzNavigationMenuTrigger:hover {
+.trzButton:hover {
     color: var(--mantine-color-text);
-    background-color: var(--mantine-color-blue-9);
+    background-color: rgba(255, 255, 255, 0.05);
 }
