@@ -1,35 +1,34 @@
 import React, { useEffect } from "react";
 import {Outlet} from "react-router-dom";
-import { useTRZ } from "@trz/util/TRZ-context";
-import { tryLoginWithGithub } from "@trz/util/githubAuth";
+import { DEFAULT_NO_AUTH_ROUTE, useTRZ } from "@trz/util/TRZ-context";
 import { useNavigate } from "react-router-dom";
-import { useSessionStorage } from "@mantine/hooks";
 import { Loader } from "@mantine/core";
 
 
 export const AuthWrapper = () => {
     const trz = useTRZ();
     const navigate = useNavigate();
-    const [loginRouteDestination, setLoginRouteDestination] = useSessionStorage({
-        key: "loginRouteDestination",
-        defaultValue: "/dashboard"
-    });
     const currentRoute = window.location.pathname;
 
+    
+
     useEffect(() => {
+        let strictIgnore = false;
         const tryLogin = async () => {
-            const {authToken, data} = await tryLoginWithGithub();
-            if (authToken && data) {
-                trz.setGithubAuthToken(authToken);
-                trz.setGithubData(data);
-            } else {
-                setLoginRouteDestination(currentRoute);
-                navigate("/login");
+            await new Promise((resolve)=>setTimeout(resolve, 0));
+            if(strictIgnore){
+                return;
+            }
+            const {route, success} = await trz.githubLogin(undefined);
+            if(!success){
+                navigate(route);
             }
         }
-        if (!trz.githubAuthToken || !trz.githubData || currentRoute !== "/login") {
+        if (!trz.githubAuthToken || !trz.githubData || currentRoute !== DEFAULT_NO_AUTH_ROUTE) {
             tryLogin();
-            return;
+        }
+        return ()=>{
+            strictIgnore = true;
         }
     }, []);
 

@@ -1,9 +1,8 @@
 import React from "react";
 import { Badge, Box } from "@mantine/core";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowPointer } from "@fortawesome/free-solid-svg-icons";
 import { useImageColor} from "@trz/util/useImageColor";
 import { Position } from "@mosaiq/terrazzo-common/socketTypes";
+import { GiArrowCursor } from "react-icons/gi";
 
 interface UserCursorProps {
     position?: Position;
@@ -18,7 +17,7 @@ const UserCursor = (props: UserCursorProps) => {
     const IDLE_COLOR = "#afafaf";
     const imgColor = useImageColor(props.avatarUrl);
     React.useEffect(() => {
-        setColor(imgColor);
+        setColor(imgColor ?? props.color ?? "black");
     }, [imgColor]);
     
     if (!props.position) { return null; }
@@ -30,7 +29,11 @@ const UserCursor = (props: UserCursorProps) => {
             top: props.position.y,
             transform: "translate(0%, -50%)",
         }}>
-            <FontAwesomeIcon icon={faArrowPointer} scale={2} color={props.idle ? IDLE_COLOR : color} />
+            <GiArrowCursor 
+                size={"1.25rem"}
+                color={props.idle ? IDLE_COLOR : color}
+                
+            />
             <Badge
                 color={props.idle ? IDLE_COLOR : color}
                 size="xs"

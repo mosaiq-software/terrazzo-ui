@@ -1,5 +1,5 @@
 // Utility
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 
 //Components
 import CardElement from "@trz/components/CardElement";
@@ -55,6 +55,20 @@ function ListElement(props: ListElementProps): React.JSX.Element {
         setVisible(false);
     }
 
+    function onTitleChange(value: string) {
+        setListTitle(value);
+        sockCtx.updateListTitle(props.listType.id, value).then((success) => {
+            if (!success) {
+                notify(NoteType.LIST_UPDATE_ERROR);
+                return;
+            }
+        });
+    }
+
+    useEffect(() => {
+        setListTitle(props.listType.name || "List Title");
+    })
+
     function onBlur(){
         setCardTitle("");
         setError("");
@@ -80,7 +94,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 align="center"
                 p="xs"
             >
-                <EditableTextbox value={listTitle} onChange={setListTitle} placeholder="Click to edit!" type="title"
+                <EditableTextbox value={listTitle} onChange={onTitleChange} placeholder="Click to edit!" type="title"
                                  titleProps={{order: 6, c: "#ffffff"}}/>
                 <Button variant="subtle" c="#ffffff" h="xs"><Title order={6} c="#ffffff">•••</Title></Button>
             </Group>
