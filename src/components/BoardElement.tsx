@@ -37,17 +37,36 @@ const BoardElement = (): React.JSX.Element => {
 
 	return (
 		<>
-			<Container h="100%" fluid maw="100%" p="lg" bg="#1d2022">
-				<Group h="95%" gap={20} align="flex-start" justify="flex-start" wrap="nowrap">
+			<Container 
+				h="100%" 
+				fluid 
+				maw="100%" 
+				p="lg" 
+				bg="#1d2022"
+				style={{
+					overflowX: "scroll"
+				}}
+			>
+				<CollaborativeMouseTracker 
+					boardId={params.boardId}
+					style={{
+						height: "95%",
+						width: "fit-content",
+						display: "flex",
+						gap: "20px",
+						alignItems: "flex-start",
+						justifyContent: "flex-start",
+						flexWrap: "nowrap",
+					}}
+				>
 					{
 						sockCtx.boardData?.lists?.map((list: List, index: number) => (
 							<ListElement key={index} listType={list}/>
 						))
 					}
 					<CreateList/>
-				</Group>
+				</CollaborativeMouseTracker>
 			</Container>
-			<CollaborativeMouseTracker boardId={params.boardId} />
 		</>
 	);
 };
