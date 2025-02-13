@@ -1,5 +1,3 @@
-import axios from "axios";
-
 export const getApiUrl = () => {
     const apiUrl = process.env.API_URL;
     const apiPort = process.env.API_PORT;
@@ -11,22 +9,32 @@ export const getApiUrl = () => {
     return `${apiUrl}:${apiPort}`;
 };
 
-export const callTrzApi = async (endpoint: string, method: string, data?: any) => {
-    const apiUrl = getApiUrl();
+export const callTrzApi = async (endpoint: string, method: string, body?: any) => {
     if (endpoint[0] === "/") {
         endpoint = endpoint.slice(1);
     }
     try {
-        const response = await axios({
+        const response = await fetch(`${getApiUrl()}/${endpoint}`, {
             method,
-            url: `${apiUrl}/${endpoint}`,
-            data,
+            body,
         });
         if (!response) {
             console.error(`Error calling ${endpoint} with method ${method}`);
-            return null;
+            return {
+                status: 500,
+                json: undefined
+            }
         }
-        return response;
+        let json:any = await response.text();
+        try {
+            json = JSON.parse(json);
+        } catch (error: any){
+
+        }
+        return {
+            status: response.status,
+            json: json,
+        }
     } catch (error) {
         console.error(`Error calling ${endpoint} with method ${method}`, error);
         throw error;

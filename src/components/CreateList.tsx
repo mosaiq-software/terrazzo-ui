@@ -49,7 +49,8 @@ const CreateList = (): React.JSX.Element => {
     return (
         <>
             {!visible &&
-                <Button w="250"
+                <Button miw="250px"
+                        maw="250px"
                         onClick={() => setVisible((v) => !v)}
                         color={"#121314"}
                 >
