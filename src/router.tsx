@@ -9,6 +9,7 @@ import Home from "@trz/components/Home";
 import BoardElement from "@trz/components/BoardElement";
 import {CreateBoardModal} from "@trz/components/CreateBoard";
 import {ModalsProvider} from "@mantine/modals";
+import Workspace from "@trz/components/Workspace";
 
 const Router = () => {
 	return (
@@ -25,6 +26,7 @@ const Router = () => {
 						<Route path='/dashboard' element={<Dashboard />} />
 						<Route path='/boards/:boardId' element={<BoardElement/>}></Route>
                         <Route path='/home' element={<Home/>} />
+						<Route path='/workspace' element={<Workspace/>} />
                     </Route>
 				</Routes>
 			</ModalsProvider>
