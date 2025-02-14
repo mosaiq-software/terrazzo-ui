@@ -1,66 +1,49 @@
 import React from "react"
-import { Slot } from "@radix-ui/react-slot"
-import { Title, Text } from "@mantine/core"
-import { useViewportSize } from "@mantine/hooks"
+import { NavLink } from "@mantine/core"
+import { useWindowScroll } from "@mantine/hooks"
 
-import "../styles/Navbar.css"
-import { r } from "react-router/dist/production/route-data-DuV3tXo2"
+import "@trz/styles/Navbar.css"
+import TRZButton from  "@trz/components/Button";
 
 // Custom hook that encapsulates a components behaviour 
 const useNavbar = () => {
-    const [isMobile, setIsMobile] = React.useState(false);
-    const { width, height } = useViewportSize();
+    const [scroll, scrollTo] = useWindowScroll();
+    const [isTop, setIsTop] = React.useState( true );
 
-    function toggleMobileVariant() {
-        setIsMobile(!isMobile);
+    return { 
+        scroll
     }
-
-    return {
-        isMobile
-    }
-}
-
-type NavbarType = {
-    children?: React.ReactNode;
 }
 
 const Navbar = () => {
     return (
-        <nav className="trzNavigationMenuRoot">
+        <header className="trzNavigationMenuRoot">
             <ul className="trzNavigationMenuList">
                 <li className="trzNavigationMenuItem">
-                    <Title order={1}>Terrazzo</Title>
+                    <NavLink
+                        unstyled
+                        className="trzNavLink"
+                        label="Terrazzo"
+                    />
                 </li>
                 <li className="trzNavigationMenuItem">
-                    <NavbarTrigger>Workspace</NavbarTrigger>
+                    <TRZButton>Workspace</TRZButton>
                 </li>
                 <li className="trzNavigationMenuItem">
-                    <NavbarTrigger>Create</NavbarTrigger>
+                    <TRZButton>Create</TRZButton>
                 </li>
             </ul>
             <ul className="trzNavigationMenuList">
                 <li className="trzNavigationMenuItem">
-                    <NavbarTrigger>Search</NavbarTrigger>
+                    <TRZButton>Search</TRZButton>
                 </li>
                 <li className="trzNavigationMenuItem">
-                    <NavbarTrigger>Account</NavbarTrigger>
+                    <TRZButton>Account</TRZButton>
                 </li>
             </ul>
-        </nav>
+        </header>
     )
 }
 
-
-type AsChildProp<DefaultElementProps> = 
-    ({ asChild?: false } & DefaultElementProps) 
-  |  { asChild: true; children: React.ReactNode }
-
-type TriggerProp = AsChildProp<React.ButtonHTMLAttributes<HTMLButtonElement>>
-
-const NavbarTrigger = ({asChild, ...props} : TriggerProp) => {
-    const Component = asChild ? Slot : "button"
-
-    return <Component className="trzNavigationMenuTrigger" {...props}/> 
-}
 
 export default Navbar;

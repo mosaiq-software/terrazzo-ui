@@ -1,10 +1,15 @@
-import React from "@react"
-import { UnstyledButton } from "@mantine/core"
+import React from "react"
+import { Button } from "@mantine/core"
 
-const Button = () => {
+type TRZButtonProps = {
+    children?: React.ReactNode;
+    className?: string;
+}
+
+const TRZButton = ({children, className, ...props}: TRZButtonProps) => {
     return (
-        <UnstyledButton>
-
-        </UnstyledButton>
+        <Button unstyled className="trzButton" {...props}>{children}</Button>
     )
 }
+
+export default TRZButton;

@@ -11,7 +11,7 @@ import Router from "./router";
 import "./styles/Main.css"
 
 // Styling
-const darktheme = createTheme({
+const theme = createTheme({
     activeClassName: '',
     colors: {
         'gray': [
@@ -31,7 +31,7 @@ const darktheme = createTheme({
 
 const App = () => {
 	return (
-		<MantineProvider defaultColorScheme="dark" theme={darktheme}>
+		<MantineProvider defaultColorScheme="dark" theme={theme}>
 			<Notifications/>
                 <TRZProvider>
                     <SocketProvider>
