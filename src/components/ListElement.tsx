@@ -1,7 +1,4 @@
-// Utility
 import React, {useEffect, useState} from "react";
-
-//Components
 import CardElement from "@trz/components/CardElement";
 import EditableTextbox from "@trz/components/EditableTextbox";
 import {Button, Group, Paper, Stack, Title, CloseButton, TextInput, Flex, FocusTrap} from "@mantine/core";
@@ -11,15 +8,8 @@ import {useSocket} from "@trz/util/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
 
 interface ListElementProps {
-    listType: List
+    listType: List,
 }
-
-/**BoardList Component
- *
- * State: none
- *
- * Props: none
- */
 
 function ListElement(props: ListElementProps): React.JSX.Element {
     const [listTitle, setListTitle] = React.useState(props.listType.name || "List Title");
@@ -87,7 +77,8 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 justifyContent: "space-between",
                 alignItems: "stretch",
                 minWidth: "250px",
-                maxWidth: "250px"
+                maxWidth: "250px",
+                cursor:"pointer",
             }}
             ref={inViewportRef}
         >
@@ -119,8 +110,8 @@ function ListElement(props: ListElementProps): React.JSX.Element {
             >
                 {
                     inViewport && props.listType?.cards.map((card:Card, index) => (
-						<CardElement key={index} cardType={card}/>
-					))
+                        <CardElement key={index} cardType={card}/>
+                    ))
                 }
                 <Group>
                     {visible &&
