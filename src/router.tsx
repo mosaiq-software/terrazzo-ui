@@ -17,7 +17,7 @@ const Router = () => {
 	return (
 		<BrowserRouter>
 			<ModalsProvider modals={{board: CreateBoardModal}}>
-				<Navbar/>
+				<Navbar openSettings={openSettings}/>
 				<Routes>
 					<Route path='/' element={<Outlet />} />
 					<Route path='/login' element={<p><a href={getGithubLoginUrl()}>Login with GitHub</a></p>} />
@@ -26,7 +26,7 @@ const Router = () => {
 					</Route>
 					<Route element={<AuthWrapper />}>
 						<Route path='/dashboard' element={<Dashboard />} />
-						<Route path='/boards/:boardId' element={<BoardElement/>}></Route>
+						<Route path='/boards/:boardId' element={<BoardElement isVisible={isVisible} onClose={()=>{setVisible(false)}}/>}></Route>
 					</Route>
 				</Routes>
 			</ModalsProvider>

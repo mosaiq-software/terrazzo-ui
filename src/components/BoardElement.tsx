@@ -6,10 +6,10 @@ import {useNavigate, useParams} from "react-router-dom";
 import {useSocket} from "@trz/util/socket-context";
 import CreateList from "@trz/components/CreateList";
 import {Board, List} from "@mosaiq/terrazzo-common/types";
-import {NoteType, notify} from "@trz/util/notifications";
+import {NoteType, notify} from "@trz/util/notifications"; 
+import Settings  from "./Settings";
 
-
-const BoardElement = (): React.JSX.Element => {
+const BoardElement = ({isVisible, onClose}): React.JSX.Element => {
 	const params = useParams();
 	const sockCtx = useSocket();
 
@@ -34,7 +34,6 @@ const BoardElement = (): React.JSX.Element => {
 	if (!params.boardId) {
 		return <div>Board not found</div>;
 	}
-
 	return (
 		<>
 			<Container h="100%" fluid maw="100%" p="lg" bg="#1d2022">
@@ -46,6 +45,7 @@ const BoardElement = (): React.JSX.Element => {
 					}
 					<CreateList/>
 				</Group>
+			<Settings boardData={sockCtx.boardData} isVisible={isVisible} onClose={onClose}/>
 			</Container>
 			<CollaborativeMouseTracker boardId={params.boardId} />
 		</>
