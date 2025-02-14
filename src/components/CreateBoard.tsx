@@ -46,7 +46,6 @@ const CreateBoard = ({
             return;
         }
         sockCtx.createBoard(boardName, boardAbbreviation).then((board) => {
-            console.log(board);
             navigate(`/boards/${board}`);
             context.closeModal(id);
         }).catch((err) => {

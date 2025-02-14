@@ -2,6 +2,7 @@ import queryString from "query-string";
 import { callTrzApi } from "./apiUtils";
 import { LocalStorageKey } from "@mosaiq/terrazzo-common/constants";
 import { NoteType, notify } from "./notifications";
+import { readSessionStorageValue } from "@mantine/hooks";
 
 /*
     Returns the URL to redirect to for GitHub login.
@@ -26,8 +27,11 @@ export const getGithubLoginUrl = () => {
 */
 export const getUserAccessTokenFromGithub = async (code: string) => {
     try {
-        const response = await callTrzApi(`/user/github/auth?code=${code}`, "GET");
-        return (response?.data?.access_token);
+        const {json, status} = await callTrzApi(`/user/github/auth?code=${code}`, "GET");
+        if(status !== 200){
+            throw new Error("Invalid status code "+status);
+        }
+        return (json?.access_token);
     } catch (error) {
         console.error("Error fetching user access token from GitHub", error);
         notify(NoteType.GITHUB_AUTH_ERROR);
@@ -39,8 +43,11 @@ export const getUserAccessTokenFromGithub = async (code: string) => {
 */
 export const getUserDataFromGithub = async (accessToken: string) => {
     try {
-        const response = await callTrzApi(`/user/github/userdata?access_token=${accessToken}`, "GET");
-        return (response?.data);
+        const {json, status} = await callTrzApi(`/user/github/userdata?access_token=${accessToken}`, "GET");
+        if(status !== 200){
+            throw new Error("Invalid status code "+status);
+        }
+        return (json);
     } catch (error) {
         console.error("Error fetching user data from GitHub", error);
         notify(NoteType.GITHUB_DATA_ERROR);
@@ -66,6 +73,30 @@ export const tryLoginWithGithub = async (callbackCode?:string): Promise<{authTok
     if (!data) {
         return {authToken: null, data: null};
     }
-    localStorage.setItem(LocalStorageKey.GITHUB_ACCESS_TOKEN, authToken);
+    const remember = readSessionStorageValue({key: "remember-me"});
+    if(remember === "true"){
+        localStorage.setItem(LocalStorageKey.GITHUB_ACCESS_TOKEN, authToken);
+    } else {
+        localStorage.removeItem(LocalStorageKey.GITHUB_ACCESS_TOKEN);
+    }
     return {authToken, data};
+}
+
+/*
+    Get the user's access token from GitHub using the one-time code from the URL.
+*/
+export const revokeUserAccessToGithubAuth = async (access_token: string) => {
+    try {
+        if(!access_token){
+            return;
+        }
+        const {json, status} = await callTrzApi(`/user/github/revoke/${access_token}`, "DELETE");
+        if(status !== 200){
+            throw new Error("Invalid status code "+status);
+        }
+    } catch (error) {
+        console.error("Error revoking user access from GitHub", error);
+        notify(NoteType.GITHUB_AUTH_ERROR);
+        return null;
+    }
 }

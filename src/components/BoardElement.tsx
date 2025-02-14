@@ -7,9 +7,8 @@ import {useSocket} from "@trz/util/socket-context";
 import CreateList from "@trz/components/CreateList";
 import {Board, List} from "@mosaiq/terrazzo-common/types";
 import {NoteType, notify} from "@trz/util/notifications"; 
-import Settings  from "./Settings";
 
-const BoardElement = ({isVisible, onClose}): React.JSX.Element => {
+const BoardElement = (): React.JSX.Element => {
 	const params = useParams();
 	const sockCtx = useSocket();
 
@@ -36,18 +35,36 @@ const BoardElement = ({isVisible, onClose}): React.JSX.Element => {
 	}
 	return (
 		<>
-			<Container h="100%" fluid maw="100%" p="lg" bg="#1d2022">
-				<Group h="95%" gap={20} align="flex-start" justify="flex-start" wrap="nowrap">
+			<Container 
+				h="100%" 
+				fluid 
+				maw="100%" 
+				p="lg" 
+				bg="#1d2022"
+				style={{
+					overflowX: "scroll"
+				}}
+			>
+				<CollaborativeMouseTracker 
+					boardId={params.boardId}
+					style={{
+						height: "95%",
+						width: "fit-content",
+						display: "flex",
+						gap: "20px",
+						alignItems: "flex-start",
+						justifyContent: "flex-start",
+						flexWrap: "nowrap",
+					}}
+				>
 					{
 						sockCtx.boardData?.lists?.map((list: List, index: number) => (
 							<ListElement key={index} listType={list}/>
 						))
 					}
 					<CreateList/>
-				</Group>
-			<Settings boardData={sockCtx.boardData} isVisible={isVisible} onClose={onClose}/>
+				</CollaborativeMouseTracker>
 			</Container>
-			<CollaborativeMouseTracker boardId={params.boardId} />
 		</>
 	);
 };
