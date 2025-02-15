@@ -7,8 +7,9 @@ import {useSocket} from "@trz/util/socket-context";
 import CreateList from "@trz/components/CreateList";
 import {Board, List} from "@mosaiq/terrazzo-common/types";
 import {NoteType, notify} from "@trz/util/notifications"; 
+import Settings from "@trz/components/Settings";
 
-const BoardElement = (): React.JSX.Element => {
+const BoardElement = ({isVisible, onClose}): React.JSX.Element => {
 	const params = useParams();
 	const sockCtx = useSocket();
 
@@ -28,7 +29,7 @@ const BoardElement = (): React.JSX.Element => {
 				});
 		};
 		fetchBoardData();
-	}, [params.boardId, sockCtx.connected]);
+	}, [params.boardId, sockCtx.connected, sockCtx.boardData]);
 
 	if (!params.boardId) {
 		return <div>Board not found</div>;
@@ -63,6 +64,7 @@ const BoardElement = (): React.JSX.Element => {
 						))
 					}
 					<CreateList/>
+					<Settings boardData={sockCtx.boardData} isVisible={isVisible} onClose={onClose}/>
 				</CollaborativeMouseTracker>
 			</Container>
 		</>

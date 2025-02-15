@@ -1,14 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Drawer, Group, Button, List, Paper, Text, Divider, ActionIcon } from '@mantine/core';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEyeDropper } from '@fortawesome/free-solid-svg-icons';
 import { ColorPicker } from '@mantine/core';
+import { FaEyeDropper } from "react-icons/fa";
+import EditableTextbox from "@trz/components/EditableTextbox";
+import {useSocket} from "@trz/util/socket-context";
+import {NoteType, notify} from "@trz/util/notifications";
+import { useNavigate } from 'react-router';
 
 let colorOptions = ["#FF5733", "#33FF57", "#3357FF", "#FF33A1", "#FFD700", "#6A5ACD", "#FF4500", "#008080"];
 
 const Settings = ({ boardData, isVisible, onClose }: { boardData: any, isVisible: boolean, onClose: () => void }) => {
   const [selectedColors, setSelectedColors] = useState<string[]>(colorOptions);
   const [openPickerIndex, setOpenPickerIndex] = useState<number | null>(null); 
+  const sockCtx = useSocket();
+  const navigate = useNavigate()
+  const boardID = boardData?.id;
 
   const handleColorChange = (index: number, color: string) => {
     const updatedColors = [...selectedColors];
@@ -23,7 +29,23 @@ const Settings = ({ boardData, isVisible, onClose }: { boardData: any, isVisible
   const addColor = () => {
     setSelectedColors(prevColors => [...prevColors, "#D3D3D3"]);
   };
-  console.log(boardData)
+
+  function onBoardNameChange(value: string) {
+    sockCtx.updateBoardSettings(boardData.id, { boardName: value }).then((success) => {
+        if (!success) {
+            notify(NoteType.SETTINGS_UPDATE_ERROR);
+            return;
+        }
+    });
+  }
+  function onBoardCodeChange(value: string) {
+    sockCtx.updateBoardSettings(boardData.id, { boardCode: value }).then((success) => {
+        if (!success) {
+            notify(NoteType.SETTINGS_UPDATE_ERROR);
+            return;
+        }
+    });
+  }
   return (
     <Drawer
       opened={isVisible}
@@ -45,14 +67,26 @@ const Settings = ({ boardData, isVisible, onClose }: { boardData: any, isVisible
               <Text style={{ fontSize: '18px' }}>Board Name</Text>
             </List.Item>
             <List.Item>
-              <Text style={{ fontSize: '16px' }}>{boardData.name}</Text>
+              <EditableTextbox 
+                    value={boardData.name}
+                    onChange={onBoardNameChange}
+                    placeholder="Click to edit!"
+                    type="title"
+                    titleProps={{order: 6, c: "#ffffff"}}
+                />
             </List.Item>
             <Divider my="sm" />
             <List.Item>
               <Text style={{ fontSize: '18px' }}>Board Code</Text>
             </List.Item>
             <List.Item>
-              <Text style={{ fontSize: '16px' }}>{boardData.boardCode}</Text>
+              <EditableTextbox 
+                    value={boardData.boardCode}
+                    onChange={onBoardCodeChange}
+                    placeholder="Click to edit!"
+                    type="title"
+                    titleProps={{order: 6, c: "#ffffff"}}
+                />
             </List.Item>
             <Divider my="sm" />
             <List.Item>
@@ -82,7 +116,7 @@ const Settings = ({ boardData, isVisible, onClose }: { boardData: any, isVisible
                   </Button>
 
                   <ActionIcon variant="subtle" onClick={() => togglePicker(index)}>
-                    <FontAwesomeIcon icon={faEyeDropper} />
+                    <FaEyeDropper size={24} color="white" />
                   </ActionIcon>
                 </Group>
 

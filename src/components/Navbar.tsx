@@ -4,8 +4,8 @@ import {modals} from "@mantine/modals";
 import { FaBell } from "react-icons/fa";
 import { useTRZ } from "@trz/util/TRZ-context";
 
-const Navbar = () => {
-
+const Navbar = ({openSettings}) => {
+	const trz = useTRZ()
 	return (
 		<div
 			style={{
@@ -97,6 +97,25 @@ const Navbar = () => {
 					onClick={()=>trz.logoutAll()}
 				>
 					F
+				</button>
+				<button
+					className='settingsIcon'
+					style={{
+						display: "flex",
+						justifyContent: " center",
+						backgroundColor: " hsl(0, 2%, 40%)",
+						borderRadius: " 70%",
+						cursor: "pointer",
+						border: " none",
+						height: " 35px",
+						width: " 35px",
+						margin: " 0",
+						padding: " 0",
+						fontSize: " 22px",
+						color: "white",
+					}}
+					onClick={openSettings}>
+					...
 				</button>
 			</div>
 		</div>

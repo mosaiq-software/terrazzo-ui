@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTRZ } from '@trz/util/TRZ-context';
 import { ClientSE, ClientSEReplies, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
-import { Board, TextBlock, TextBlockEvent, TextBlockId} from '@mosaiq/terrazzo-common/types';
+import { Board, TextBlock, TextBlockEvent, TextBlockId, Label} from '@mosaiq/terrazzo-common/types';
 import { NoteType, notify } from '@trz/util/notifications';
 import { useIdle, useThrottledCallback } from '@mantine/hooks';
 import { getCaretCoordinates, IDLE_TIMEOUT_MS, MOUSE_UPDATE_THROTTLE_MS, TEXT_EVENT_EMIT_THROTTLE_MS, TextObject } from './textUtils';
@@ -27,6 +27,7 @@ type SocketContextType = {
     setCollaborativeTextObject: React.Dispatch<React.SetStateAction<TextObject>>;
     receiveCollabTextEvent: (event: TextBlockEvent, element: HTMLTextAreaElement | undefined, emit: boolean) => void;
     syncCaretPosition: (element: HTMLTextAreaElement | undefined) => void;
+    updateBoardSettings: (boardID: string, updates: Partial<{ boardName: string; boardCode: string; labels: Label[]; visibility: string }>) => Promise<boolean | undefined>;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -312,6 +313,32 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }
 
+//    const updateBoardSettings = async (boardID: string, boardName: string, boardCode: string, labels: Label[], visibility: string):Promise<boolean | undefined> => {
+//        if (!socket) {return undefined;}
+//        return new Promise((resolve, reject) => {
+//            socket.emit(ClientSE.UPDATE_BOARD_SETTINGS, {boardID, boardName, boardCode, labels, visibility}, (response: ClientSEReplies[ClientSE.UPDATE_BOARD_SETTINGS], error?: string) => {
+//                if(error) {
+//                    reject(error);
+//                } else {
+//                    resolve(response.success);
+//                }
+//            });
+//        });
+//    }
+    const updateBoardSettings = async (boardID: string, updates: Partial<{ boardName: string; boardCode: string; labels: Label[]; visibility: string }>): Promise<boolean | undefined> => {  
+        if (!socket) return undefined;
+        return new Promise((resolve, reject) => {
+          socket.emit(
+            ClientSE.UPDATE_BOARD_SETTINGS, { boardID, ...updates }, (response: ClientSEReplies[ClientSE.UPDATE_BOARD_SETTINGS], error?: string) => {
+              if (error) {
+                reject(error);
+              } else {
+                resolve(response.success);
+              }
+            });
+        });
+    };    
+
     const initializeTextBlockData = async (textBlockId:TextBlockId): Promise<void> => {
         if(!socket) {return undefined;}
         const text: TextBlock | undefined = await new Promise((resolve, reject)=>{
@@ -433,7 +460,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             collaborativeTextObject,
             setCollaborativeTextObject,
             receiveCollabTextEvent,
-            syncCaretPosition
+            syncCaretPosition,
+            updateBoardSettings
         }}>
             {children}
         </SocketContext.Provider>
