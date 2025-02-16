@@ -1,119 +1,89 @@
 //Utility
 import React from "react";
 //Components
-import {Box, Group, Paper, Text, ScrollArea, Title, Flex, UnstyledButton, Divider, Select, Button} from "@mantine/core";
+import {Box, Group, Text, ScrollArea, Title, Flex, Divider, Select, Button} from "@mantine/core";
+import {AddBoardListCard, BoardListCard} from "./BoardListCards";
+import {Board} from "@mosaiq/terrazzo-common/types";
+
+interface WorkspaceBoardsProps {
+    title: string;
+    isYourBoards: boolean;
+}
+//temporary until socket route is in place
+const tempBoard: Board = {
+    id:"8abc0689-7f7e-4b13-8554-e0c3d5daac6c",
+    boardCode:"TRZ",
+    name:"Terrazzo",
+    lists:[],
+    members:[],
+    sprints:[],
+    labels:[],
+    archived:false,
+    createdAt:0,
+    totalCards:0
+};
 
 const Home = (): React.JSX.Element => {
     return (
-        <ScrollArea bg='#1d2022'
+        <ScrollArea bg='#15161A'
                     h='100vh'>
             <Box w='100vw'
-                 pl='15vh'
-                 mih='100vh'>
-                <YourBoards/>
-                <Title c='white' order={2} pb='25'>Your Workspaces</Title>
-                <WorkspaceBoards/>
-                <WorkspaceBoards/>
-                <WorkspaceBoards/>
-                <Divider mt='100'/>
+                 pl='1vw'
+                 mih='100vh'
+                 pb='10vh'>
+                <Flex justify='space-between'
+                      py='25'>
+                    <Title c='white' order={2}>Your Boards</Title>
+                    <ViewBoardButtons/>
+                </Flex>
+                <Divider maw='98%' color='#5B5857' mb='15'/>
+                <WorkspaceBoards title={""} isYourBoards={true}/>
+                <Title c='white' order={2} pt='20'>Your Workspaces</Title>
+                <WorkspaceBoards title={"Terrazzo"} isYourBoards={false}/>
+                <WorkspaceBoards title={"Planner"} isYourBoards={false}/>
+                <WorkspaceBoards title={"Wiki"} isYourBoards={false}/>
             </Box>
         </ScrollArea>
     );
 }
 
-const YourBoards = (): React.JSX.Element => {
+const WorkspaceBoards = (props:WorkspaceBoardsProps): React.JSX.Element => {
     return (
         <>
-            <Group pt='50'
+            {!props.isYourBoards &&
+                <Group pt='10'
                    justify='space-between'>
-                <Title order={2}
+                <Title order={3}
                        c='white'
-                       p='10'>
-                    Your Boards</Title>
-                <ViewBoardButtons/>
+                       p='20'>
+                    {props.title}</Title>
+                    <Flex justify='flex-end'
+                          gap='3em'
+                          c='white'
+                          mr='50'>
+                        <Text>Boards</Text>
+                        <Text>Members(10)</Text>
+                        <Text>Settings</Text>
+                    </Flex>
             </Group>
-            <Divider maw='94%' color='#5B5857' mt='20'/>
-            <Group w='87vw'
-                   pb='25'>
-                <AddHomeListCard/>
-                <HomeListCard/>
-                <HomeListCard/>
-                <HomeListCard/>
-            </Group>
-        </>
-    );
-}
-
-const WorkspaceBoards = (): React.JSX.Element => {
-    return (
-        <>
-            <Group pt='10'>
-                <Title order={2}
-                       c='white'
-                       p='10'
-                       pr='63vw'>
-                    Terrazzo</Title>
-                <Flex justify='flex-end'
-                      gap='3em'
-                      c='white'>
-                    <Text>Boards</Text>
-                    <Text>Members(10)</Text>
-                    <Text>Settings</Text>
-                </Flex>
-            </Group>
-            <Divider maw='94%' color='#5B5857'/>
-            <Group w='87vw'>
-                <AddHomeListCard/>
-                <HomeListCard/>
-                <HomeListCard/>
-                <HomeListCard/>
+            }
+            <Group w='97vw' gap='1'>
+                <BoardListCard board={tempBoard} color={'#121314'}/>
+                <BoardListCard board={tempBoard} color={'#121314'}/>
+                <BoardListCard board={tempBoard} color={'#121314'}/>
+                <BoardListCard board={tempBoard} color={'#121314'}/>
+                <AddBoardListCard/>
             </Group>
         </>
     )
 }
 
-const HomeListCard = (): React.JSX.Element => {
-    return (
-        <UnstyledButton m='10'>
-            <Paper bg='#121314'
-                   w='20vw'
-                   h='175'
-                   radius='md'>
-                <Text c='white'
-                      p='10'>
-                    [BRD] Board Name</Text>
-            </Paper>
-        </UnstyledButton>
-    );
-}
-
-const AddHomeListCard = (): React.JSX.Element => {
-    return (
-        <UnstyledButton m='10'>
-            <Paper bg='#121314'
-                   w='20vw'
-                   h='175'
-                   radius='md'>
-                <Flex justify='center'
-                      align='center'
-                      h='100%'
-                      w='100%'>
-                    <Text c='white'
-                          fw={700}>
-                        + Create New Board
-                    </Text>
-                </Flex>
-            </Paper>
-        </UnstyledButton>
-    );
-}
-
 const ViewBoardButtons = (): React.JSX.Element => {
     return (
-        <Group pr='100'>
+        <Group pr='70'>
             <Select data={['All Views', 'Workspace views?', 'Mosaiq']}
                     defaultValue='All Views'
-                    styles={() => ({
+                    styles={{
                         input: {
                             backgroundColor: '#27292E', // Background color of the select box
                             color: 'white', // Text color
@@ -127,15 +97,15 @@ const ViewBoardButtons = (): React.JSX.Element => {
                             backgroundColor: '#27292E', // Background color of the dropdown items
                             color: 'white', // Text color of the dropdown items
                         }
-                    })}
+                    }}
             />
-            <Divider orientation='vertical' color='gray'/>
-            <Button size='compact-md' color='#27292E'>Recent</Button>
-            <Button size='compact-md' color='#27292E'>Newest</Button>
-            <Button size='compact-md' color='#27292E'>Oldest</Button>
-            <Divider orientation='vertical' color='gray'/>
-            <Button size='compact-md' color='#27292E'>Grid</Button>
-            <Button size='compact-md' color='#27292E'>List</Button>
+            <Divider orientation='vertical' color='#868e96'/>
+            <Button size='compact-md' color='#27292E' fw='500'>Recent</Button>
+            <Button size='compact-md' color='#27292E' fw='500'>Newest</Button>
+            <Button size='compact-md' color='#27292E' fw='500'>Oldest</Button>
+            <Divider orientation='vertical' color='#868e96'/>
+            <Button size='compact-md' color='#27292E' fw='500'>Grid</Button>
+            <Button size='compact-md' color='#27292E' fw='500'>List</Button>
         </Group>
     )
 }
