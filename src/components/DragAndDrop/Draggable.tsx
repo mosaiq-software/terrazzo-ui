@@ -3,8 +3,10 @@ import React, { useState } from "react";
 interface DraggableProps {
     removeOnDrag?: boolean;
     children: React.ReactNode;
-    id: number;
+    id: string;
     group: string;
+    onDrag?: (id:string)=>void;
+    onDrop?: (id:string)=>void;
 }
 const Draggable = (props: DraggableProps) => {
     const [dragging, setDragging] = useState<boolean>(false);
@@ -17,10 +19,15 @@ const Draggable = (props: DraggableProps) => {
                 setDragging(true);
             }}
             onDragStartCapture={(e)=>{
+                // e.preventDefault();
+                if(props.onDrag)
+                    props.onDrag(props.id);
                 global.trzDragging = {id: props.id, group:props.group};
             }}
             onDragEndCapture={(e)=>{
                 e.preventDefault();
+                if(props.onDrop)
+                    props.onDrop(props.id);
                 setDragging(false)
             }}
             style={{

@@ -3,10 +3,10 @@ import React, { CSSProperties, useState } from "react";
 interface DroppableProps {
     children?: React.ReactNode;
     style?: CSSProperties;
-    id: number;
+    id: string | number;
     group: string;
-    onDragHover?: (id:number, group:string) => void;
-    onDragDrop?: (id:number, group:string) => void;
+    onDragHover?: (id:string | number, group:string) => void;
+    onDragDrop?: (id:string | number, group:string) => void;
 }
 const Droppable = (props: DroppableProps) => {
     return (

@@ -73,6 +73,7 @@ const BoardElement = (): React.JSX.Element => {
 			"cards": []
 		}
 	])
+	const [draggingId, setDraggingId] = useState<string>("");
 
 	useEffect(() => {
 		const fetchBoardData = async () => {
@@ -97,17 +98,21 @@ const BoardElement = (): React.JSX.Element => {
 	// TODO switch this to be searching by list ID, not index
 	// TODO make this generic so that it can work across any element. Maybe look into some sort of generic wrapper that can handle dnd
 	// TODO look into splitting up a droppable (take thing drop in slot) and a swappable (d&d for each, can swap places around (useful for lists/cards))
-	const swapLists = (indexA: number, indexB: number) => {
+	const swapLists = (idA: string, idB: string) => {
 		// const lists = sockCtx.boardData?.lists;
 		const lists = testLists;
 		if(!lists) return;
-		const t = lists[indexA];
-		lists[indexA] = lists[indexB];
-		lists[indexB] = t;
-		console.log('swapped ', lists[indexA], lists[indexB]);
+		const itemA = lists.filter((i)=>i.id === idA)[0];
+		const itemB = lists.filter((i)=>i.id === idB)[0];
+		if(!itemA || !itemB) return;
+		const indA = lists.indexOf(itemA);
+		const indB = lists.indexOf(itemB);
+		console.log(indA, indB);
+		lists[indA] = itemB;
+		lists[indB] = itemA;
 		setTestLists([...lists]);
 	}
-	console.log(testLists)
+
 	return (
 		<>
 			<Container 
@@ -132,42 +137,60 @@ const BoardElement = (): React.JSX.Element => {
 						flexWrap: "nowrap",
 					}}
 				>
-					{/* {
-						<Droppable
-							style={{
-								width:"2px",
-								height:"100%",
-								backgroundColor:"blue",
-							}}
-						/>
-					} */}
 					{
 						// sockCtx.boardData?.lists?.map((list: List, index: number) => {
 						testLists?.map((list: List, index: number) => {
 							return (
 								<React.Fragment key={index}>
-									<Droppable 
-										id={index} 
+									<Draggable 
+										id={list.id}
 										group={"lists"}
-										onDragHover={(id, gr)=>{
-											swapLists(id, index);
+										onDrag={(id)=>{
+											setDraggingId(id);
+										}}
+										onDrop={(id)=>{
+											setDraggingId("");
 										}}
 									>
-									<Draggable id={index} group={"lists"}>
 										<ListElement
 											listType={list}
 										/>
 									</Draggable>
-									</Droppable>
-									{/* {
+									{
+										// draggingId &&
 										<Droppable
 											style={{
-												width:"2px",
 												height:"100%",
+												width:"2px",
 												backgroundColor:"blue",
+												display: "flex",
+												flexDirection: "row",
+												flexWrap: "nowrap",
+												justifyContent: "center",
 											}}
-										/>
-									} */}
+											id={index+1} 
+											group={"lists"}
+											onDragHover={(id, gr)=>{
+												let lists = testLists;
+												const item = lists.filter((i)=>i.id === id)[0];
+												if(!item) return;
+												const to = index+1;
+												const from = lists.indexOf(item);
+												lists.splice(to, 0, lists.splice(from, 1)[0]);
+												setTestLists([...lists]);
+											}}
+										>
+											<Box
+												style={{
+													position:'absolute',
+													top: 0,
+													width: "200px",
+													height: "100%",
+													backgroundColor: "#ff000010",
+												}}
+											/>
+										</Droppable>
+									}
 								</React.Fragment>
 							)
 						})
