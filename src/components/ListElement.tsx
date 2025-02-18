@@ -1,19 +1,22 @@
 import React, {useEffect, useState} from "react";
-import CardElement from "@trz/components/CardElement";
 import EditableTextbox from "@trz/components/EditableTextbox";
 import {Button, Group, Paper, Stack, Title, CloseButton, TextInput, Flex, FocusTrap} from "@mantine/core";
 import {useClickOutside, getHotkeyHandler, useInViewport} from "@mantine/hooks";
 import {Card, List} from "@mosaiq/terrazzo-common/types";
 import {useSocket} from "@trz/util/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
+import { closestCenter, DndContext, DragEndEvent, DragStartEvent, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { SortableContext, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import SortableCard from '@trz/components/DragAndDrop/SortableCard';
+import { snapCenterToCursor } from "@dnd-kit/modifiers";
+
 
 interface ListElementProps {
-    listType: List,
+    listType: List;
+    children?: React.ReactNode;
 }
-
 function ListElement(props: ListElementProps): React.JSX.Element {
     const [listTitle, setListTitle] = React.useState(props.listType.name || "List Title");
-
     const [visible, setVisible] = useState(false);
     const [error, setError] = useState("");
     const [cardTitle, setCardTitle] = useState("");
@@ -66,8 +69,22 @@ function ListElement(props: ListElementProps): React.JSX.Element {
         setVisible((v) => !v)
     }
 
+    function handleDragCardStart(event: DragStartEvent) {
+        const {active} = event;
+        if(active.id){
+            sockCtx.setDraggingObject({card: active.id.toString()});
+        }
+    }
+
+    function handleDragCardEnd(event: DragEndEvent) {
+        const {active, over} = event;
+        sockCtx.setDraggingObject({});
+    }
+
+
     return (
         <Paper
+            ref={inViewportRef} 
             bg="#121314"
             radius="md"
             shadow="lg"
@@ -79,8 +96,8 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 minWidth: "250px",
                 maxWidth: "250px",
                 cursor:"pointer",
+                zIndex: 1000
             }}
-            ref={inViewportRef}
         >
             <Group
                 justify="space-between"
@@ -103,15 +120,13 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 mah="75vh"
                 flex={1}
                 style={{
-                    overflowY: "scroll",
+                    overflowY: "auto",
                     overflowX: "hidden"
 
                 }}
             >
                 {
-                    inViewport && props.listType?.cards.map((card:Card, index) => (
-                        <CardElement key={index} cardType={card}/>
-                    ))
+                    inViewport && props.children
                 }
                 <Group>
                     {visible &&
@@ -154,7 +169,9 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 <Button 
                     w="100%"
                     variant="light"
-                    onClick={() => setVisible((v) => !v)}
+                    onClickCapture={(e) => {
+                        setVisible((v) => !v)
+                    }}
                 >
                     Add Card +
                 </Button>

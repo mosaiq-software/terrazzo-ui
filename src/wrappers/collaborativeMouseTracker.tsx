@@ -39,7 +39,7 @@ const CollaborativeMouseTracker = (props: CollaborativeMouseTrackerProps) => {
                     return (
                         <UserCursor
                             key={user.sid}
-                            position={user.mouseRoomData}
+                            position={user.mouseRoomData.pos}
                             name={user.fullName}
                             avatarUrl={user.avatarUrl}
                             idle={user.idle}

@@ -1,79 +1,63 @@
-import React, {useEffect, useState} from "react";
-import ListElement from "@trz/components/ListElement";
-import {Box, Container, Group} from "@mantine/core";
+import React, {useCallback, useEffect, useState} from "react";
+import {Container} from "@mantine/core";
 import CollaborativeMouseTracker from "@trz/wrappers/collaborativeMouseTracker";
 import {useNavigate, useParams} from "react-router-dom";
 import {useSocket} from "@trz/util/socket-context";
 import CreateList from "@trz/components/CreateList";
-import {Board, List} from "@mosaiq/terrazzo-common/types";
+import {Card, List} from "@mosaiq/terrazzo-common/types";
 import {NoteType, notify} from "@trz/util/notifications";
-import Droppable from '@trz/components/DragAndDrop/Droppable';
-import Draggable from "./DragAndDrop/Draggable";
+import SortableList from "@trz/components/DragAndDrop/SortableList"
+import {
+	DndContext, 
+	closestCenter,
+	KeyboardSensor,
+	PointerSensor,
+	useSensor,
+	useSensors,
+	DragEndEvent,
+	DragStartEvent,
+	CollisionDetection,
+	Active,
+	Collision,
+	rectIntersection,
+	getFirstCollision,
+	pointerWithin,
+	MeasuringStrategy,
+} from '@dnd-kit/core';
+import {
+	arrayMove,
+	horizontalListSortingStrategy,
+	SortableContext,
+	sortableKeyboardCoordinates,
+	verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+	restrictToHorizontalAxis,
+	restrictToParentElement,
+	snapCenterToCursor,
+} from '@dnd-kit/modifiers';
+import { DroppableContainer, RectMap } from "@dnd-kit/core/dist/store";
+import { Coordinates } from "@dnd-kit/core/dist/types";
+import SortableCard from "./DragAndDrop/SortableCard";
 
 
 const BoardElement = (): React.JSX.Element => {
 	const params = useParams();
 	const sockCtx = useSocket();
 	const navigate = useNavigate();
-	const [testLists, setTestLists] = useState<List[]|undefined>([
-		{
-			"id": "07cafb44-82fc-4392-a4a5-173ed85d75fc",
-			"boardId": "08a0c2df-b58c-44bf-a84b-5bd3930a1999",
-			"name": "test",
-			"archived": false,
-			"order": 1,
-			"cards": []
-		},
-		{
-			"id": "09e0601c-89ca-4e8c-85b6-015b668d99db",
-			"boardId": "08a0c2df-b58c-44bf-a84b-5bd3930a1999",
-			"name": "test 2",
-			"archived": false,
-			"order": 2,
-			"cards": []
-		},
-		{
-			"id": "e1742347-0f28-4fe8-b3b8-de3c93a10062",
-			"boardId": "08a0c2df-b58c-44bf-a84b-5bd3930a1999",
-			"name": "a",
-			"archived": false,
-			"order": 3,
-			"cards": []
-		},
-		{
-			"id": "dafadb81-1d79-4617-ae56-e522afaf394c",
-			"boardId": "08a0c2df-b58c-44bf-a84b-5bd3930a1999",
-			"name": "b",
-			"archived": false,
-			"order": 4,
-			"cards": []
-		},
-		{
-			"id": "9bf901ca-9f27-4d02-92e6-c69f7bab9420",
-			"boardId": "08a0c2df-b58c-44bf-a84b-5bd3930a1999",
-			"name": "c",
-			"archived": false,
-			"order": 5,
-			"cards": []
-		},
-		{
-			"id": "43aa97f6-be50-4352-a1cf-bd46b658528a",
-			"boardId": "08a0c2df-b58c-44bf-a84b-5bd3930a1999",
-			"name": "a",
-			"archived": false,
-			"order": 6,
-			"cards": []
-		},
-		{
-			"id": "858f1706-06eb-49df-b31a-dd95901a1b9b",
-			"boardId": "08a0c2df-b58c-44bf-a84b-5bd3930a1999",
-			"name": "a",
-			"archived": false,
-			"order": 7,
-			"cards": []
-		}
-	])
-	const [draggingId, setDraggingId] = useState<string>("");
+
+	const sensors = useSensors(
+		useSensor(PointerSensor, {
+			activationConstraint: {
+				delay: 0,
+				tolerance: 0
+			}
+		}),
+		useSensor(KeyboardSensor, {
+			coordinateGetter: sortableKeyboardCoordinates,
+		})
+	);
+    
 
 	useEffect(() => {
 		const fetchBoardData = async () => {
@@ -95,111 +79,147 @@ const BoardElement = (): React.JSX.Element => {
 		return <div>Board not found</div>;
 	}
 
-	// TODO switch this to be searching by list ID, not index
-	// TODO make this generic so that it can work across any element. Maybe look into some sort of generic wrapper that can handle dnd
-	// TODO look into splitting up a droppable (take thing drop in slot) and a swappable (d&d for each, can swap places around (useful for lists/cards))
-	const swapLists = (idA: string, idB: string) => {
-		// const lists = sockCtx.boardData?.lists;
-		const lists = testLists;
-		if(!lists) return;
-		const itemA = lists.filter((i)=>i.id === idA)[0];
-		const itemB = lists.filter((i)=>i.id === idB)[0];
-		if(!itemA || !itemB) return;
-		const indA = lists.indexOf(itemA);
-		const indB = lists.indexOf(itemB);
-		console.log(indA, indB);
-		lists[indA] = itemB;
-		lists[indB] = itemA;
-		setTestLists([...lists]);
+	function handleDragListStart(event: DragStartEvent) {
+		const {active} = event;
+		if(active.id){
+			sockCtx.setDraggingObject({list: active.id.toString()});
+		}
 	}
 
+	function handleDragListEnd(event: DragEndEvent) {
+		const {active, over} = event;
+		sockCtx.setDraggingObject({});
+		if (sockCtx.boardData?.lists && over && active.id !== over.id) {
+			const newIndex = sockCtx.boardData.lists.findIndex((v)=>v.id === over.id);
+			if(newIndex > -1){
+				sockCtx.moveList(active.id.toString(), newIndex);
+			}
+		}
+	}
+
+	// const collisionDetectionStrategy: CollisionDetection = useCallback( (args) => {
+	// 	if (activeId && activeId in items) {
+	// 		return closestCenter({
+	// 			...args,
+	// 			droppableContainers: args.droppableContainers.filter(
+	// 			(container) => container.id in items
+	// 			),
+	// 		});
+	// 	}
+
+	// 	// Start by finding any intersecting droppable
+	// 	const pointerIntersections = pointerWithin(args);
+	// 	const intersections =
+	// 	pointerIntersections.length > 0
+	// 		? // If there are droppables intersecting with the pointer, return those
+	// 		pointerIntersections
+	// 		: rectIntersection(args);
+	// 	let overId = getFirstCollision(intersections, 'id');
+
+	// 		if (overId != null) {
+
+	// 		if (overId in items) {
+	// 			const containerItems = items[overId];
+
+	// 			// If a container is matched and it contains items (columns 'A', 'B', 'C')
+	// 			if (containerItems.length > 0) {
+	// 			// Return the closest droppable within that container
+	// 			overId = closestCenter({
+	// 				...args,
+	// 				droppableContainers: args.droppableContainers.filter(
+	// 				(container) =>
+	// 					container.id !== overId &&
+	// 					containerItems.includes(container.id)
+	// 				),
+	// 			})[0]?.id;
+	// 			}
+	// 		}
+
+	// 		lastOverId.current = overId;
+
+	// 		return [{ id: overId }];
+	// 	}
+
+	// 	// When a draggable item moves to a new container, the layout may shift
+	// 	// and the `overId` may become `null`. We manually set the cached `lastOverId`
+	// 	// to the id of the draggable item that was moved to the new container, otherwise
+	// 	// the previous `overId` will be returned which can cause items to incorrectly shift positions
+	// 	if (recentlyMovedToNewContainer.current) {
+	// 		lastOverId.current = activeId;
+	// 	}
+
+	// 	// If no droppable is matched, return the last match
+	// 	return lastOverId.current ? [{ id: lastOverId.current }] : [];
+	// }, [activeId, items] );
+
 	return (
-		<>
-			<Container 
-				h="100%" 
-				fluid 
-				maw="100%" 
-				p="lg" 
-				bg="#1d2022"
+		<Container 
+			h="100%" 
+			fluid 
+			maw="100%" 
+			p="lg" 
+			bg="#1d2022"
+			style={{
+				overflowX: "scroll"
+			}}
+		>
+			<CollaborativeMouseTracker 
+				boardId={params.boardId}
 				style={{
-					overflowX: "scroll"
+					height: "95%",
+					width: "fit-content",
+					display: "flex",
+					gap: "20px",
+					alignItems: "flex-start",
+					justifyContent: "flex-start",
+					flexWrap: "nowrap",
 				}}
 			>
-				<CollaborativeMouseTracker 
-					boardId={params.boardId}
-					style={{
-						height: "95%",
-						width: "fit-content",
-						display: "flex",
-						gap: "20px",
-						alignItems: "flex-start",
-						justifyContent: "flex-start",
-						flexWrap: "nowrap",
+				<DndContext
+					sensors={sensors}
+					collisionDetection={closestCenter}
+					modifiers={[snapCenterToCursor, restrictToHorizontalAxis, restrictToParentElement]}
+					onDragEnd={handleDragListEnd}
+					onDragStart={handleDragListStart}
+					measuring={{
+						droppable: {
+							strategy: MeasuringStrategy.Always,
+						},
 					}}
 				>
-					{
-						// sockCtx.boardData?.lists?.map((list: List, index: number) => {
-						testLists?.map((list: List, index: number) => {
+					<SortableContext 
+						items={sockCtx.boardData?.lists ?? []}
+						strategy={horizontalListSortingStrategy}
+					>{
+						sockCtx.boardData?.lists?.map((list: List, listIndex: number) => {
 							return (
-								<React.Fragment key={index}>
-									<Draggable 
-										id={list.id}
-										group={"lists"}
-										onDrag={(id)=>{
-											setDraggingId(id);
-										}}
-										onDrop={(id)=>{
-											setDraggingId("");
-										}}
-									>
-										<ListElement
-											listType={list}
-										/>
-									</Draggable>
-									{
-										// draggingId &&
-										<Droppable
-											style={{
-												height:"100%",
-												width:"2px",
-												backgroundColor:"blue",
-												display: "flex",
-												flexDirection: "row",
-												flexWrap: "nowrap",
-												justifyContent: "center",
-											}}
-											id={index+1} 
-											group={"lists"}
-											onDragHover={(id, gr)=>{
-												let lists = testLists;
-												const item = lists.filter((i)=>i.id === id)[0];
-												if(!item) return;
-												const to = index+1;
-												const from = lists.indexOf(item);
-												lists.splice(to, 0, lists.splice(from, 1)[0]);
-												setTestLists([...lists]);
-											}}
-										>
-											<Box
-												style={{
-													position:'absolute',
-													top: 0,
-													width: "200px",
-													height: "100%",
-													backgroundColor: "#ff000010",
-												}}
-											/>
-										</Droppable>
-									}
-								</React.Fragment>
-							)
+								<SortableList
+									key={listIndex}
+									listType={list}
+								>
+									<SortableContext 
+										items={list.cards}
+										strategy={verticalListSortingStrategy}
+									>{
+										list.cards.map((card: Card, cardIndex: number) => {
+											return (
+												<SortableCard
+													key={cardIndex}
+													cardType={card}
+												/>
+											);
+										})
+									}</SortableContext>
+								</SortableList>
+							);
 						})
-					}
-					<CreateList/>
-				</CollaborativeMouseTracker>
-			</Container>
-		</>
+					}</SortableContext>
+				</DndContext>
+				<CreateList/>
+			</CollaborativeMouseTracker>
+		</Container>
 	);
 };
+
 
 export default BoardElement;

@@ -7,7 +7,7 @@ import { AvatarRow } from "@trz/components/AvatarRow";
 
 
 interface CardElementProps {
-	cardType: Card
+	cardType: Card;
 }
 const CardElement = (props: CardElementProps): React.JSX.Element => {
 	const [opened, {open, close}] = useDisclosure(false);
@@ -18,7 +18,16 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 
 	return (
 		<>
-			<Paper bg="#17191b" radius="md" p="sm" mx="xs" shadow="lg" bd="1px solid #757575" style={{ cursor: "pointer" }}
+			<Paper
+				bg="#17191b"
+				radius="md"
+				p="sm"
+				mx="xs"
+				shadow="lg"
+				bd="1px solid #757575"
+				style={{
+					cursor: "pointer",
+				}}
 				onClick={open}
 			>
 				<Pill.Group>
