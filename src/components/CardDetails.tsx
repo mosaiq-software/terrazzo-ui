@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect} from "react";
 import {
 	Select,
 	Group,
@@ -14,6 +14,8 @@ import { CollaborativeTextArea } from "@trz/components/CollaborativeTextArea";
 import { Card } from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
+import {useSocket} from "@trz/util/socket-context";
+import {NoteType, notify} from "@trz/util/notifications";
 
 interface CardDetailsProps {
 	boardCode: string;
@@ -22,6 +24,25 @@ interface CardDetailsProps {
 	open: boolean;
 }
 const CardDetails = (props: CardDetailsProps): React.JSX.Element => {
+	const [title, setTitle] = React.useState(props.card.name || "Card Title");
+	const sockCtx = useSocket();
+
+	function onTitleChange(value:string) {
+		setTitle(value);
+		sockCtx.updateCardTitle(props.card.id, value).then((success) => {
+			if (!success) {
+				notify(NoteType.CARD_UPDATE_ERROR);
+				return;
+			}
+		}).catch((err) => {
+			console.error(err);
+		});
+	}
+
+	useEffect(() => {
+		setTitle(props.card.name);
+	}, [props.card.name]);
+
 	return (
 		<Modal.Root
 			opened={props.open}
@@ -45,8 +66,8 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element => {
 						w={"100%"}
 					>
 					<EditableTextbox 
-							value={props.card.name} 
-							onChange={()=>{}}
+							value={title}
+							onChange={onTitleChange}
 							type="title"
 							placeholder="Card name.."
 							titleProps={{

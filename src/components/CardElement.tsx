@@ -1,16 +1,21 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { Group, Paper, Pill, Text, Title } from "@mantine/core";
 import CardDetails from "@trz/components/CardDetails";
 import {Card} from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from "@trz/components/AvatarRow";
 
-
 interface CardElementProps {
 	cardType: Card
 }
 const CardElement = (props: CardElementProps): React.JSX.Element => {
 	const [opened, {open, close}] = useDisclosure(false);
+	const [title, setTitle] = React.useState(props.cardType.name || "Card Title");
+
+	useEffect(() => {
+		setTitle(props.cardType.name);
+	}, [props.cardType.name]);
+
 	const testUsers = Array.from({ length: 1 }).map((_, index) => ({
 		name: "John Doe",
 		url: "https://avatars.githubusercontent.com/u/47070087?v=4"
@@ -33,7 +38,7 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 						wordWrap: "break-word",
 						textWrap: "wrap"
 					}}
-				>{props.cardType.name}</Title>
+				>{title}</Title>
 				<Text size='xs' c="#878787">{"TRZ"} - {props.cardType.cardNumber}</Text>
 				<Group>
 					{/* icons for info abt the card */}

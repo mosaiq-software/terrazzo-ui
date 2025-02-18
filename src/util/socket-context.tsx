@@ -22,6 +22,7 @@ type SocketContextType = {
     addList: (boardID: string, listName: string) => Promise<boolean | undefined>;
     addCard: (listID: string, cardName: string) => Promise<boolean | undefined>;
     updateListTitle: (listID: string, newName: string) => Promise<boolean | undefined>;
+    updateCardTitle: (cardID: string, newName: string) => Promise<boolean | undefined>;
     initializeTextBlockData: (textBlockId: TextBlockId) => Promise<void>;
     collaborativeTextObject: TextObject;
     setCollaborativeTextObject: React.Dispatch<React.SetStateAction<TextObject>>;
@@ -186,6 +187,29 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             });
         });
 
+        sock.on(ServerSE.UPDATE_CARD_TITLE, (payload: ServerSEPayload[ServerSE.UPDATE_CARD_TITLE]) => {
+            setBoardData(prev => {
+                if(!prev) {return prev;}
+                return {
+                    ...prev,
+                    lists: prev.lists.map(list => {
+                        return {
+                            ...list,
+                            cards: list.cards.map(card => {
+                                if(card.id === payload.cardID) {
+                                    return {
+                                        ...card,
+                                        name: payload.title
+                                    }
+                                }
+                                return card;
+                            })
+                        }
+                    })
+                }
+            });
+        });
+
         sock.on(ServerSE.UPDATE_TEXT_BLOCK, (payload: ServerSEPayload[ServerSE.UPDATE_TEXT_BLOCK]) => {
             if (!payload) {
                 return;
@@ -312,6 +336,19 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }
 
+    const updateCardTitle = async (cardID:string, title:string):Promise<boolean | undefined> => {
+        if (!socket) {return undefined;}
+        return new Promise((resolve, reject) => {
+            socket.emit(ClientSE.UPDATE_CARD_TITLE, {cardID, title}, (response: ClientSEReplies[ClientSE.UPDATE_CARD_TITLE], error?: string) => {
+                if(error) {
+                    reject(error);
+                } else {
+                    resolve(response.success);
+                }
+            });
+        });
+    }
+
     const initializeTextBlockData = async (textBlockId:TextBlockId): Promise<void> => {
         if(!socket) {return undefined;}
         const text: TextBlock | undefined = await new Promise((resolve, reject)=>{
@@ -429,6 +466,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             addList,
             addCard,
             updateListTitle,
+            updateCardTitle,
             initializeTextBlockData,
             collaborativeTextObject,
             setCollaborativeTextObject,
