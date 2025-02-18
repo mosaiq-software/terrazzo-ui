@@ -1,13 +1,12 @@
 //Utility
 import React from "react";
 //Components
-import {Box, Group, Text, ScrollArea, Title, Flex, Divider, Select, Button} from "@mantine/core";
+import {Box, Group, ScrollArea, Title, Flex, Divider, Select, Button} from "@mantine/core";
 import {AddBoardListCard, BoardListCard} from "./BoardListCards";
 import {Board} from "@mosaiq/terrazzo-common/types";
 
 interface WorkspaceBoardsProps {
     title: string;
-    isYourBoards: boolean;
 }
 //temporary until socket route is in place
 const tempBoard: Board = {
@@ -22,6 +21,16 @@ const tempBoard: Board = {
     createdAt:0,
     totalCards:0
 };
+const boards:Board[] = [
+    tempBoard,
+    tempBoard,
+    tempBoard
+];
+const tempWorkspace: string[] = [
+    "Terrazzo",
+    "Wiki",
+    "Planner"
+];
 
 const Home = (): React.JSX.Element => {
     return (
@@ -33,45 +42,36 @@ const Home = (): React.JSX.Element => {
                  pb='10vh'>
                 <Flex justify='space-between'
                       py='25'>
-                    <Title c='white' order={2}>Your Boards</Title>
+                    <Title c='white' order={2}>Your Workspaces</Title>
                     <ViewBoardButtons/>
                 </Flex>
                 <Divider maw='98%' color='#5B5857' mb='15'/>
-                <WorkspaceBoards title={""} isYourBoards={true}/>
-                <Title c='white' order={2} pt='20'>Your Workspaces</Title>
-                <WorkspaceBoards title={"Terrazzo"} isYourBoards={false}/>
-                <WorkspaceBoards title={"Planner"} isYourBoards={false}/>
-                <WorkspaceBoards title={"Wiki"} isYourBoards={false}/>
+                {
+                    tempWorkspace.map((workspace: string) => (
+                        <WorkspaceBoards title={workspace}/>
+                    ))
+                }
             </Box>
         </ScrollArea>
-    );
+    )
 }
 
 const WorkspaceBoards = (props:WorkspaceBoardsProps): React.JSX.Element => {
     return (
         <>
-            {!props.isYourBoards &&
-                <Group pt='10'
+            <Group pt='10'
                    justify='space-between'>
                 <Title order={3}
                        c='white'
                        p='20'>
                     {props.title}</Title>
-                    <Flex justify='flex-end'
-                          gap='3em'
-                          c='white'
-                          mr='50'>
-                        <Text>Boards</Text>
-                        <Text>Members(10)</Text>
-                        <Text>Settings</Text>
-                    </Flex>
             </Group>
-            }
-            <Group w='97vw' gap='1'>
-                <BoardListCard board={tempBoard} color={'#121314'}/>
-                <BoardListCard board={tempBoard} color={'#121314'}/>
-                <BoardListCard board={tempBoard} color={'#121314'}/>
-                <BoardListCard board={tempBoard} color={'#121314'}/>
+            <Group w='100%' gap='1'>
+                {
+                    boards.map((board: Board) => (
+                        <BoardListCard board={board} color={'#121314'}/>
+                    ))
+                }
                 <AddBoardListCard/>
             </Group>
         </>

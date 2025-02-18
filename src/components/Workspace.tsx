@@ -12,7 +12,7 @@ import {
     Select,
     Divider,
     Button,
-    ScrollArea
+    ScrollArea,
 } from "@mantine/core";
 import {AddBoardListCard, BoardListCard} from "./BoardListCards";
 import {Board} from "@mosaiq/terrazzo-common/types";
@@ -30,6 +30,14 @@ const tempBoard: Board = {
     createdAt:0,
     totalCards:0
 };
+const boards:Board[] = [
+    tempBoard,
+    tempBoard,
+    tempBoard,
+    tempBoard,
+    tempBoard,
+    tempBoard
+]
 
 const Workspace = (): React.JSX.Element => {
     return (
@@ -102,15 +110,53 @@ const WorkspaceBody = (): React.JSX.Element => {
                 {/*<TextInput ml='auto' placeholder='Search for Board' styles={{ input: { backgroundColor: '#27292E', outline:'gray'} }}></TextInput> */}
             </Group>
             <Group gap='1' pt='20'>
-                <BoardListCard board={tempBoard} color={'#121314'}/>
-                <BoardListCard board={tempBoard} color={'#121314'}/>
-                <BoardListCard board={tempBoard} color={'#121314'}/>
-                <BoardListCard board={tempBoard} color={'#121314'}/>
-                <BoardListCard board={tempBoard} color={'#121314'}/>
+                {
+                    boards.map((board: Board) => (
+                        <BoardListCard board={board} color={'#121314'}/>
+                    ))
+                }
                 <AddBoardListCard/>
             </Group>
         </Box>
     )
 }
-
+/*
+const WorkspaceAvatars = (): React.JSX.Element => {
+    return (
+        <Group pr='70'>
+            <Tooltip.Group>
+                <Avatar.Group>
+                    <Tooltip label='User 1' withArrow>
+                        <Avatar bg='#FFFFFF'/>
+                    </Tooltip>
+                    <Tooltip label='User 2' withArrow>
+                        <Avatar bg='#FFFFFF'/>
+                    </Tooltip>
+                    <Tooltip label='User 3' withArrow>
+                        <Avatar bg='#FFFFFF'/>
+                    </Tooltip>
+                    <Tooltip label='User 4' withArrow>
+                        <Avatar bg='#FFFFFF'/>
+                    </Tooltip>
+                    <Tooltip label='User 5' withArrow>
+                        <Avatar bg='#FFFFFF'/>
+                    </Tooltip>
+                    <Tooltip withArrow
+                             label={
+                        <>
+                            <Text>User 6</Text>
+                            <Text>User 7</Text>
+                            <Text>User 8</Text>
+                            <Text>User 9</Text>
+                            <Text>User 10</Text>
+                        </>
+                    }>
+                        <Avatar bg='#FFFFFF'>+5</Avatar>
+                    </Tooltip>
+                </Avatar.Group>
+            </Tooltip.Group>
+        </Group>
+    )
+}
+*/
 export default Workspace;
