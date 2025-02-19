@@ -9,9 +9,8 @@ import CardElement from "../CardElement";
 
 interface SortableCardProps {
 	cardType: Card;
+    disabled: boolean;
 }
-
-const animateLayoutChanges: AnimateLayoutChanges = (args) => defaultAnimateLayoutChanges({ ...args, wasDragging: true });
 
 function SortableCard(props: SortableCardProps): React.JSX.Element {
     const sockCtx = useSocket();
@@ -27,14 +26,11 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
         transition,
         transform,
         node,
-        
-        
     } = useSortable({
-        id:props.cardType.id,
+        id: props.cardType.id,
         data: {
             type: 'card',
         },
-        animateLayoutChanges,
     });
 
     useEffect(()=>{
@@ -56,7 +52,7 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
     }
     return (
         <div
-            ref={setNodeRef} 
+            ref={props.disabled ? undefined : setNodeRef} 
             {...attributes} 
             {...listeners}
             style={{

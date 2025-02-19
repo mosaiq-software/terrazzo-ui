@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTRZ } from '@trz/util/TRZ-context';
 import { ClientSE, ClientSEPayload, ClientSEReplies, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
-import { Board, List, TextBlock, TextBlockEvent, TextBlockId} from '@mosaiq/terrazzo-common/types';
+import { Board, Card, List, TextBlock, TextBlockEvent, TextBlockId} from '@mosaiq/terrazzo-common/types';
 import { NoteType, notify } from '@trz/util/notifications';
 import { useIdle, useThrottledCallback } from '@mantine/hooks';
 import { getCaretCoordinates, IDLE_TIMEOUT_MS, MOUSE_UPDATE_THROTTLE_MS, TEXT_EVENT_EMIT_THROTTLE_MS, TextObject } from './textUtils';
@@ -30,7 +30,8 @@ type SocketContextType = {
     syncCaretPosition: (element: HTMLTextAreaElement | undefined) => void;
     moveList: (listId: string, position: number) => Promise<void>;
     moveCard: (cardId: string, toList: string, position: number) => Promise<void>;
-    setDraggingObject: React.Dispatch<React.SetStateAction<{list?: string;card?: string;}>>
+    setDraggingObject: React.Dispatch<React.SetStateAction<{list?: string;card?: string;}>>;
+    moveListToPos: (listId: string, position: number) => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -213,18 +214,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
 
         sock.on(ServerSE.MOVE_LIST, (payload: ServerSEPayload[ServerSE.MOVE_LIST]) => {
-            setBoardData((prevBoard)=>{
-                if(!prevBoard)return prevBoard;
-                const index = prevBoard.lists.findIndex((l)=>l.id === payload.listId);
-                if(index < 0) {
-                    console.error("Error moving list, list not found in prev lists");
-                    return prevBoard;
-                }
-                return{
-                    ...prevBoard,
-                    lists: arrayMove<List>(prevBoard.lists, index, payload.position)
-                }
-            });
+            moveListToPos(payload.listId, payload.position)
         });
 
         sock.on(ServerSE.MOVE_CARD, (payload: ServerSEPayload[ServerSE.MOVE_CARD]) => {
@@ -439,6 +429,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     }, MOUSE_UPDATE_THROTTLE_MS);
 
     const moveList = async (listId: string, position: number): Promise<void> => {
+        moveListToPos(listId, position);
         if(!socket) return;
         const payload: ClientSEPayload[ClientSE.MOVE_LIST] = {listId, position};
         socket.emit(ClientSE.MOVE_LIST, payload, (response: ClientSEReplies[ClientSE.MOVE_LIST], error?: string) => {
@@ -446,19 +437,20 @@ const SocketProvider: React.FC<any> = ({ children }) => {
                 console.error("Error moving list ", listId, "to", position);
             }
         });
-        setBoardData((prevBoard)=>{
-            if(!prevBoard)return prevBoard;
-            const index = prevBoard.lists.findIndex((l)=>l.id === listId);
-            if(index < 0) {
-                console.error("Error moving list, list not found in prev lists");
-                return prevBoard;
-            }
-            return{
-                ...prevBoard,
-                lists: arrayMove<List>(prevBoard.lists, index, position)
-            }
-        });
     }
+
+    const moveListToPos = (listId: string, position: number) => setBoardData((prevBoard)=>{
+        if(!prevBoard)return prevBoard;
+        const index = prevBoard.lists.findIndex((l)=>l.id === listId);
+        if(index < 0) {
+            console.error("Error moving list, list not found in prev lists");
+            return prevBoard;
+        }
+        return{
+            ...prevBoard,
+            lists: arrayMove<List>(prevBoard.lists, index, position)
+        }
+    });
 
     const moveCard = async (cardId: string, toList: string, position: number): Promise<void> => {
         if(!socket) return;
@@ -468,19 +460,13 @@ const SocketProvider: React.FC<any> = ({ children }) => {
                 console.error("Error moving card", cardId, "to", toList, "at", position);
             }
         });
-        setBoardData((prevBoard)=>{
-            if(!prevBoard)return prevBoard;
-            const index = prevBoard.lists.findIndex((l)=>l.id === toList);
-            if(index < 0) {
-                console.error("Error moving to list, list not found in prev lists");
-                return prevBoard;
-            }
-            return{
-                ...prevBoard,
-                lists: arrayMove<List>(prevBoard.lists, index, position)
-            }
-        });
     }
+
+    
+    const moveCardToListAndPos = (cardId: string, toList: string, position: number) => setBoardData((prevBoard)=>{
+        if(!prevBoard)return prevBoard;
+        // TODO move card into correct spot in new list
+    });
 
 
     return (
@@ -506,6 +492,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             moveList,
             moveCard,
             setDraggingObject,
+            moveListToPos
         }}>
             {children}
         </SocketContext.Provider>

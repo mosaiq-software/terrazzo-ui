@@ -4,14 +4,14 @@ import {CSS, Transform} from '@dnd-kit/utilities';
 import {AnimateLayoutChanges, defaultAnimateLayoutChanges, useSortable} from '@dnd-kit/sortable';
 import { List } from "@mosaiq/terrazzo-common/types";
 import { useSocket } from "@trz/util/socket-context";
+import { useDroppable } from "@dnd-kit/core";
 
 
 interface SortableListProps {
     listType: List;
     children?: React.ReactNode;
+    index: number;
 }
-
-const animateLayoutChanges: AnimateLayoutChanges = (args) => defaultAnimateLayoutChanges({ ...args, wasDragging: true });
 
 function SortableList(props: SortableListProps): React.JSX.Element {
     const sockCtx = useSocket();
@@ -23,18 +23,23 @@ function SortableList(props: SortableListProps): React.JSX.Element {
         isDragging,
         listeners,
         over,
-        setNodeRef,
+        setNodeRef: sortableSetNodeRef,
         transition,
         transform,
         node,
+        setActivatorNodeRef
     } = useSortable({
-        id:props.listType.id,
+        id: props.listType.id,
         data: {
-        type: 'container',
-        children: props.listType.cards,
-        },
-        animateLayoutChanges,
+            type: "list"
+        }
     });
+
+    const {
+        setNodeRef: droppableSetNodeRef
+    } = useDroppable({
+        id: props.listType.id
+    })
 
     useEffect(()=>{
         if(node.current)
@@ -55,15 +60,21 @@ function SortableList(props: SortableListProps): React.JSX.Element {
     }
     return (
         <div
-            ref={setNodeRef} 
+            ref={sortableSetNodeRef} 
             {...attributes} 
-            {...listeners}
             style={{
                 transform: CSS.Transform.toString(listTransform),
-                zIndex: isDragging ? 1000 : "unset"
+                transition,
+                opacity: isDragging ? 0 : 1,
             }}
         >
-            <ListElement listType={props.listType}>
+            <ListElement
+                listType={props.listType}
+                dragging={isDragging}
+                handleProps={{ref: setActivatorNodeRef, ...listeners}}
+                droppableSetNodeRef={droppableSetNodeRef}
+                index={props.index}
+            >
                 {props.children}
             </ListElement>
         </div>

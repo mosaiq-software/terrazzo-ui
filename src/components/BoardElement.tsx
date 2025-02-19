@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect, useRef, useState} from "react";
 import {Container} from "@mantine/core";
 import CollaborativeMouseTracker from "@trz/wrappers/collaborativeMouseTracker";
 import {useNavigate, useParams} from "react-router-dom";
@@ -23,6 +23,10 @@ import {
 	getFirstCollision,
 	pointerWithin,
 	MeasuringStrategy,
+	DragOverlay,
+	closestCorners,
+	defaultDropAnimationSideEffects,
+	DropAnimation,
 } from '@dnd-kit/core';
 import {
 	arrayMove,
@@ -37,27 +41,34 @@ import {
 	snapCenterToCursor,
 } from '@dnd-kit/modifiers';
 import { DroppableContainer, RectMap } from "@dnd-kit/core/dist/store";
-import { Coordinates } from "@dnd-kit/core/dist/types";
+import { Coordinates, DragAbortEvent, DragCancelEvent, DragOverEvent, UniqueIdentifier } from "@dnd-kit/core/dist/types";
 import SortableCard from "./DragAndDrop/SortableCard";
+import { createPortal } from "react-dom";
+import ListElement from "./ListElement";
+import CardElement from "./CardElement";
 
 
 const BoardElement = (): React.JSX.Element => {
 	const params = useParams();
 	const sockCtx = useSocket();
 	const navigate = useNavigate();
+	// const [activeDraggingId, setActiveDraggingId] = useState<UniqueIdentifier | undefined>(undefined);
 
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
 			activationConstraint: {
-				delay: 0,
-				tolerance: 0
+				distance: 2,
 			}
 		}),
 		useSensor(KeyboardSensor, {
 			coordinateGetter: sortableKeyboardCoordinates,
 		})
 	);
-    
+
+	const [activeObject, setActiveObject] = useState<List | Card | null>(null);
+	const recentlyMovedToNewContainer = useRef(false);
+	const lastOverId = useRef<string | null>(null);
+
 
 	useEffect(() => {
 		const fetchBoardData = async () => {
@@ -75,20 +86,129 @@ const BoardElement = (): React.JSX.Element => {
 		fetchBoardData();
 	}, [params.boardId, sockCtx.connected]);
 
-	if (!params.boardId) {
-		return <div>Board not found</div>;
+	const getListIds = useCallback(()=>{
+		return sockCtx.boardData?.lists.map(l=>l.id) ?? [];
+	}, [sockCtx.boardData?.lists])
+
+	const getCard = (cardId: string): Card | null => {
+		if(!sockCtx.boardData){
+			return null;
+		}
+		let card: Card | null = null;
+		sockCtx.boardData.lists.forEach(l=>{
+			l.cards.forEach(c=>{
+				if(c.id === cardId)
+					card = c;
+			})
+		})
+		return card;
 	}
 
-	function handleDragListStart(event: DragStartEvent) {
+	const isSortingList = !!(activeObject && getListIds().includes(activeObject.id.toString()))
+
+	const getList = (listId: string): List | null => {
+		return sockCtx.boardData?.lists.find(l=>l.id === listId) ?? null;
+	}
+
+	const getCardsList = (cardId: string): List | null => {
+		if(!sockCtx.boardData){
+			return null;
+		}
+		let list: List | null = null;
+		sockCtx.boardData.lists.forEach(l=>{
+			l.cards.forEach(c=>{
+				if(c.id === cardId)
+					list = l;
+			})
+		})
+		return list;
+	}
+
+	function handleDragStart(event: DragStartEvent) {
 		const {active} = event;
+		if(getListIds().includes(active.id.toString())) {
+			setActiveObject(getList(active.id.toString()));
+		} else {
+			 setActiveObject(getCard(active.id.toString()));
+		}
 		if(active.id){
 			sockCtx.setDraggingObject({list: active.id.toString()});
 		}
 	}
 
-	function handleDragListEnd(event: DragEndEvent) {
+	function handleDragOver(event: DragOverEvent) {
+		// const {active, over} = event;
+		// console.log("over", active.id.toString().substring(0, 2), over?.id.toString().substring(0, 2))
+		// if (sockCtx.boardData?.lists && over && active.id !== over.id) {
+		// 	const newIndex = sockCtx.boardData.lists.findIndex((v)=>v.id === over.id);
+		// 	if(newIndex > -1){
+		// 		sockCtx.moveListToPos(active.id.toString(), newIndex);
+		// 	}
+		// }
 		const {active, over} = event;
+		const overId = over?.id.toString() || null;
+		const activeId = active.id.toString();
+
+		if (overId == null || getListIds().includes(active.id.toString())) {
+			return;
+		}
+
+		const overContainer = getCardsList(overId); 
+		const activeContainer = getCardsList(activeId);
+
+		if (!overContainer || !activeContainer) {
+			return;
+		}
+
+		if (activeContainer === overContainer) {
+			return
+		}
+		setItems((items) => {
+			const activeItems = items[activeContainer];
+			const overItems = items[overContainer];
+			const overIndex = overItems.indexOf(overId);
+			const activeIndex = activeItems.indexOf(active.id);
+
+			let newIndex: number;
+
+			if (overId in items) {
+				newIndex = overItems.length + 1;
+			} else {
+				const isBelowOverItem =
+					over &&
+					active.rect.current.translated &&
+					active.rect.current.translated.top >
+					over.rect.top + over.rect.height;
+
+				const modifier = isBelowOverItem ? 1 : 0;
+
+				newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length + 1;
+			}
+
+			recentlyMovedToNewContainer.current = true;
+
+			return {
+				...items,
+				[activeContainer]: items[activeContainer].filter(
+					(item) => item !== active.id
+				),
+				[overContainer]: [
+					...items[overContainer].slice(0, newIndex),
+					items[activeContainer][activeIndex],
+					...items[overContainer].slice(
+						newIndex,
+						items[overContainer].length
+					),
+				],
+			};
+		});
+	}
+
+	function handleDragEnd(event: DragEndEvent) {
+		const {active, over} = event;
+		// console.log("end", active.id, over?.id)
 		sockCtx.setDraggingObject({});
+		setActiveObject(null);
 		if (sockCtx.boardData?.lists && over && active.id !== over.id) {
 			const newIndex = sockCtx.boardData.lists.findIndex((v)=>v.id === over.id);
 			if(newIndex > -1){
@@ -97,60 +217,93 @@ const BoardElement = (): React.JSX.Element => {
 		}
 	}
 
-	// const collisionDetectionStrategy: CollisionDetection = useCallback( (args) => {
-	// 	if (activeId && activeId in items) {
+	function handleDragAbort(event: DragAbortEvent) {
+		console.log("abort", event.id)
+		setActiveObject(null);
+	}
+
+	function handleDragCancel(event: DragCancelEvent) {
+		const {active, over} = event;
+		console.log("cancel", active.id, over?.id)
+		setActiveObject(null);
+	}
+
+	const collisionDetectionStrategy: CollisionDetection = useCallback((args) => {
+		if (activeObject && getListIds().includes(activeObject.id)) {
+			return closestCenter({
+				...args,
+				droppableContainers: args.droppableContainers.filter(
+					(container) => getListIds().includes(container.id.toString())
+				),
+			});
+		}
+
+		// Start by finding any intersecting droppable
+		const pointerIntersections = pointerWithin(args);
+		// If there are droppables intersecting with the pointer, return those 
+		const intersections = pointerIntersections.length > 0 ? pointerIntersections : rectIntersection(args);
+		let overId = getFirstCollision(intersections, 'id')?.toString() ?? null;
+
+		if (overId != null) {
+
+			if (getListIds().includes(overId)) {
+				const containerItems = (activeObject as List).cards;
+
+				// If a container is matched and it contains items (columns 'A', 'B', 'C')
+				if (containerItems.length > 0) {
+					// Return the closest droppable within that container
+					overId = closestCenter({
+						...args,
+						droppableContainers: args.droppableContainers.filter((container) =>
+							container.id !== overId && containerItems.find(c=>c.id === container.id.toString())
+						),
+					})[0]?.id.toString() ?? null;
+				}
+			}
+
+			lastOverId.current = overId;
+
+			return [{ id: overId }];
+		}
+
+		// When a draggable item moves to a new container, the layout may shift
+		// and the `overId` may become `null`. We manually set the cached `lastOverId`
+		// to the id of the draggable item that was moved to the new container, otherwise
+		// the previous `overId` will be returned which can cause items to incorrectly shift positions
+		if (recentlyMovedToNewContainer.current) {
+			lastOverId.current = activeObject?.id ?? null;
+		}
+
+		// If no droppable is matched, return the last match
+		return lastOverId.current ? [{ id: lastOverId.current }] : [];
+	}, [activeObject, sockCtx.boardData?.lists] );
+
+	// const collisionDetectionStrategy: CollisionDetection = (args) => {
+	// 	if(args.active.data.current?.type === "list"){
 	// 		return closestCenter({
 	// 			...args,
-	// 			droppableContainers: args.droppableContainers.filter(
-	// 			(container) => container.id in items
-	// 			),
+	// 			droppableContainers: args.droppableContainers.filter((container) => getListIds().includes(container.id.toString())),
 	// 		});
+	// 	} else if(args.active.data.current?.type === "card"){
+			
 	// 	}
 
-	// 	// Start by finding any intersecting droppable
-	// 	const pointerIntersections = pointerWithin(args);
-	// 	const intersections =
-	// 	pointerIntersections.length > 0
-	// 		? // If there are droppables intersecting with the pointer, return those
-	// 		pointerIntersections
-	// 		: rectIntersection(args);
-	// 	let overId = getFirstCollision(intersections, 'id');
+	// 	return [];
+	// };
 
-	// 		if (overId != null) {
+	const dropAnimation: DropAnimation = {
+		sideEffects: defaultDropAnimationSideEffects({
+		  styles: {
+			active: {
+			  opacity: '0.5',
+			},
+		  },
+		}),
+	  };
 
-	// 		if (overId in items) {
-	// 			const containerItems = items[overId];
-
-	// 			// If a container is matched and it contains items (columns 'A', 'B', 'C')
-	// 			if (containerItems.length > 0) {
-	// 			// Return the closest droppable within that container
-	// 			overId = closestCenter({
-	// 				...args,
-	// 				droppableContainers: args.droppableContainers.filter(
-	// 				(container) =>
-	// 					container.id !== overId &&
-	// 					containerItems.includes(container.id)
-	// 				),
-	// 			})[0]?.id;
-	// 			}
-	// 		}
-
-	// 		lastOverId.current = overId;
-
-	// 		return [{ id: overId }];
-	// 	}
-
-	// 	// When a draggable item moves to a new container, the layout may shift
-	// 	// and the `overId` may become `null`. We manually set the cached `lastOverId`
-	// 	// to the id of the draggable item that was moved to the new container, otherwise
-	// 	// the previous `overId` will be returned which can cause items to incorrectly shift positions
-	// 	if (recentlyMovedToNewContainer.current) {
-	// 		lastOverId.current = activeId;
-	// 	}
-
-	// 	// If no droppable is matched, return the last match
-	// 	return lastOverId.current ? [{ id: lastOverId.current }] : [];
-	// }, [activeId, items] );
+	if (!params.boardId || ! sockCtx.boardData) {
+		return <div>Board not found</div>;
+	}
 
 	return (
 		<Container 
@@ -177,10 +330,13 @@ const BoardElement = (): React.JSX.Element => {
 			>
 				<DndContext
 					sensors={sensors}
-					collisionDetection={closestCenter}
-					modifiers={[snapCenterToCursor, restrictToHorizontalAxis, restrictToParentElement]}
-					onDragEnd={handleDragListEnd}
-					onDragStart={handleDragListStart}
+					collisionDetection={collisionDetectionStrategy}
+					modifiers={[restrictToHorizontalAxis, restrictToParentElement]}
+					onDragEnd={handleDragEnd}
+					onDragOver={handleDragOver}
+					onDragStart={handleDragStart}
+					onDragAbort={handleDragAbort}
+					onDragCancel={handleDragCancel}
 					measuring={{
 						droppable: {
 							strategy: MeasuringStrategy.Always,
@@ -196,6 +352,7 @@ const BoardElement = (): React.JSX.Element => {
 								<SortableList
 									key={listIndex}
 									listType={list}
+									index={listIndex}
 								>
 									<SortableContext 
 										items={list.cards}
@@ -206,6 +363,7 @@ const BoardElement = (): React.JSX.Element => {
 												<SortableCard
 													key={cardIndex}
 													cardType={card}
+													disabled={isSortingList}
 												/>
 											);
 										})
@@ -214,12 +372,51 @@ const BoardElement = (): React.JSX.Element => {
 							);
 						})
 					}</SortableContext>
+					{createPortal(
+						<DragOverlay dropAnimation={dropAnimation}>
+						{activeObject
+							? getListIds().includes(activeObject.id.toString())
+							? renderContainerDragOverlay(activeObject as List)
+							: renderSortableItemDragOverlay(activeObject as Card)
+							: null}
+						</DragOverlay>,
+						document.body
+					)}
 				</DndContext>
 				<CreateList/>
 			</CollaborativeMouseTracker>
 		</Container>
 	);
 };
+
+function renderContainerDragOverlay(list: List) {
+	return (
+		<ListElement
+			listType={list}
+			index={-1}
+			dragging
+		>
+			{
+				list.cards.map((card: Card, cardIndex: number) => {
+					return (
+						<CardElement
+							key={cardIndex}
+							cardType={card}
+						/>
+					);
+				})
+			}
+		</ListElement>
+	);
+}
+
+function renderSortableItemDragOverlay(card: Card) {
+	return (
+		<CardElement
+			cardType={card}
+		/>
+	);
+}
 
 
 export default BoardElement;

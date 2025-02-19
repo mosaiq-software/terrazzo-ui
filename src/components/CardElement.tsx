@@ -43,7 +43,7 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 						textWrap: "wrap"
 					}}
 				>{props.cardType.name}</Title>
-				<Text size='xs' c="#878787">{"TRZ"} - {props.cardType.cardNumber}</Text>
+				<Text size='xs' c="#878787">{props.cardType.id.substring(0,2)}  {"TRZ"} - {props.cardType.cardNumber}</Text>
 				<Group>
 					{/* icons for info abt the card */}
 				</Group>

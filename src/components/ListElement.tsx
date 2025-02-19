@@ -2,7 +2,7 @@ import React, {useEffect, useState} from "react";
 import EditableTextbox from "@trz/components/EditableTextbox";
 import {Button, Group, Paper, Stack, Title, CloseButton, TextInput, Flex, FocusTrap} from "@mantine/core";
 import {useClickOutside, getHotkeyHandler, useInViewport} from "@mantine/hooks";
-import {Card, List} from "@mosaiq/terrazzo-common/types";
+import {List} from "@mosaiq/terrazzo-common/types";
 import {useSocket} from "@trz/util/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
 import { captureDraggableEvents, captureEvent, forAllClickEvents } from "@trz/util/eventUtils";
@@ -11,6 +11,10 @@ import { captureDraggableEvents, captureEvent, forAllClickEvents } from "@trz/ut
 interface ListElementProps {
     listType: List;
     children?: React.ReactNode;
+    dragging: boolean;
+    droppableSetNodeRef?: (element: HTMLElement | null) => void;
+    handleProps?: any;
+    index: number;
 }
 function ListElement(props: ListElementProps): React.JSX.Element {
     const [listTitle, setListTitle] = React.useState(props.listType.name || "List Title");
@@ -19,7 +23,6 @@ function ListElement(props: ListElementProps): React.JSX.Element {
     const [cardTitle, setCardTitle] = useState("");
     const clickOutsideRef = useClickOutside(() => onBlur());
     const sockCtx = useSocket();
-    const { ref:inViewportRef, inViewport } = useInViewport();
     
     function onSubmit() {
         setError("")
@@ -66,22 +69,8 @@ function ListElement(props: ListElementProps): React.JSX.Element {
         setVisible((v) => !v)
     }
 
-    function handleDragCardStart(event: DragStartEvent) {
-        const {active} = event;
-        if(active.id){
-            sockCtx.setDraggingObject({card: active.id.toString()});
-        }
-    }
-
-    function handleDragCardEnd(event: DragEndEvent) {
-        const {active, over} = event;
-        sockCtx.setDraggingObject({});
-    }
-
-
     return (
         <Paper
-            ref={inViewportRef} 
             bg="#121314"
             radius="md"
             shadow="lg"
@@ -92,15 +81,26 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 alignItems: "stretch",
                 minWidth: "250px",
                 maxWidth: "250px",
-                cursor:"pointer",
-                zIndex: 1000
+                zIndex: 10,
+                transition: "transform .1s, box-shadow .1s",
+                ...(props.dragging ? {
+                    transform: "rotateZ(3deg) scale(1.02)",
+                    boxShadow: "10px 8px 25px black",
+                    border: "1px solid #14222e",
+                } : undefined)
             }}
         >
             <Group
+                {...props.handleProps}
                 justify="space-between"
                 align="center"
+                wrap="nowrap"
                 p="xs"
+                style={{
+                    cursor:"pointer",
+                }}
             >
+                <p style={{color:"#fff"}}>{props.index} {props.listType.id.substring(0,2)}</p>
                 <EditableTextbox 
                     value={listTitle}
                     onChange={onTitleChange}
@@ -118,6 +118,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     h="xs"><Title order={6} c="#ffffff">•••</Title></Button>
             </Group>
             <Stack
+                ref={props.droppableSetNodeRef}
                 mt="md"
                 mb="md"
                 gap={10}
@@ -126,12 +127,9 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 style={{
                     overflowY: "auto",
                     overflowX: "hidden"
-
                 }}
             >
-                {
-                    inViewport && props.children
-                }
+                { props.children }
                 <Group>
                     {visible &&
                         <Paper 
