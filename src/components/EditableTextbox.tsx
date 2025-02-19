@@ -28,29 +28,37 @@ const EditableTextbox = (props: EditableTextboxProps) => {
     };
 
     const onEdit = (e) => {
-        captureEvent(e);
+        // captureEvent(e);
         setEditingValue(value);
     };
 
+    const noBubble = (e) => {
+        e.stopPropagation();
+        e.nativeEvent.stopImmediatePropagation();
+    }
+
     return (
         <div
-            {...captureDraggableEvents(captureEvent, forAllClickEvents(onEdit))}
+            onClick={onEdit}
             style={style}
         >
             {
                 editingValue !== null &&
                 <Input
                     value={editingValue}
-                    onChange={(event) => setEditingValue(event.currentTarget.value)}
-                    onBlur={onSaveChanges}
+                    {...captureDraggableEvents(captureEvent, {
+                        ...forAllClickEvents(noBubble),
+                        onChange: (event) => setEditingValue(event.currentTarget.value),
+                        onBlur: onSaveChanges,
+                        onKeyDown: (event) => {
+                            if(event.key === "Enter") {
+                                onSaveChanges();
+                            } else if(event.key === "Escape") {
+                                onDiscardChanges();
+                            }
+                        },
+                    })}
                     autoFocus
-                    onKeyDown={(event) => {
-                        if(event.key === "Enter") {
-                            onSaveChanges();
-                        } else if(event.key === "Escape") {
-                            onDiscardChanges();
-                        }
-                    }}
                     {...inputProps}
                 />
             }
