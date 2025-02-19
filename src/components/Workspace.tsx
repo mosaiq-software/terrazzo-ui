@@ -12,7 +12,7 @@ import {
     Select,
     Divider,
     Button,
-    ScrollArea,
+    ScrollArea, Center,
 } from "@mantine/core";
 import {AddBoardListCard, BoardListCard} from "./BoardListCards";
 import {AvatarRow} from "@trz/components/AvatarRow";
@@ -42,8 +42,8 @@ const boards:Board[] = [
 
 const Workspace = (): React.JSX.Element => {
     return (
-        <ScrollArea>
-            <Box bg='#15161A' h='100vh'>
+        <ScrollArea h='100vh'>
+            <Box bg='#15161A' mih='100vh' pb='10vh'>
                 <WorkspaceHeader/>
                 <WorkspaceBody/>
             </Box>
@@ -85,44 +85,45 @@ const WorkspaceHeader = (): React.JSX.Element => {
 
 const WorkspaceBody = (): React.JSX.Element => {
     return (
-        <Box pl='12vw'>
-            <Title c='white' pb='20' order={2}>Boards</Title>
-            <Group maw='91%'>
-                <Select data={['Sort by: Alphabetical A-Z', 'Date', 'Creator']}
-                        defaultValue='Sort by: Alphabetical A-Z'
-                        size='xs'
-                        styles={{
-                            input: {
-                                backgroundColor: '#27292E', // Background color of the select box
-                                color: 'white', // Text color
-                                borderColor: '#1d2022', // Border color
-                            },
-                            dropdown: {
-                                backgroundColor: '#27292E', // Background color of the dropdown
-                                color: 'white', // Text color of the dropdown items
-                            },
-                            option: {
-                                backgroundColor: '#27292E', // Background color of the dropdown items
-                                color: 'white', // Text color of the dropdown items
-                            }
-                        }}
-                />
-                <Divider orientation='vertical' color='#868e96'/>
-                <Button size='compact-sm' color='#27292E' fw='500'>Grid</Button>
-                <Button size='compact-sm' color='#27292E' fw='500'>List</Button>
-                {/*<TextInput ml='auto' placeholder='Search for Board' styles={{ input: { backgroundColor: '#27292E', outline:'gray'} }}></TextInput> */}
-            </Group>
-            <Group gap='1' pt='20'>
-                {
-                    boards.map((board: Board) => (
-                        <BoardListCard board={board} color={'#121314'}/>
-                    ))
-                }
-                <AddBoardListCard/>
-            </Group>
-        </Box>
+        <Center>
+            <Box>
+                <Title c='white' pb='20' order={2} maw='200'>Boards</Title>
+                <Group maw='40%'>
+                    <Select data={['Sort by: Alphabetical A-Z', 'Date', 'Creator']}
+                            defaultValue='Sort by: Alphabetical A-Z'
+                            size='xs'
+                            styles={{
+                                input: {
+                                    backgroundColor: '#27292E', // Background color of the select box
+                                    color: 'white', // Text color
+                                    borderColor: '#1d2022', // Border color
+                                },
+                                dropdown: {
+                                    backgroundColor: '#27292E', // Background color of the dropdown
+                                    color: 'white', // Text color of the dropdown items
+                                },
+                                option: {
+                                    backgroundColor: '#27292E', // Background color of the dropdown items
+                                    color: 'white', // Text color of the dropdown items
+                                }
+                            }}
+                    />
+                    <Divider orientation='vertical' color='#868e96'/>
+                    <Button size='compact-sm' color='#27292E' fw='500'>Grid</Button>
+                    <Button size='compact-sm' color='#27292E' fw='500'>List</Button>
+                    {/*<TextInput ml='auto' placeholder='Search for Board' styles={{ input: { backgroundColor: '#27292E', outline:'gray'} }}></TextInput> */}
+                </Group>
+                <Group justify='center' align='center' wrap='wrap' gap='1' w='fit-content' maw={380*4}>
+                    {
+                        boards.map((board: Board) => (
+                            <BoardListCard board={board} color={'#121314'} key={board.id}/>
+                        ))
+                    }
+                    <AddBoardListCard/>
+                </Group>
+            </Box>
+        </Center>
     )
 }
-
 
 export default Workspace;
