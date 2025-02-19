@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ListElement from "@trz/components/ListElement"
 import {CSS, Transform} from '@dnd-kit/utilities';
 import {AnimateLayoutChanges, defaultAnimateLayoutChanges, useSortable} from '@dnd-kit/sortable';
@@ -58,20 +58,21 @@ function SortableList(props: SortableListProps): React.JSX.Element {
             scaleY: 1
         };
     }
+
+    console.log("List: "+props.listType.id.substring(0,2),"is at index", props.index, "with an x of", node.current?.getBoundingClientRect().x.toFixed(0), "but going to", listTransform?.x,)
     return (
         <div
             ref={sortableSetNodeRef} 
-            {...attributes} 
             style={{
                 transform: CSS.Transform.toString(listTransform),
                 transition,
-                opacity: isDragging ? 0 : 1,
+                // opacity: isDragging ? 0 : 1,
             }}
         >
             <ListElement
                 listType={props.listType}
                 dragging={isDragging}
-                handleProps={{ref: setActivatorNodeRef, ...listeners}}
+                handleProps={{ref: setActivatorNodeRef, ...listeners, ...attributes}}
                 droppableSetNodeRef={droppableSetNodeRef}
                 index={props.index}
             >

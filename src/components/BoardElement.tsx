@@ -7,6 +7,7 @@ import CreateList from "@trz/components/CreateList";
 import {Card, List} from "@mosaiq/terrazzo-common/types";
 import {NoteType, notify} from "@trz/util/notifications";
 import SortableList from "@trz/components/DragAndDrop/SortableList"
+import { arrayMove } from "@mosaiq/terrazzo-common/utils/arrayUtils";
 import {
 	DndContext, 
 	closestCenter,
@@ -29,7 +30,6 @@ import {
 	DropAnimation,
 } from '@dnd-kit/core';
 import {
-	arrayMove,
 	horizontalListSortingStrategy,
 	SortableContext,
 	sortableKeyboardCoordinates,
@@ -49,11 +49,27 @@ import CardElement from "./CardElement";
 
 
 const BoardElement = (): React.JSX.Element => {
+	const [testLists, setTestLists] = useState<List[]>([
+		{
+		  "id": "c21e516b-987d-4381-95f9-f5ab7ed9b6fd",
+		  "boardId": "e2ead73c-6b8c-416a-9331-375f2bc3d484",
+		  "name": "List A",
+		  "archived": false,
+		  "order": 0,
+		  "cards": []
+		},
+		{
+		  "id": "48afe3e4-736d-433c-885c-819b27568c64",
+		  "boardId": "e2ead73c-6b8c-416a-9331-375f2bc3d484",
+		  "name": "List B",
+		  "archived": false,
+		  "order": 1,
+		  "cards": []
+		}
+	  ]);
 	const params = useParams();
 	const sockCtx = useSocket();
 	const navigate = useNavigate();
-	// const [activeDraggingId, setActiveDraggingId] = useState<UniqueIdentifier | undefined>(undefined);
-
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
 			activationConstraint: {
@@ -87,15 +103,18 @@ const BoardElement = (): React.JSX.Element => {
 	}, [params.boardId, sockCtx.connected]);
 
 	const getListIds = useCallback(()=>{
-		return sockCtx.boardData?.lists.map(l=>l.id) ?? [];
-	}, [sockCtx.boardData?.lists])
+		return testLists.map(l=>l.id) ?? [];
+		// return sockCtx.boardData?.lists.map(l=>l.id) ?? [];
+	}, [testLists])
+	// }, [sockCtx.boardData?.lists])
 
 	const getCard = (cardId: string): Card | null => {
 		if(!sockCtx.boardData){
 			return null;
 		}
 		let card: Card | null = null;
-		sockCtx.boardData.lists.forEach(l=>{
+		// sockCtx.boardData.lists.forEach(l=>{
+		testLists.forEach(l=>{
 			l.cards.forEach(c=>{
 				if(c.id === cardId)
 					card = c;
@@ -107,7 +126,8 @@ const BoardElement = (): React.JSX.Element => {
 	const isSortingList = !!(activeObject && getListIds().includes(activeObject.id.toString()))
 
 	const getList = (listId: string): List | null => {
-		return sockCtx.boardData?.lists.find(l=>l.id === listId) ?? null;
+		// return sockCtx.boardData?.lists.find(l=>l.id === listId) ?? null;
+		return testLists.find(l=>l.id === listId) ?? null;
 	}
 
 	const getCardsList = (cardId: string): List | null => {
@@ -115,7 +135,8 @@ const BoardElement = (): React.JSX.Element => {
 			return null;
 		}
 		let list: List | null = null;
-		sockCtx.boardData.lists.forEach(l=>{
+		// sockCtx.boardData.lists.forEach(l=>{
+		testLists.forEach(l=>{
 			l.cards.forEach(c=>{
 				if(c.id === cardId)
 					list = l;
@@ -163,58 +184,107 @@ const BoardElement = (): React.JSX.Element => {
 		if (activeContainer === overContainer) {
 			return
 		}
-		setItems((items) => {
-			const activeItems = items[activeContainer];
-			const overItems = items[overContainer];
-			const overIndex = overItems.indexOf(overId);
-			const activeIndex = activeItems.indexOf(active.id);
+		// setTestLists((prevTestLists) => {
+		// 	const activeItems = prevTestLists[activeContainer];
+		// 	const overItems = prevTestLists[overContainer];
+		// 	const overIndex = overItems.indexOf(overId);
+		// 	const activeIndex = activeItems.indexOf(active.id);
 
-			let newIndex: number;
+		// 	let newIndex: number;
 
-			if (overId in items) {
-				newIndex = overItems.length + 1;
-			} else {
-				const isBelowOverItem =
-					over &&
-					active.rect.current.translated &&
-					active.rect.current.translated.top >
-					over.rect.top + over.rect.height;
+		// 	if (overId in prevTestLists) {
+		// 		newIndex = overItems.length + 1;
+		// 	} else {
+		// 		const isBelowOverItem =
+		// 			over &&
+		// 			active.rect.current.translated &&
+		// 			active.rect.current.translated.top >
+		// 			over.rect.top + over.rect.height;
 
-				const modifier = isBelowOverItem ? 1 : 0;
+		// 		const modifier = isBelowOverItem ? 1 : 0;
 
-				newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length + 1;
-			}
+		// 		newIndex = overIndex >= 0 ? overIndex + modifier : overItems.length + 1;
+		// 	}
 
-			recentlyMovedToNewContainer.current = true;
+		// 	recentlyMovedToNewContainer.current = true;
 
-			return {
-				...items,
-				[activeContainer]: items[activeContainer].filter(
-					(item) => item !== active.id
-				),
-				[overContainer]: [
-					...items[overContainer].slice(0, newIndex),
-					items[activeContainer][activeIndex],
-					...items[overContainer].slice(
-						newIndex,
-						items[overContainer].length
-					),
-				],
-			};
-		});
+		// 	return {
+		// 		...prevTestLists,
+		// 		[activeContainer]: prevTestLists[activeContainer].filter(
+		// 			(item) => item !== active.id
+		// 		),
+		// 		[overContainer]: [
+		// 			...prevTestLists[overContainer].slice(0, newIndex),
+		// 			prevTestLists[activeContainer][activeIndex],
+		// 			...prevTestLists[overContainer].slice(
+		// 				newIndex,
+		// 				prevTestLists[overContainer].length
+		// 			),
+		// 		],
+		// 	};
+		// });
 	}
 
 	function handleDragEnd(event: DragEndEvent) {
 		const {active, over} = event;
-		// console.log("end", active.id, over?.id)
-		sockCtx.setDraggingObject({});
-		setActiveObject(null);
-		if (sockCtx.boardData?.lists && over && active.id !== over.id) {
-			const newIndex = sockCtx.boardData.lists.findIndex((v)=>v.id === over.id);
-			if(newIndex > -1){
-				sockCtx.moveList(active.id.toString(), newIndex);
+		// // console.log("end", active.id, over?.id)
+		// sockCtx.setDraggingObject({});
+		// setActiveObject(null);
+		// if (sockCtx.boardData?.lists && over && active.id !== over.id) {
+		// 	const newIndex = sockCtx.boardData.lists.findIndex((v)=>v.id === over.id);
+		// 	if(newIndex > -1){
+		// 		sockCtx.moveList(active.id.toString(), newIndex);
+		// 	}
+		// }
+
+
+		console.log(active.id, over?.id);
+		if (getListIds().includes(active.id.toString()) && over?.id) {
+			setTestLists((prevTestLists) => {
+				const activeIndex = prevTestLists.findIndex(l=>l.id === active.id);
+				const overIndex = prevTestLists.findIndex(l=>l.id === over.id);
+				const moved = arrayMove(prevTestLists, activeIndex, overIndex);
+				console.log(prevTestLists, moved, activeIndex, overIndex);
+				return moved;
+			});
+		}
+
+		const activeContainer = getList(active.id.toString());
+
+		if (!activeContainer) {
+			setActiveObject(null);
+			return;
+		}	
+
+		const overId = over?.id;
+
+		if (overId == null) {
+			setActiveObject(null);
+			return;
+		}
+
+		const overContainer = getCardsList(overId.toString());
+
+		if (overContainer) {
+			const activeIndex = activeContainer.cards.findIndex(c=>c.id===active.id);
+			const overIndex = activeContainer.cards.findIndex(c=>c.id===overId);
+
+			if (activeIndex !== overIndex) {
+				// setTestLists((prevTestLists) => ({
+
+
+				// 	// ...items,
+				// 	// [overContainer]: arrayMove(
+				// 	// 	items[overContainer],
+				// 	// 	activeIndex,
+				// 	// 	overIndex
+				// 	// ),
+
+				// }));
 			}
 		}
+
+		setActiveObject(null);
 	}
 
 	function handleDragAbort(event: DragAbortEvent) {
@@ -330,8 +400,9 @@ const BoardElement = (): React.JSX.Element => {
 			>
 				<DndContext
 					sensors={sensors}
-					collisionDetection={collisionDetectionStrategy}
-					modifiers={[restrictToHorizontalAxis, restrictToParentElement]}
+					collisionDetection={closestCenter}
+					// collisionDetection={collisionDetectionStrategy}
+					// modifiers={[restrictToHorizontalAxis, restrictToParentElement]}
 					onDragEnd={handleDragEnd}
 					onDragOver={handleDragOver}
 					onDragStart={handleDragStart}
@@ -344,13 +415,15 @@ const BoardElement = (): React.JSX.Element => {
 					}}
 				>
 					<SortableContext 
-						items={sockCtx.boardData?.lists ?? []}
+						// items={sockCtx.boardData?.lists ?? []}
+						items={testLists}
 						strategy={horizontalListSortingStrategy}
 					>{
-						sockCtx.boardData?.lists?.map((list: List, listIndex: number) => {
+						// sockCtx.boardData?.lists?.map((list: List, listIndex: number) => {
+						testLists.map((list: List, listIndex: number) => {
 							return (
 								<SortableList
-									key={listIndex}
+									key={list.id}
 									listType={list}
 									index={listIndex}
 								>

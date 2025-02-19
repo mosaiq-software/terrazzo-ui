@@ -84,9 +84,9 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 zIndex: 10,
                 transition: "transform .1s, box-shadow .1s",
                 ...(props.dragging ? {
-                    transform: "rotateZ(3deg) scale(1.02)",
-                    boxShadow: "10px 8px 25px black",
-                    border: "1px solid #14222e",
+                    // transform: "rotateZ(3deg) scale(1.02)",
+                    // boxShadow: "10px 8px 25px black",
+                    // border: "1px solid #14222e",
                 } : undefined)
             }}
         >
