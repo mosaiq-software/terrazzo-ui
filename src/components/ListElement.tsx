@@ -5,10 +5,7 @@ import {useClickOutside, getHotkeyHandler, useInViewport} from "@mantine/hooks";
 import {Card, List} from "@mosaiq/terrazzo-common/types";
 import {useSocket} from "@trz/util/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
-import { closestCenter, DndContext, DragEndEvent, DragStartEvent, KeyboardSensor, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
-import { SortableContext, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
-import SortableCard from '@trz/components/DragAndDrop/SortableCard';
-import { snapCenterToCursor } from "@dnd-kit/modifiers";
+import { captureDraggableEvents, captureEvent, forAllClickEvents } from "@trz/util/eventUtils";
 
 
 interface ListElementProps {
@@ -110,8 +107,15 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     placeholder="Click to edit!"
                     type="title"
                     titleProps={{order: 6, c: "#ffffff"}}
+                    style={{
+                        cursor: "text"
+                    }}
                 />
-                <Button variant="subtle" c="#ffffff" h="xs"><Title order={6} c="#ffffff">•••</Title></Button>
+                <Button 
+                    {...captureDraggableEvents(captureEvent, forAllClickEvents((e)=>{captureEvent(e)}))}
+                    variant="subtle" 
+                    c="#ffffff"
+                    h="xs"><Title order={6} c="#ffffff">•••</Title></Button>
             </Group>
             <Stack
                 mt="md"

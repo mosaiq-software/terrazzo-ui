@@ -1,5 +1,6 @@
-import React from "react";
+import React, { CSSProperties } from "react";
 import {Text, Title, Input, TitleProps, TextProps, InputProps} from "@mantine/core";
+import {captureAllEvents, captureDraggableEvents, captureEvent, forAllClickEvents} from '@trz/util/eventUtils';
 
 interface EditableTextboxProps {
     value: string;
@@ -9,14 +10,15 @@ interface EditableTextboxProps {
     titleProps?: TitleProps;
     textProps?: TextProps;
     inputProps?: InputProps;
+    style?: CSSProperties;
 }
 const EditableTextbox = (props: EditableTextboxProps) => {
-    const { value, onChange, titleProps, textProps, inputProps } = props;
+    const { value, onChange, placeholder, type, titleProps, textProps, inputProps, style } = props;
     const [editingValue, setEditingValue] = React.useState<string|null>(null);
 
     const onSaveChanges = () => {
         if (editingValue !== null) {
-            onChange(editingValue);
+            onChange(editingValue.trim());
             setEditingValue(null);
         }
     };
@@ -25,41 +27,45 @@ const EditableTextbox = (props: EditableTextboxProps) => {
         setEditingValue(null);
     };
 
-    const onEdit = () => {
+    const onEdit = (e) => {
+        captureEvent(e);
         setEditingValue(value);
     };
 
-    if(editingValue === null) {
-        if(!value) {
-            if(titleProps) titleProps.c = "#878787";
-            if(textProps) textProps.c = "#878787";
-        }
-        if(props.type === "title") {
-            return (
-                <Title onClick={onEdit} {...titleProps}  >{value || props.placeholder}</Title>
-            );
-        } else {
-            return (
-                <Text onClick={onEdit} {...textProps}>{value || props.placeholder}</Text>
-            );
-        }
-    }
-
     return (
-        <Input
-            value={editingValue}
-            onChange={(event) => setEditingValue(event.currentTarget.value)}
-            onBlur={onSaveChanges}
-            autoFocus
-            onKeyDown={(event) => {
-                if(event.key === "Enter") {
-                    onSaveChanges();
-                } else if(event.key === "Escape") {
-                    onDiscardChanges();
-                }
-            }}
-            {...inputProps}
-        />
+        <div
+            {...captureDraggableEvents(captureEvent, forAllClickEvents(onEdit))}
+            style={style}
+        >
+            {
+                editingValue !== null &&
+                <Input
+                    value={editingValue}
+                    onChange={(event) => setEditingValue(event.currentTarget.value)}
+                    onBlur={onSaveChanges}
+                    autoFocus
+                    onKeyDown={(event) => {
+                        if(event.key === "Enter") {
+                            onSaveChanges();
+                        } else if(event.key === "Escape") {
+                            onDiscardChanges();
+                        }
+                    }}
+                    {...inputProps}
+                />
+            }
+            {
+                editingValue === null &&
+                type === "title" &&
+                <Title {...titleProps} >{value || placeholder}</Title>
+            }
+            {
+                editingValue === null &&
+                type === "text" &&
+                <Text {...textProps} >{value || placeholder}</Text>
+            }
+        </div>
+        
     );
 }
 export default EditableTextbox;
