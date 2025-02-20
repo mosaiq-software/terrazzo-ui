@@ -14,7 +14,7 @@ interface ListElementProps {
     dragging: boolean;
     droppableSetNodeRef?: (element: HTMLElement | null) => void;
     handleProps?: any;
-    index: number;
+    isOverlay: boolean;
 }
 function ListElement(props: ListElementProps): React.JSX.Element {
     const [listTitle, setListTitle] = React.useState(props.listType.name || "List Title");
@@ -81,13 +81,17 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 alignItems: "stretch",
                 minWidth: "250px",
                 maxWidth: "250px",
-                zIndex: 10,
-                transition: "transform .1s, box-shadow .1s",
-                ...(props.dragging ? {
-                    // transform: "rotateZ(3deg) scale(1.02)",
-                    // boxShadow: "10px 8px 25px black",
-                    // border: "1px solid #14222e",
-                } : undefined)
+                transition: `transform .1s, box-shadow .1s, filter 0ms linear ${props.dragging ? '0ms' : '225ms'}`,
+                ...(props.dragging ? props.isOverlay ? {
+                    transform: "rotateZ(3deg) scale(1.02)",
+                    boxShadow: "10px 8px 25px black",
+                    border: "1px solid #14222e",
+                    zIndex: 11,
+            } : {
+                    filter: "grayscale(1) contrast(0) brightness(0) blur(6px)",
+                    opacity: .4,
+                    zIndex: 10,
+            } : undefined)
             }}
         >
             <Group
@@ -100,7 +104,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     cursor:"pointer",
                 }}
             >
-                <p style={{color:"#fff"}}>{props.index} {props.listType.id.substring(0,2)}</p>
+                <p style={{color:"white"}}>{props.listType.id.substring(0,2)}</p>
                 <EditableTextbox 
                     value={listTitle}
                     onChange={onTitleChange}

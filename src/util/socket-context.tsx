@@ -29,9 +29,10 @@ type SocketContextType = {
     receiveCollabTextEvent: (event: TextBlockEvent, element: HTMLTextAreaElement | undefined, emit: boolean) => void;
     syncCaretPosition: (element: HTMLTextAreaElement | undefined) => void;
     moveList: (listId: string, position: number) => Promise<void>;
-    moveCard: (cardId: string, toList: string, position: number) => Promise<void>;
+    moveCard: (cardId: string, toList: string, position?: number) => Promise<void>;
     setDraggingObject: React.Dispatch<React.SetStateAction<{list?: string;card?: string;}>>;
     moveListToPos: (listId: string, position: number) => void;
+    moveCardToListAndPos: (cardId: string, toList: string, position?: number) => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -215,10 +216,40 @@ const SocketProvider: React.FC<any> = ({ children }) => {
 
         sock.on(ServerSE.MOVE_LIST, (payload: ServerSEPayload[ServerSE.MOVE_LIST]) => {
             moveListToPos(payload.listId, payload.position)
+            setRoomUsersState((prev)=>{
+                return prev.map((ru)=>{
+                    if(ru.mouseRoomData?.draggingList === payload.listId){
+                        return {
+                            ...ru,
+                            mouseRoomData: {
+                                ...ru.mouseRoomData,
+                                draggingList: undefined,
+                            }
+                        }
+                    }else{
+                        return ru;
+                    }
+                })
+            })
         });
 
         sock.on(ServerSE.MOVE_CARD, (payload: ServerSEPayload[ServerSE.MOVE_CARD]) => {
-            
+            moveCardToListAndPos(payload.cardId, payload.toList, payload.position);
+            setRoomUsersState((prev)=>{
+                return prev.map((ru)=>{
+                    if(ru.mouseRoomData?.draggingCard === payload.cardId){
+                        return {
+                            ...ru,
+                            mouseRoomData: {
+                                ...ru.mouseRoomData,
+                                draggingList: undefined,
+                            }
+                        }
+                    }else{
+                        return ru;
+                    }
+                })
+            })
         });
 
         
@@ -452,7 +483,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         }
     });
 
-    const moveCard = async (cardId: string, toList: string, position: number): Promise<void> => {
+    const moveCard = async (cardId: string, toList: string, position?: number): Promise<void> => {
+        moveCardToListAndPos(cardId, toList, position);
         if(!socket) return;
         const payload: ClientSEPayload[ClientSE.MOVE_CARD] = {cardId, toList, position};
         socket.emit(ClientSE.MOVE_CARD, payload, (response: ClientSEReplies[ClientSE.MOVE_CARD], error?: string) => {
@@ -462,10 +494,30 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }
 
-    
-    const moveCardToListAndPos = (cardId: string, toList: string, position: number) => setBoardData((prevBoard)=>{
+    const moveCardToListAndPos = (cardId: string, toList: string, position?: number) => setBoardData((prevBoard)=>{
         if(!prevBoard)return prevBoard;
-        // TODO move card into correct spot in new list
+        let currentListIndex: number = -1;
+        let currentCardIndexInCurrentList = -1;
+        let card: Card | null = null;
+        let newListIndex: number = -1;
+        prevBoard.lists.forEach((l, li)=>{
+            if(l.id === toList)
+                newListIndex = li;
+            l.cards.forEach((c, ci)=>{
+                if(c.id === cardId){
+                    card = c;
+                    currentListIndex = li;
+                    currentCardIndexInCurrentList = ci;
+                }
+            })
+        })
+        if(currentListIndex < 0 || newListIndex < 0 || currentCardIndexInCurrentList < 0 || card === null){
+            console.error("Error moving card to list, list or card not found");
+            return prevBoard;
+        }
+        prevBoard.lists[currentListIndex].cards.splice(currentCardIndexInCurrentList, 1);
+        prevBoard.lists[newListIndex].cards.splice(position ?? prevBoard.lists[newListIndex].cards.length, 0, card);
+        return {...prevBoard};
     });
 
 
@@ -492,7 +544,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             moveList,
             moveCard,
             setDraggingObject,
-            moveListToPos
+            moveListToPos,
+            moveCardToListAndPos
         }}>
             {children}
         </SocketContext.Provider>

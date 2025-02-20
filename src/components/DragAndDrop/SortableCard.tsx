@@ -34,8 +34,9 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
     });
 
     useEffect(()=>{
-        if(node.current)
+        if(node.current){
             setInitialPosition(node.current.getBoundingClientRect())
+        }
     }, [node])
 
     const otherDraggingPos = sockCtx.roomUsers.find((ru)=>ru.mouseRoomData?.draggingCard === props.cardType.id)?.mouseRoomData?.pos
@@ -56,10 +57,10 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
             {...attributes} 
             {...listeners}
             style={{
-                transform: CSS.Transform.toString(cardTransform),
+                zIndex: isDragging ? 101 : undefined,
             }}
         >
-            <CardElement cardType={props.cardType} />
+            <CardElement cardType={props.cardType} dragging={isDragging} isOverlay={false}/>
         </div>
     );
 }

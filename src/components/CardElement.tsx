@@ -8,6 +8,8 @@ import { AvatarRow } from "@trz/components/AvatarRow";
 
 interface CardElementProps {
 	cardType: Card;
+	dragging: boolean;
+	isOverlay: boolean;
 }
 const CardElement = (props: CardElementProps): React.JSX.Element => {
 	const [opened, {open, close}] = useDisclosure(false);
@@ -27,6 +29,17 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 				bd="1px solid #757575"
 				style={{
 					cursor: "pointer",
+					transition: `transform .1s, box-shadow .1s, filter 0ms linear ${props.dragging ? '0ms' : '225ms'}`,
+					...(props.dragging ? props.isOverlay ? {
+						transform: "rotateZ(3deg) scale(1.02)",
+						boxShadow: "10px 8px 25px black",
+						border: "1px solid #14222e",
+						zIndex: 12,
+				} : {
+						filter: "grayscale(1) contrast(0) brightness(0) blur(6px)",
+						opacity: .4,
+						zIndex: 11,
+				} : undefined)
 				}}
 				onClick={open}
 			>

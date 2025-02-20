@@ -12,6 +12,8 @@ interface SortableListProps {
     children?: React.ReactNode;
     index: number;
 }
+const animateLayoutChanges: AnimateLayoutChanges = (args) =>
+    defaultAnimateLayoutChanges({ ...args, wasDragging: true });
 
 function SortableList(props: SortableListProps): React.JSX.Element {
     const sockCtx = useSocket();
@@ -21,6 +23,7 @@ function SortableList(props: SortableListProps): React.JSX.Element {
         active,
         attributes,
         isDragging,
+        isSorting,
         listeners,
         over,
         setNodeRef: sortableSetNodeRef,
@@ -32,7 +35,8 @@ function SortableList(props: SortableListProps): React.JSX.Element {
         id: props.listType.id,
         data: {
             type: "list"
-        }
+        },
+        // animateLayoutChanges
     });
 
     const {
@@ -59,22 +63,21 @@ function SortableList(props: SortableListProps): React.JSX.Element {
         };
     }
 
-    console.log("List: "+props.listType.id.substring(0,2),"is at index", props.index, "with an x of", node.current?.getBoundingClientRect().x.toFixed(0), "but going to", listTransform?.x,)
     return (
         <div
             ref={sortableSetNodeRef} 
             style={{
                 transform: CSS.Transform.toString(listTransform),
-                transition,
-                // opacity: isDragging ? 0 : 1,
+                transition: transition,
+                zIndex: isDragging ? 100 : undefined,
             }}
         >
             <ListElement
                 listType={props.listType}
-                dragging={isDragging}
+                dragging={isDragging || !!otherDraggingPos}
                 handleProps={{ref: setActivatorNodeRef, ...listeners, ...attributes}}
                 droppableSetNodeRef={droppableSetNodeRef}
-                index={props.index}
+                isOverlay={false}
             >
                 {props.children}
             </ListElement>
