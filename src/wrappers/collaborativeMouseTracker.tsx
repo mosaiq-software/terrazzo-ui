@@ -16,8 +16,8 @@ const CollaborativeMouseTracker = (props: CollaborativeMouseTrackerProps) => {
     const sockCtx = useSocket();
 
     useEffect(() => {
-        sockCtx.moveMouse({x, y});
-    }, [x, y]);
+        moveMouse();
+    }, [x, y, ref.current]);
 
     useEffect(() => {
         if (!sockCtx.connected) { return; }
@@ -26,6 +26,15 @@ const CollaborativeMouseTracker = (props: CollaborativeMouseTrackerProps) => {
             sockCtx.setRoom(null);
         }
     }, [props.boardId, sockCtx.connected]);
+
+    const moveMouse = () => {
+        const bounds = ref.current.getBoundingClientRect();
+        if(!bounds) return;
+        sockCtx.moveMouse({
+            x: x / bounds.width,
+            y: y / bounds.height
+        });
+    }
 
     return (
         <Box
@@ -39,7 +48,10 @@ const CollaborativeMouseTracker = (props: CollaborativeMouseTrackerProps) => {
                     return (
                         <UserCursor
                             key={user.sid}
-                            position={user.mouseRoomData.pos}
+                            position={{
+                                x: user.mouseRoomData.pos.x * (ref.current?.getBoundingClientRect().width ?? 0) + (ref.current?.getBoundingClientRect().left ?? 0),
+                                y: user.mouseRoomData.pos.y * (ref.current?.getBoundingClientRect().height ?? 0) + (ref.current?.getBoundingClientRect().top ?? 0)
+                            }}
                             name={user.fullName}
                             avatarUrl={user.avatarUrl}
                             idle={user.idle}
