@@ -47,8 +47,8 @@ const Home = (): React.JSX.Element => {
                 </Flex>
                 <Divider maw='98%' color='#5B5857' mb='15'/>
                 {
-                    tempWorkspace.map((workspace: string) => (
-                        <WorkspaceBoards title={workspace}/>
+                    tempWorkspace.map((workspace: string, index) => (
+                        <WorkspaceBoards title={workspace} key={index}/>
                     ))
                 }
             </Box>
@@ -69,7 +69,7 @@ const WorkspaceBoards = (props:WorkspaceBoardsProps): React.JSX.Element => {
             <Group w='100%' gap='1'>
                 {
                     boards.map((board: Board) => (
-                        <BoardListCard board={board} color={'#121314'}/>
+                        <BoardListCard board={board} color={'#121314'} key={board.id}/>
                     ))
                 }
                 <AddBoardListCard/>
