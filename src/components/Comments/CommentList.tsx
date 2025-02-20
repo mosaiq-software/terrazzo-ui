@@ -2,8 +2,14 @@ import React, {useState} from "react";
 import {Button, Paper, Stack, Title, CloseButton, TextInput, Flex} from "@mantine/core";
 import {useClickOutside} from "@mantine/hooks";
 import CommentCard from "./CommentCard";
+import { Comment } from "@mosaiq/terrazzo-common/types";
 
-const CommentList = ({comments, onAddComment}) => {
+interface CommentListProps {
+   comments: Comment[];
+   onAddComment: (commentText: string) => void;
+}
+
+const CommentList = (props: CommentListProps) => {
     const [visible, setVisible] = useState(false);
     const [error, setError] = useState("");
     const [commentText, setCommentText] = useState("");
@@ -20,7 +26,7 @@ const CommentList = ({comments, onAddComment}) => {
             return;
         }
 
-        onAddComment(commentText);
+        props.onAddComment(commentText);
         setError("");
         setCommentText("");
         setVisible(false);
@@ -54,8 +60,8 @@ const CommentList = ({comments, onAddComment}) => {
                     overflowX: "hidden"
                 }}
             >
-                {comments.map((comment, index) => (
-                    <CommentCard key={index} {...comment} />
+                {props.comments.map((comment, index) => (
+                    <CommentCard content={comment.content} postedAt={comment.postedAt} postedById={comment.postedById}/>
                 ))}
                 {visible && (
                     <Paper w="100%" radius="md" shadow="lg" ref={ref}>

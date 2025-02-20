@@ -1,4 +1,5 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
+
 import {
 	Select,
 	Group,
@@ -11,9 +12,12 @@ import {
 	Pill,
 } from "@mantine/core";
 import { CollaborativeTextArea } from "@trz/components/CollaborativeTextArea";
-import { Card } from "@mosaiq/terrazzo-common/types";
+import { Card, Comment } from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
+import CommentList from "@trz/components/Comments/CommentList";
+import {useSocket} from "@trz/util/socket-context";
+import {NoteType, notify} from "@trz/util/notifications";
 
 interface CardDetailsProps {
 	boardCode: string;
@@ -23,6 +27,50 @@ interface CardDetailsProps {
 }
 
 const CardDetails = (props: CardDetailsProps): React.JSX.Element => {
+	console.log(props);
+	const sockCtx = useSocket();
+	const [comments, setComments] = useState<Comment[]>(
+		[
+			{ 
+				id: "test",
+				cardId: "test",
+				content: "test",
+				postedAt: Date.now().toLocaleString(),
+				postedById: "test",
+				archived: false,
+			}, 
+			
+			{ 
+				id: "test2",
+				cardId: "test2",
+				content: "test2",
+				postedAt: Date.now().toLocaleString(),
+				postedById: "test",
+				archived: false,
+			}, 
+		]
+	);
+	
+	const handleAddComment = (newCommentText: string) => {
+		const newComment = {
+			id: "test1",
+			cardId: props.card.id,
+			postedById: "test",
+			postedAt: Date.now().toLocaleString(),
+			content: newCommentText,
+			archived: false,
+		};
+				
+		sockCtx.createComment(newComment).then((commentId) => {
+			if(commentId == null){
+				notify(NoteType.CREATE_COMMENT_ERROR);
+			}
+		}).catch((err) => {
+			notify(NoteType.CREATE_COMMENT_ERROR);
+			console.error(err);
+		});
+	};
+
 	return (
 		<Modal.Root
 			opened={props.open}
@@ -96,6 +144,12 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element => {
 								</Grid.Col>
 							</Grid>
 							<CollaborativeTextArea textBlockId={props.card.descriptionTextBlockId} maxLineLength={66} />
+
+							<CommentList
+                            comments={comments}
+                            onAddComment={handleAddComment}
+                        />
+
 						</Stack>
 						<Stack justify='flex-start' align='stretch' pt="md">
 							<Menu>

@@ -4,24 +4,33 @@ import {
     Group,
     Text,
 } from "@mantine/core";
-export function CommentSimple({ avatarSrc, name, time, comment }) {
+import { ISO_Date, User } from "@mosaiq/terrazzo-common/types";
+
+
+interface CommentProps {
+    content: string,
+    postedAt: ISO_Date,
+    postedById: string,
+ }
+
+export function CommentSimple(props: CommentProps) {
     return (
         <div>
             <Group>
                 <Avatar
-                    src={avatarSrc}
-                    alt={name}
+                    src={""}
+                    alt={props.postedById}
                     radius="xl"
                 />
                 <div>
-                    <Text size="sm">{name}</Text>
+                    <Text size="sm">{props.postedById}</Text>
                     <Text size="xs" c="dimmed">
-                        {time}
+                        {props.postedById}
                     </Text>
                 </div>
             </Group>
             <Text pl={54} pt="sm" size="sm">
-                {comment}
+                {props.content}
             </Text>
         </div>
     );

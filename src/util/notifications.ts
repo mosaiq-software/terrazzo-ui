@@ -14,7 +14,8 @@ export enum NoteType {
     CARD_CREATION_ERROR = 'CARD_CREATION_ERROR',
     LIST_UPDATE_ERROR = 'LIST_UPDATE_ERROR',
     CLIPBOARD_COPY_ERROR = 'CLIPBOARD_COPY_ERROR',
-    CLIPBOARD_PASTE_ERROR = 'CLIPBOARD_PASTE_ERROR'
+    CLIPBOARD_PASTE_ERROR = 'CLIPBOARD_PASTE_ERROR',
+    CREATE_COMMENT_ERROR = 'CREATE_COMMENT_ERROR',
 }
 
 const AUTO_CLOSE_TIMEOUT = 5000;
@@ -95,7 +96,13 @@ const noteMap = {
         title: 'Error pasting text',
         message: 'Make sure the browser has this permission enabled',
         color: NoteColor.ERROR
-    }
+    },
+    
+    [NoteType.CREATE_COMMENT_ERROR]: {
+        title: 'Error creating comment',
+        message: 'An error occured creating a comment',
+        color: NoteColor.ERROR
+    },
 }
 
 export const notify = (note: NoteType) => {
