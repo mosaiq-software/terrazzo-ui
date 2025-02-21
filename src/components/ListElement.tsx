@@ -170,6 +170,6 @@ function ListElement(props: ListElementProps): React.JSX.Element {
             }
         </Paper>
     );
-};
+}
 
 export default ListElement;
