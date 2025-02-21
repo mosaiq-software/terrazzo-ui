@@ -53,6 +53,7 @@ const CreateList = (): React.JSX.Element => {
                         maw="250px"
                         onClick={() => setVisible((v) => !v)}
                         color={"#121314"}
+                        justify="left"
                 >
                     + Add List
                 </Button>

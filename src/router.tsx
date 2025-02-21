@@ -4,11 +4,13 @@ import { GithubAuth } from "@trz/pages/auth/github";
 import { Dashboard } from "@trz/pages/Dashboard";
 import {AuthWrapper} from "@trz/wrappers/AuthWrapper";
 import Navbar from "@trz/components/Navbar";
+import Home from "@trz/components/Home";
 import BoardElement from "@trz/components/BoardElement";
 import {CreateBoardModal} from "@trz/components/CreateBoard";
 import {ModalsProvider} from "@mantine/modals";
 import { CollaborativeTextArea } from "./components/CollaborativeTextArea";
 import {LoginPage} from '@trz/pages/auth/LoginPage'
+import Workspace from "@trz/components/Workspace";
 
 const Router = () => {
 	return (
@@ -24,8 +26,10 @@ const Router = () => {
 					<Route element={<AuthWrapper />}>
 						<Route path='/text' element={<CollaborativeTextArea maxLineLength={40} maxRows={20} textBlockId="6f77a4b2-990e-46be-8810-3813aba7d1f6" />} />
 						<Route path='/dashboard' element={<Dashboard />} />
-						<Route path='/boards/:boardId' element={<BoardElement />}></Route>
-					</Route>
+						<Route path='/boards/:boardId' element={<BoardElement/>}></Route>
+                        <Route path='/home' element={<Home/>} />
+						<Route path='/workspace' element={<Workspace/>} />
+                    </Route>
 				</Routes>
 			</ModalsProvider>
 		</BrowserRouter>
