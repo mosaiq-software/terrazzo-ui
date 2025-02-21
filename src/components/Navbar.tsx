@@ -4,7 +4,7 @@ import {modals} from "@mantine/modals";
 import { FaBell } from "react-icons/fa";
 import { useTRZ } from "@trz/util/TRZ-context";
 
-const Navbar = ({openSettings}) => {
+const Navbar = () => {
 	const trz = useTRZ()
 	return (
 		<div
@@ -114,7 +114,7 @@ const Navbar = ({openSettings}) => {
 						fontSize: " 22px",
 						color: "white",
 					}}
-					onClick={openSettings}>
+					onClick={() => trz.openSettings()}>
 					...
 				</button>
 			</div>

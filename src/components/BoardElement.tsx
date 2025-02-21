@@ -8,10 +8,12 @@ import CreateList from "@trz/components/CreateList";
 import {Board, List} from "@mosaiq/terrazzo-common/types";
 import {NoteType, notify} from "@trz/util/notifications"; 
 import Settings from "@trz/components/Settings";
+import { useTRZ } from '@trz/util/TRZ-context';
 
-const BoardElement = ({isVisible, onClose}): React.JSX.Element => {
+const BoardElement = (): React.JSX.Element => {
 	const params = useParams();
 	const sockCtx = useSocket();
+	const trz = useTRZ();
 
 	const navigate = useNavigate();
 
@@ -64,7 +66,7 @@ const BoardElement = ({isVisible, onClose}): React.JSX.Element => {
 						))
 					}
 					<CreateList/>
-					<Settings boardData={sockCtx.boardData} isVisible={isVisible} onClose={onClose}/>
+					<Settings boardData={sockCtx.boardData}/>
 				</CollaborativeMouseTracker>
 			</Container>
 		</>

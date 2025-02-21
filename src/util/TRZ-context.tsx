@@ -8,6 +8,8 @@ type TRZContextType = {
     githubData: any | null;
     githubLogin: (code: string | undefined) => Promise<{route:string, success:boolean}>;
     logoutAll: () => void;
+    isVisible: boolean;
+    openSettings: (boolean) => void;
 }
 
 const TRZContext = createContext<TRZContextType | undefined>(undefined);
@@ -18,6 +20,7 @@ export const DEFAULT_NO_AUTH_ROUTE = "/login"
 const TRZProvider: React.FC<any> = ({ children }) => {
     const [githubAuthToken, setGithubAuthToken] = useState<string | null>(null);
     const [githubData, setGithubData] = useState<any | null>(null);
+    const [isVisible, setVisible] = useState<boolean>(false);
     const [loginRouteDestination, setLoginRouteDestination] = useSessionStorage({ key: "loginRouteDestination" });
 
     const githubLogin = async (code: string | undefined): Promise<{route:string, success:boolean}> => {
@@ -49,12 +52,18 @@ const TRZProvider: React.FC<any> = ({ children }) => {
         window.location.pathname = DEFAULT_NO_AUTH_ROUTE;
     }
 
+    const openSettings = async () => {
+        setVisible(prev => !prev);
+    }
+
     return (
         <TRZContext.Provider value={{
             githubAuthToken,
             githubData,
             githubLogin,
             logoutAll,
+            isVisible, 
+            openSettings
         }}>
             {children}
         </TRZContext.Provider>

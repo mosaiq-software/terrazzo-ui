@@ -313,18 +313,6 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }
 
-//    const updateBoardSettings = async (boardID: string, boardName: string, boardCode: string, labels: Label[], visibility: string):Promise<boolean | undefined> => {
-//        if (!socket) {return undefined;}
-//        return new Promise((resolve, reject) => {
-//            socket.emit(ClientSE.UPDATE_BOARD_SETTINGS, {boardID, boardName, boardCode, labels, visibility}, (response: ClientSEReplies[ClientSE.UPDATE_BOARD_SETTINGS], error?: string) => {
-//                if(error) {
-//                    reject(error);
-//                } else {
-//                    resolve(response.success);
-//                }
-//            });
-//        });
-//    }
     const updateBoardSettings = async (boardID: string, updates: Partial<{ boardName: string; boardCode: string; labels: Label[]; visibility: string }>): Promise<boolean | undefined> => {  
         if (!socket) return undefined;
         return new Promise((resolve, reject) => {
