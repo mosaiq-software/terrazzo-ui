@@ -1,0 +1,96 @@
+
+/* Header Navigation Menu */
+#trzLogo {
+  z-index: 1000;
+}
+.trzNavigationMenuRoot {
+  display: flex;
+  justify-content: space-between;
+  width: 100vw;
+  height: calc(3.5rem * var(--mantine-scale));
+  padding: 10px;
+}
+.mantine-AppShell-header {
+  transition: 300ms;
+  border-bottom: 1px solid;
+  border-color: rgba(0,0,0,0);
+}
+.mantine-AppShell-header[data-pinned] {
+  background-color: #0f0f0f;
+  border-color: var(--app-shell-border-color);
+}
+.mantine-AppShell-header[data-sidebar] {
+  border-color: var(--app-shell-border-color);
+}
+.mantine-AppShell-navbar {
+  transition: 300ms;
+  border-right: 1px solid;
+  border-color: rgba(0,0,0,0);
+}
+.mantine-AppShell-navbar[data-pinned] {
+  background-color: #0f0f0f;
+  border-color: var(--app-shell-border-color);
+}
+.mantine-AppShell-navbar[data-sidebar] {
+  border-color: var(--app-shell-border-color);
+}
+.trzNavigationMenuList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(1rem * var(--mantine-scale));
+}
+.trz-NavLink {
+  font-size: calc(1.4rem * var(--mantine-scale));
+  color: var(--mantine-font-color);
+  font-weight: var(--mantine-font-weight-md);
+  text-decoration: none;
+  padding-top: calc(0.25rem * var(--mantine-scale));
+  padding-bottom: calc(0.25rem * var(--mantine-scale));
+  padding-left: calc(0.5rem * var(--mantine-scale));
+  padding-right: calc(0.5rem * var(--mantine-scale));
+  border-radius: 4px;
+  transition: 200ms;
+}
+:root[data-mantine-color-scheme="dark"] .trz-NavLink:hover {
+  background-color: var(--mantine-color-dark-6);
+}
+
+/* sidebar navbar */
+.trz-Navbar-NavLink {
+  color: var(--mantine-font-color);
+  text-decoration: none;
+  padding-top: calc(0.5rem * var(--mantine-scale));
+  padding-bottom: calc(0.5rem * var(--mantine-scale));
+  padding-left: calc(0.82rem * var(--mantine-scale));
+  width: var(--app-shell-navbar-width);
+  transition: 200ms;
+}
+.trz-Navbar-Group {
+  width: calc(255px - calc(0.82rem * var(--mantine-scale)));
+  height: calc(2rem * var(--mantine-scale));
+}
+.trz-Navbar-NavLink-text {
+  font-weight: 600;
+}
+
+
+/* Modal Search Button */
+.mantine-Input-input {
+  background-color: rgba(0,0,0,0);
+  padding-right: 0.2rem;
+  border-radius: 6px;
+  transition: 200ms;
+}
+:root[data-mantine-color-scheme="dark"] .mantine-Input-input:hover {
+  background-color: var(--mantine-color-dark-6);
+}
+.key-binding {
+  width: fit-content;
+  background-color: var(--mantine-color-dark-8);
+  padding: 2px 6px 2px 6px;
+  border-radius: 4px;
+}

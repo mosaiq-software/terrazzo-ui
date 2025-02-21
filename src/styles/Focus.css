@@ -1,0 +1,9 @@
+
+.trz-Focus:focus {
+  outline: none;
+}
+
+.trz-Focus:focus-visible {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  offset: 3px;
+}

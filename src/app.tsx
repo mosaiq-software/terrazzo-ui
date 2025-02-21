@@ -1,4 +1,4 @@
-// Utility
+//Utility
 import React from "react";
 import "@mantine/core/styles.css";
 import '@mantine/notifications/styles.css';
@@ -7,39 +7,25 @@ import { TRZProvider } from "@trz/util/TRZ-context";
 import { SocketProvider } from "@trz/util/socket-context";
 import { Notifications } from '@mantine/notifications';
 import Router from "./router";
+import "@trz/styles/Main.css"
+import "@trz/styles/Focus.css"
 
-import "./styles/Main.css"
-
-// Styling
 const theme = createTheme({
-    activeClassName: '',
-    colors: {
-        'gray': [
-            '#FFFFFF',
-            '#F0F0F0', 
-            '#DEDEDE', 
-            '#ACACAC', 
-            '#808080', 
-            '#656565', 
-            '#505050', 
-            '#404040', 
-            '#1F1F1F', 
-            '#101010', 
-        ],
-    },
+  activeClassName: "",
+  focusClassName: "trz-Focus"
 });
 
 const App = () => {
-	return (
-		<MantineProvider defaultColorScheme="dark" theme={theme}>
-			<Notifications/>
-                <TRZProvider>
-                    <SocketProvider>
-                        <Router/>
-                    </SocketProvider>
-                </TRZProvider>
-		</MantineProvider>
-	);
+  return (
+    <MantineProvider theme={theme} defaultColorScheme={'auto'}>
+      <Notifications/>
+      <TRZProvider>
+        <SocketProvider>
+          <Router/>
+        </SocketProvider>
+      </TRZProvider>
+    </MantineProvider>
+  );
 };
 
 export default App;

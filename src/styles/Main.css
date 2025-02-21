@@ -1,15 +1,16 @@
-:root {
-    color-scheme: var(--mantine-color-scheme);
-    --trz-bg-primary: var(--mantine-color-gray-8);
-}
-
+:root { color-scheme: var(--mantine-color-scheme); }
 body {
     font-family: var(--mantine-font-family);
     font-size: var(--mantine-font-size-md);
     line-height: var(--mantine-line-height);
     color: var(--mantine-color-text);
-    background-color: var(--trz-bg-primary);
 
     -webkit-font-smoothing: var(--mantine-webkit-font-smoothing);
     -moz-osx-font-smoothing: var(--mantine-moz-font-smoothing);
+}
+:root[data-mantine-color-scheme="light"] body {
+  --mantine-color-body: var(--mantine-color-gray-1);
+}
+:root[data-mantine-color-scheme="dark"] body {
+  --mantine-color-body: var(--mantine-color-dark-8);
 }

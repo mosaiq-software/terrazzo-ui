@@ -1,0 +1,27 @@
+@keyframes fadeout {
+  from { background-color: var(--mantine-primary-color-6); }
+  to { background-color: var(--mantine-color-body); }
+}
+
+
+:root[data-mantine-color-scheme="dark"] .trzButton:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  cursor: pointer;
+}
+
+:root[data-mantine-color-scheme="dark"] .trzButton:active {
+  background-color: var(--mantine-primary-color-6);
+  animation-name: fadeout;
+}
+
+.trzButton {
+  padding-top: calc(0.15rem * var(--mantine-scale));
+  padding-bottom: calc(0.15rem * var(--mantine-scale));
+  padding-left: calc(0.6rem * var(--mantine-scale));
+  padding-right: calc(0.6rem * var(--mantine-scale));
+  border: none;
+  border-radius: var(--mantine-radius-default);
+  color: var(--mantine-color-text);
+  background-color: inherit;
+  transition: 200ms;
+}

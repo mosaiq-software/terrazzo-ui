@@ -1,0 +1,17 @@
+
+.mantine-Modal-root {
+  --trz-modal-radius: calc(12px * var(--mantine-scale));
+}
+.mantine-Modal-header {
+  padding: 0;
+  display: block;
+  min-height: calc(1rem * var(--mantine-scale));
+}
+
+.trz-ModalSearch-textInput {
+  border-radius: var(--trz-modal-radius);
+}
+
+.trz-ModalSearch-textInput[data-data] {
+  border-radius: 0px;
+}
