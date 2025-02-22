@@ -60,11 +60,13 @@ export const getUserDataFromGithub = async (accessToken: string) => {
 */
 export const tryLoginWithGithub = async (callbackCode?:string): Promise<{authToken:string|null, data:any}> => {
     let authToken;
+    let fromLocal = false;
     if(callbackCode) {
         authToken = await getUserAccessTokenFromGithub(callbackCode);
     }
     if(!authToken) {
         authToken = localStorage.getItem(LocalStorageKey.GITHUB_ACCESS_TOKEN);
+        fromLocal = true;
         if (!authToken) {
             return {authToken: null, data: null};
         }
@@ -74,7 +76,7 @@ export const tryLoginWithGithub = async (callbackCode?:string): Promise<{authTok
         return {authToken: null, data: null};
     }
     const remember = readSessionStorageValue({key: "remember-me"});
-    if(remember === "true"){
+    if(remember === "true" || fromLocal){
         localStorage.setItem(LocalStorageKey.GITHUB_ACCESS_TOKEN, authToken);
     } else {
         localStorage.removeItem(LocalStorageKey.GITHUB_ACCESS_TOKEN);

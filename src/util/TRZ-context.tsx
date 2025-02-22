@@ -8,6 +8,8 @@ type TRZContextType = {
     githubData: any | null;
     githubLogin: (code: string | undefined) => Promise<{route:string, success:boolean}>;
     logoutAll: () => void;
+    openedCardModal: string | null;
+    setOpenedCardModal: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 const TRZContext = createContext<TRZContextType | undefined>(undefined);
@@ -19,6 +21,8 @@ const TRZProvider: React.FC<any> = ({ children }) => {
     const [githubAuthToken, setGithubAuthToken] = useState<string | null>(null);
     const [githubData, setGithubData] = useState<any | null>(null);
     const [loginRouteDestination, setLoginRouteDestination] = useSessionStorage({ key: "loginRouteDestination" });
+
+    const [openedCardModal, setOpenedCardModal] = useState<string | null>(null);
 
     const githubLogin = async (code: string | undefined): Promise<{route:string, success:boolean}> => {
         if(githubAuthToken && githubData){
@@ -55,6 +59,8 @@ const TRZProvider: React.FC<any> = ({ children }) => {
             githubData,
             githubLogin,
             logoutAll,
+            openedCardModal,
+            setOpenedCardModal,
         }}>
             {children}
         </TRZContext.Provider>
