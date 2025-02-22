@@ -62,16 +62,15 @@ const EditableTextbox = (props: EditableTextboxProps) => {
                     {...inputProps}
                 />
             }
-            {
+            <div style={style}>{
                 editingValue === null &&
                 type === "title" &&
                 <Title {...titleProps} >{value || placeholder}</Title>
-            }
-            {
+            }{
                 editingValue === null &&
                 type === "text" &&
                 <Text {...textProps} >{value || placeholder}</Text>
-            }
+            }</div>
         </div>
         
     );
