@@ -95,7 +95,9 @@ const BoardElement = (): React.JSX.Element => {
 		}
 		if(allListIds.includes(activeId)){
 			// is dragging list
-		} else if(overId){
+			return;
+		}
+		if(overId){
 			// is dragging card
 			if(allListIds.includes(overId)) {
 				// is over a list
@@ -175,7 +177,8 @@ const BoardElement = (): React.JSX.Element => {
 				return lastOverId.current ? [{ id: lastOverId.current }] : [];
 			}
 			return [{ id: intersectingId }];
-		} else if(args.active.data.current?.type === "card"){
+		}
+		if(args.active.data.current?.type === "card"){
 			if(!intersectingId) {
 				return lastOverId.current ? [{ id: lastOverId.current }] : [];
 			}
