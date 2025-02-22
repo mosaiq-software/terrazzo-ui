@@ -24,7 +24,6 @@ const tempBoard: Board = {
     boardCode:"TRZ",
     name:"Terrazzo",
     lists:[],
-    members:[],
     sprints:[],
     labels:[],
     archived:false,
