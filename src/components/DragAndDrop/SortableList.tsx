@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ListElement from "@trz/components/ListElement"
 import {CSS, Transform} from '@dnd-kit/utilities';
-import {AnimateLayoutChanges, defaultAnimateLayoutChanges, useSortable} from '@dnd-kit/sortable';
+import {useSortable} from '@dnd-kit/sortable';
 import { List } from "@mosaiq/terrazzo-common/types";
 import { useSocket } from "@trz/util/socket-context";
 import { useDroppable } from "@dnd-kit/core";
@@ -12,20 +12,14 @@ interface SortableListProps {
     children?: React.ReactNode;
     index: number;
 }
-const animateLayoutChanges: AnimateLayoutChanges = (args) =>
-    defaultAnimateLayoutChanges({ ...args, wasDragging: true });
-
 function SortableList(props: SortableListProps): React.JSX.Element {
     const sockCtx = useSocket();
     const [initialPosition, setInitialPosition] = useState<DOMRect | undefined>(undefined);
 
     const {
-        active,
         attributes,
         isDragging,
-        isSorting,
         listeners,
-        over,
         setNodeRef: sortableSetNodeRef,
         transition,
         transform,
@@ -33,10 +27,7 @@ function SortableList(props: SortableListProps): React.JSX.Element {
         setActivatorNodeRef
     } = useSortable({
         id: props.listType.id,
-        data: {
-            type: "list"
-        },
-        // animateLayoutChanges
+        data: { type: "list" },
     });
 
     const {
@@ -46,11 +37,12 @@ function SortableList(props: SortableListProps): React.JSX.Element {
     })
 
     useEffect(()=>{
-        if(node.current)
-            setInitialPosition(node.current.getBoundingClientRect())
+        if(node.current){
+            setInitialPosition(node.current.getBoundingClientRect());
+        }
     }, [node])
 
-    const otherDraggingPos = sockCtx.roomUsers.find((ru)=>ru.mouseRoomData?.draggingList === props.listType.id)?.mouseRoomData?.pos
+    const otherDraggingPos = sockCtx.roomUsers.find((ru)=>ru.mouseRoomData?.draggingList === props.listType.id)?.mouseRoomData?.pos;
     let listTransform: Transform  | null = transform
     if(listTransform) {
         listTransform.scaleY = 1;
@@ -69,7 +61,7 @@ function SortableList(props: SortableListProps): React.JSX.Element {
             style={{
                 transform: CSS.Transform.toString(listTransform),
                 transition: transition,
-                zIndex: isDragging ? 100 : undefined,
+                zIndex: (isDragging || !!otherDraggingPos) ? 100 : undefined,
             }}
         >
             <ListElement
@@ -77,7 +69,7 @@ function SortableList(props: SortableListProps): React.JSX.Element {
                 dragging={isDragging || !!otherDraggingPos}
                 handleProps={{ref: setActivatorNodeRef, ...listeners, ...attributes}}
                 droppableSetNodeRef={droppableSetNodeRef}
-                isOverlay={false}
+                isOverlay={!!otherDraggingPos}
             >
                 {props.children}
             </ListElement>

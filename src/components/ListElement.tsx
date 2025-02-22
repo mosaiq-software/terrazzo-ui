@@ -78,9 +78,11 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
-                alignItems: "stretch",
+                alignItems: "center",
                 minWidth: "250px",
                 maxWidth: "250px",
+                minHeight: "5rem",
+                maxHeight: "88vh",
                 transition: `transform .1s, box-shadow .1s, filter 0ms linear ${props.dragging ? '0ms' : '225ms'}`,
                 ...(props.dragging ? props.isOverlay ? {
                     transform: "rotateZ(3deg) scale(1.02)",
@@ -99,12 +101,14 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 justify="space-between"
                 align="center"
                 wrap="nowrap"
-                p="xs"
+                py="xs"
+                px="sm"
+                w="100%"
                 style={{
                     cursor:"pointer",
+                    height: "3rem",
                 }}
             >
-                <p style={{color:"white"}}>{props.listType.id.substring(0,2)}</p>
                 <EditableTextbox 
                     value={listTitle}
                     onChange={onTitleChange}
@@ -112,21 +116,22 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     type="title"
                     titleProps={{order: 6, c: "#ffffff"}}
                     style={{
-                        cursor: "text"
+                        cursor: "text",
+                        width: "90%",
                     }}
                 />
                 <Button 
                     {...captureDraggableEvents(captureEvent, forAllClickEvents((e)=>{captureEvent(e)}))}
                     variant="subtle" 
                     c="#ffffff"
-                    h="xs"><Title order={6} c="#ffffff">•••</Title></Button>
+                    h="100%"
+                    px={5}
+                ><Title order={6} c="#ffffff">•••</Title></Button>
             </Group>
             <Stack
                 ref={props.droppableSetNodeRef}
-                mt="md"
                 mb="md"
-                gap={10}
-                mah="75vh"
+                gap={5}
                 flex={1}
                 style={{
                     overflowY: "auto",
@@ -177,6 +182,10 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     variant="light"
                     onClickCapture={(e) => {
                         setVisible((v) => !v)
+                    }}
+                    style={{
+                        maxHeight: '2.25rem',
+                        minHeight: '2.25rem',
                     }}
                 >
                     Add Card +

@@ -6,8 +6,8 @@ import {useSocket} from "@trz/util/socket-context";
 import CreateList from "@trz/components/CreateList";
 import {Card, List} from "@mosaiq/terrazzo-common/types";
 import {NoteType, notify} from "@trz/util/notifications";
-import SortableList from "@trz/components/DragAndDrop/SortableList"
-import {getCard, getCardsList, getList} from "@trz/util/boardUtils"
+import SortableList from "@trz/components/DragAndDrop/SortableList";
+import {getCard, getCardsList, getList} from "@trz/util/boardUtils";
 import {
 	DndContext, 
 	closestCenter,
@@ -28,7 +28,7 @@ import {
 	verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { DragAbortEvent, DragCancelEvent, DragOverEvent } from "@dnd-kit/core/dist/types";
-import SortableCard from "./DragAndDrop/SortableCard";
+import SortableCard from "@trz/components/DragAndDrop/SortableCard";
 import { createPortal } from "react-dom";
 import {boardDropAnimation, horizontalCollisionDetection, renderContainerDragOverlay, renderSortableItemDragOverlay} from "@trz/util/dragAndDropUtils";
 import CardDetails from "@trz/components/CardDetails";
@@ -43,7 +43,7 @@ const BoardElement = (): React.JSX.Element => {
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
 			activationConstraint: {
-				distance: 2,
+				distance: 6,
 			}
 		}),
 		useSensor(KeyboardSensor, {
@@ -124,36 +124,35 @@ const BoardElement = (): React.JSX.Element => {
 		const overId = over?.id.toString() ?? "NULL OBJECT";
 		sockCtx.setDraggingObject({});
 		setActiveObject(null);
-		if (sockCtx.boardData?.lists && over && activeId !== overId) {
-			if(allListIds.includes(activeId)){
-				// is dropping list
-				const newIndex = sockCtx.boardData.lists.findIndex((v)=>v.id === overId);
-				if(newIndex > -1){
-					sockCtx.moveList(activeId, newIndex);
-				}
-			} else {
-				// is dropping card
-				if(allListIds.includes(overId)) {
-					// is over a list
-					const list = getList(overId, sockCtx.boardData?.lists);
-					const cardsList = getCardsList(activeId, sockCtx.boardData?.lists);
-					if(list?.id !== cardsList?.id) {
-						sockCtx.moveCard(activeId, overId);
-					}
-				} else {
-					// is over a card
-					const newList = getCardsList(overId, sockCtx.boardData?.lists);
-					if(!newList){
-						console.error("No list found", overId);
-						return;
-					}
-					const injectPos = newList.cards.findIndex(c=>c.id === overId);
-					const newIndex = injectPos >= 0 ? injectPos : newList.cards.length + 1;
-					sockCtx.moveCard(activeId, newList.id, newIndex);
-				}
-			}
-			
+		if (!sockCtx.boardData?.lists || !over) {
+			return;
 		}
+		// is dropping list
+		if(allListIds.includes(activeId)){
+			const newIndex = sockCtx.boardData.lists.findIndex((v)=>v.id === overId);
+			if(newIndex > -1){
+				sockCtx.moveList(activeId, newIndex);
+			}
+			return;
+		}
+		// is dropping card over a list
+		if(allListIds.includes(overId)) {
+			const list = getList(overId, sockCtx.boardData?.lists);
+			const cardsList = getCardsList(activeId, sockCtx.boardData?.lists);
+			if(list?.id !== cardsList?.id) {
+				sockCtx.moveCard(activeId, overId);
+			}
+			return;
+		}
+		// is dropping a card over another card
+		const newList = getCardsList(overId, sockCtx.boardData?.lists);
+		if(!newList){
+			console.error("No list found", overId);
+			return;
+		}
+		const injectPos = newList.cards.findIndex(c=>c.id === overId);
+		const newIndex = injectPos >= 0 ? injectPos : newList.cards.length + 1;
+		sockCtx.moveCard(activeId, newList.id, newIndex);
 	}
 
 	function handleDragAbort(event: DragAbortEvent) {
@@ -213,7 +212,7 @@ const BoardElement = (): React.JSX.Element => {
 				overflowX: "scroll"
 			}}
 		>
-			<CollaborativeMouseTracker 
+			<CollaborativeMouseTracker
 				boardId={params.boardId}
 				style={{
 					height: "95%",
