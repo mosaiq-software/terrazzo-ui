@@ -4,7 +4,7 @@ import CollaborativeMouseTracker from "@trz/wrappers/CollaborativeMouseTracker";
 import {useNavigate, useParams} from "react-router-dom";
 import {useSocket} from "@trz/util/socket-context";
 import CreateList from "@trz/components/CreateList";
-import {Card, List} from "@mosaiq/terrazzo-common/types";
+import {Card, CardHeader, List} from "@mosaiq/terrazzo-common/types";
 import {NoteType, notify} from "@trz/util/notifications";
 import SortableList from "@trz/components/DragAndDrop/SortableList";
 import {getCard, getCardsList, getList} from "@trz/util/boardUtils";
@@ -256,11 +256,11 @@ const BoardElement = (): React.JSX.Element => {
 										items={list.cards}
 										strategy={verticalListSortingStrategy}
 									>{
-										list.cards.map((card: Card, cardIndex: number) => {
+										list.cards.map((card: CardHeader, cardIndex: number) => {
 											return (
 												<SortableCard
 													key={card.id + "i"+cardIndex}
-													cardType={card}
+													cardHeader={card}
 													disabled={isSortingList}
 												/>
 											);

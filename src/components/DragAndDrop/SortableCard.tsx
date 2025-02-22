@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
-import {CSS, Transform} from '@dnd-kit/utilities';
+import {CSS} from '@dnd-kit/utilities';
 import {useSortable} from '@dnd-kit/sortable';
-import { Card } from "@mosaiq/terrazzo-common/types";
+import {  CardHeader } from "@mosaiq/terrazzo-common/types";
 import { useSocket } from "@trz/util/socket-context";
 import CardElement from "../CardElement";
 import { createPortal } from "react-dom";
 
 interface SortableCardProps {
-	cardType: Card;
+	cardHeader: CardHeader;
     disabled: boolean;
 }
 function SortableCard(props: SortableCardProps): React.JSX.Element {
@@ -22,7 +22,7 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
         transform,
         node,
     } = useSortable({
-        id: props.cardType.id,
+        id: props.cardHeader.id,
         data: { type: 'card' },
     });
 
@@ -32,7 +32,7 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
         }
     }, [node])
 
-    const otherDraggingPos = sockCtx.roomUsers.find((ru)=>ru.mouseRoomData?.draggingCard === props.cardType.id)?.mouseRoomData?.pos;
+    const otherDraggingPos = sockCtx.roomUsers.find((ru)=>ru.mouseRoomData?.draggingCard === props.cardHeader.id)?.mouseRoomData?.pos;
     if(!!otherDraggingPos && initialPosition) {
         return createPortal(
             <div style={{
@@ -41,7 +41,7 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
                 top: otherDraggingPos.y,
                 zIndex: 101,
             }}>
-                <CardElement cardType={props.cardType} dragging={true} isOverlay={true}/>
+                <CardElement cardHeader={props.cardHeader} dragging={true} isOverlay={true}/>
             </div>,
             document.body
         );
@@ -57,7 +57,7 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
                 zIndex: isDragging ? 101 : undefined,
             }}
         >
-            <CardElement cardType={props.cardType} dragging={isDragging} isOverlay={false}/>
+            <CardElement cardHeader={props.cardHeader} dragging={isDragging} isOverlay={false}/>
         </div>
     );
 }

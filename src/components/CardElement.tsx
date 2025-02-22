@@ -1,14 +1,12 @@
 import React from "react";
-import { useDisclosure } from "@mantine/hooks";
 import { Group, Paper, Pill, Text, Title } from "@mantine/core";
-import CardDetails from "@trz/components/CardDetails";
-import {Card} from "@mosaiq/terrazzo-common/types";
+import {CardHeader} from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from "@trz/components/AvatarRow";
 import { useTRZ } from "@trz/util/TRZ-context";
 
 
 interface CardElementProps {
-	cardType: Card;
+	cardHeader: CardHeader;
 	dragging: boolean;
 	isOverlay: boolean;
 }
@@ -23,7 +21,7 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 		if(props.dragging || props.isOverlay){
 			return;
 		}
-		trzCtx.setOpenedCardModal(props.cardType.id);
+		trzCtx.setOpenedCardModal(props.cardHeader.id);
 	}
 
 	return (
@@ -63,8 +61,8 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 					wordWrap: "break-word",
 					textWrap: "wrap"
 				}}
-			>{props.cardType.name}</Title>
-			<Text size='xs' c="#878787">{props.cardType.id.substring(0,2)}  {"TRZ"} - {props.cardType.cardNumber}</Text>
+			>{props.cardHeader.name}</Title>
+			<Text size='xs' c="#878787">{props.cardHeader.id.substring(0,2)}  {"TRZ"} - {props.cardHeader.cardNumber}</Text>
 			<Group>
 				{/* icons for info abt the card */}
 			</Group>

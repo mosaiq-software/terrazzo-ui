@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTRZ } from '@trz/util/TRZ-context';
 import { ClientSE, ClientSEPayload, ClientSEReplies, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
-import { Board, Card, List, TextBlock, TextBlockEvent, TextBlockId} from '@mosaiq/terrazzo-common/types';
+import { Board, BoardId, Card, CardHeader, CardId, List, ListId, TextBlock, TextBlockEvent, TextBlockId} from '@mosaiq/terrazzo-common/types';
 import { NoteType, notify } from '@trz/util/notifications';
 import { useIdle, useThrottledCallback } from '@mantine/hooks';
 import { getCaretCoordinates, IDLE_TIMEOUT_MS, MOUSE_UPDATE_THROTTLE_MS, TEXT_EVENT_EMIT_THROTTLE_MS, TextObject } from './textUtils';
@@ -18,21 +18,21 @@ type SocketContextType = {
     boardData: Board | undefined;
     moveMouse: (pos: Position) => void;
     setIdle: (idle: boolean) => void;
-    getBoardData: (boardId: string) => Promise<boolean | undefined>;
-    createBoard: (name: string, boardCode: string) => Promise<string | undefined>;
-    addList: (boardID: string, listName: string) => Promise<boolean | undefined>;
-    addCard: (listID: string, cardName: string) => Promise<boolean | undefined>;
-    updateListTitle: (listID: string, newName: string) => Promise<boolean | undefined>;
+    getBoardData: (boardId: BoardId) => Promise<boolean | undefined>;
+    createBoard: (name: string, boardCode: string) => Promise<BoardId | undefined>;
+    addList: (boardID: BoardId, listName: string) => Promise<boolean | undefined>;
+    addCard: (listID: ListId, cardName: string) => Promise<boolean | undefined>;
+    updateListTitle: (listID: ListId, newName: string) => Promise<boolean | undefined>;
     initializeTextBlockData: (textBlockId: TextBlockId) => Promise<void>;
     collaborativeTextObject: TextObject;
     setCollaborativeTextObject: React.Dispatch<React.SetStateAction<TextObject>>;
     receiveCollabTextEvent: (event: TextBlockEvent, element: HTMLTextAreaElement | undefined, emit: boolean) => void;
     syncCaretPosition: (element: HTMLTextAreaElement | undefined) => void;
-    moveList: (listId: string, position: number) => Promise<void>;
-    moveCard: (cardId: string, toList: string, position?: number) => Promise<void>;
-    setDraggingObject: React.Dispatch<React.SetStateAction<{list?: string;card?: string;}>>;
-    moveListToPos: (listId: string, position: number) => void;
-    moveCardToListAndPos: (cardId: string, toList: string, position?: number) => void;
+    moveList: (listId: ListId, position: number) => Promise<void>;
+    moveCard: (cardId: CardId, toList: string, position?: number) => Promise<void>;
+    setDraggingObject: React.Dispatch<React.SetStateAction<{list?: ListId, card?: CardId}>>;
+    moveListToPos: (listId: ListId, position: number) => void;
+    moveCardToListAndPos: (cardId: CardId, toList: ListId, position?: number) => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -47,7 +47,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const [connected, setConnected] = useState<boolean>(false);
     const [boardData, setBoardData] = useState<Board>();
     const [collaborativeTextObject, setCollaborativeTextObject] = useState<TextObject>({text: '', caret: undefined, relative: undefined, queue:[]});
-    const [draggingObject, setDraggingObject] = useState<{list?: string, card?: string}>({});
+    const [draggingObject, setDraggingObject] = useState<{list?: ListId, card?: CardId}>({});
 
     useEffect(() => {
         setIdle(idle);
@@ -263,7 +263,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const setRoom = (room: RoomId) => {
         setRoomState(room);
         if (!socket) {return;}
-        socket.emit(ClientSE.SET_ROOM, room, (response: ClientSEReplies[ClientSE.SET_ROOM], error?: string) => {
+        const payload: ClientSEPayload[ClientSE.SET_ROOM] = room;
+        socket.emit(ClientSE.SET_ROOM, payload, (response: ClientSEReplies[ClientSE.SET_ROOM], error?: string) => {
             if(error) {
                 console.error("Error changing room:", error);
             } else {
@@ -285,17 +286,19 @@ const SocketProvider: React.FC<any> = ({ children }) => {
 
     const setIdle = (idle: boolean) => {
         if (!socket) {return;}
-        socket.emit(ClientSE.USER_IDLE, idle, (response: ClientSEReplies[ClientSE.USER_IDLE], error?: string) => {
+        const payload:ClientSEPayload[ClientSE.USER_IDLE] = idle;
+        socket.emit(ClientSE.USER_IDLE, payload, (response: ClientSEReplies[ClientSE.USER_IDLE], error?: string) => {
             if(error) {
                 console.error("Error setting idle:", error);
             }
         });
     }
 
-    const getBoardData = async (boardId: string): Promise<boolean | undefined> => {
+    const getBoardData = async (boardId: BoardId): Promise<boolean | undefined> => {
         if (!socket) {return undefined;}
         return new Promise((resolve, reject) => {
-            socket.emit(ClientSE.GET_BOARD, boardId, (response: ClientSEReplies[ClientSE.GET_BOARD], error?: string) => {
+            const payload:ClientSEPayload[ClientSE.GET_BOARD] = boardId;
+            socket.emit(ClientSE.GET_BOARD, payload, (response: ClientSEReplies[ClientSE.GET_BOARD], error?: string) => {
                 if(error) {
                     reject(error);
                 } else {
@@ -306,10 +309,11 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }
 
-    const createBoard = async (name: string, boardCode:string):Promise<string | undefined> => {
+    const createBoard = async (name: string, boardCode:string):Promise<BoardId | undefined> => {
         if (!socket) {return undefined;}
         return new Promise((resolve, reject) => {
-            socket.emit(ClientSE.CREATE_BOARD, {name, boardCode}, (response: ClientSEReplies[ClientSE.CREATE_BOARD], error?: string) => {
+            const payload:ClientSEPayload[ClientSE.CREATE_BOARD] = {name, boardCode};
+            socket.emit(ClientSE.CREATE_BOARD, payload, (response: ClientSEReplies[ClientSE.CREATE_BOARD], error?: string) => {
                 if(error) {
                     reject(error);
                 } else {
@@ -319,10 +323,11 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }
 
-    const addList = async (boardID:string, listName:string):Promise<boolean | undefined> => {
+    const addList = async (boardID:BoardId, listName:string):Promise<boolean | undefined> => {
         if (!socket) {return undefined;}
         return new Promise((resolve, reject) => {
-            socket.emit(ClientSE.CREATE_LIST, {boardID, listName}, (response: ClientSEReplies[ClientSE.CREATE_LIST], error?: string) => {
+            const payload:ClientSEPayload[ClientSE.CREATE_LIST] = {boardID, listName};
+            socket.emit(ClientSE.CREATE_LIST, payload, (response: ClientSEReplies[ClientSE.CREATE_LIST], error?: string) => {
                 if(error) {
                     reject(error);
                 } else {
@@ -332,10 +337,11 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }
 
-    const addCard = async (listID:string, cardName:string):Promise<boolean | undefined> => {
+    const addCard = async (listID:ListId, cardName:string):Promise<boolean | undefined> => {
         if (!socket) {return undefined;}
         return new Promise((resolve, reject) => {
-            socket.emit(ClientSE.CREATE_CARD, {listID, cardName}, (response: ClientSEReplies[ClientSE.CREATE_CARD], error?: string) => {
+            const payload:ClientSEPayload[ClientSE.CREATE_CARD] = {listID, cardName};
+            socket.emit(ClientSE.CREATE_CARD, payload, (response: ClientSEReplies[ClientSE.CREATE_CARD], error?: string) => {
                 if(error) {
                     reject(error);
                 } else {
@@ -348,7 +354,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const updateListTitle = async (listID:string, title:string):Promise<boolean | undefined> => {
         if (!socket) {return undefined;}
         return new Promise((resolve, reject) => {
-            socket.emit(ClientSE.UPDATE_LIST_TITLE, {listID, title}, (response: ClientSEReplies[ClientSE.UPDATE_LIST_TITLE], error?: string) => {
+            const payload:ClientSEPayload[ClientSE.UPDATE_LIST_TITLE] = {listID, title};
+            socket.emit(ClientSE.UPDATE_LIST_TITLE, payload, (response: ClientSEReplies[ClientSE.UPDATE_LIST_TITLE], error?: string) => {
                 if(error) {
                     reject(error);
                 } else {
@@ -361,7 +368,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const initializeTextBlockData = async (textBlockId:TextBlockId): Promise<void> => {
         if(!socket) {return undefined;}
         const text: TextBlock | undefined = await new Promise((resolve, reject)=>{
-            socket.emit(ClientSE.GET_TEXT_BLOCK, textBlockId, (response: ClientSEReplies[ClientSE.GET_TEXT_BLOCK], error?:string)=>{
+            const payload:ClientSEPayload[ClientSE.GET_TEXT_BLOCK] = textBlockId;
+            socket.emit(ClientSE.GET_TEXT_BLOCK, payload, (response: ClientSEReplies[ClientSE.GET_TEXT_BLOCK], error?:string)=>{
                 if(error) {
                     reject(error);
                 } else{
@@ -440,7 +448,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const emitTextBlockEvents = async (textBlockEvents:TextBlockEvent[]): Promise<string | undefined> => {
         if(!socket) {return undefined;}
         return new Promise((resolve, reject)=>{
-            socket.emit(ClientSE.UPDATE_TEXT_BLOCK, textBlockEvents, (response: ClientSEReplies[ClientSE.UPDATE_TEXT_BLOCK], error?:string)=>{
+            const payload:ClientSEPayload[ClientSE.UPDATE_TEXT_BLOCK] = textBlockEvents;
+            socket.emit(ClientSE.UPDATE_TEXT_BLOCK, payload, (response: ClientSEReplies[ClientSE.UPDATE_TEXT_BLOCK], error?:string)=>{
                 if (error){
                     reject(error);
                 } else {
@@ -452,14 +461,15 @@ const SocketProvider: React.FC<any> = ({ children }) => {
 
     const syncUpdatedCaret = useThrottledCallback((pos?: Position) => {
         if (!socket || !room || !connected || roomUsers.length === 0) {return;}
-        socket.volatile.emit(ClientSE.TEXT_CARET, pos, (response: ClientSEReplies[ClientSE.TEXT_CARET], error?: string) => {
+        const payload:ClientSEPayload[ClientSE.TEXT_CARET] = pos;
+        socket.volatile.emit(ClientSE.TEXT_CARET, payload, (response: ClientSEReplies[ClientSE.TEXT_CARET], error?: string) => {
             if(error) {
                 console.error("Error moving caret:", error);
             }
         });
     }, MOUSE_UPDATE_THROTTLE_MS);
 
-    const moveList = async (listId: string, position: number): Promise<void> => {
+    const moveList = async (listId: ListId, position: number): Promise<void> => {
         moveListToPos(listId, position);
         if(!socket) return;
         const payload: ClientSEPayload[ClientSE.MOVE_LIST] = {listId, position};
@@ -470,7 +480,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }
 
-    const moveListToPos = (listId: string, position: number) => setBoardData((prevBoard)=>{
+    const moveListToPos = (listId: ListId, position: number) => setBoardData((prevBoard)=>{
         if(!prevBoard)return prevBoard;
         const index = prevBoard.lists.findIndex((l)=>l.id === listId);
         if(index < 0) {
@@ -483,7 +493,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         }
     });
 
-    const moveCard = async (cardId: string, toList: string, position?: number): Promise<void> => {
+    const moveCard = async (cardId: CardId, toList: ListId, position?: number): Promise<void> => {
         moveCardToListAndPos(cardId, toList, position);
         if(!socket) return;
         const payload: ClientSEPayload[ClientSE.MOVE_CARD] = {cardId, toList, position};
@@ -494,11 +504,11 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }
 
-    const moveCardToListAndPos = (cardId: string, toList: string, position?: number) => setBoardData((prevBoard)=>{
+    const moveCardToListAndPos = (cardId: CardId, toList: ListId, position?: number) => setBoardData((prevBoard)=>{
         if(!prevBoard)return prevBoard;
         let currentListIndex: number = -1;
         let currentCardIndexInCurrentList = -1;
-        let card: Card | null = null;
+        let card: CardHeader | null = null;
         let newListIndex: number = -1;
         prevBoard.lists.forEach((l, li)=>{
             if(l.id === toList)
