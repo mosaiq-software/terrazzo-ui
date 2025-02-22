@@ -30,7 +30,8 @@ import {
 import { DragAbortEvent, DragCancelEvent, DragOverEvent } from "@dnd-kit/core/dist/types";
 import SortableCard from "./DragAndDrop/SortableCard";
 import { createPortal } from "react-dom";
-import {boardDropAnimation, horizontalCollisionDetection, renderContainerDragOverlay, renderSortableItemDragOverlay} from "@trz/util/dragAndDropUtils"
+import {boardDropAnimation, horizontalCollisionDetection, renderContainerDragOverlay, renderSortableItemDragOverlay} from "@trz/util/dragAndDropUtils";
+import CardDetails from "@trz/components/CardDetails";
 
 const BoardElement = (): React.JSX.Element => {
 	const [activeObject, setActiveObject] = useState<List | Card | null>(null);
@@ -279,6 +280,7 @@ const BoardElement = (): React.JSX.Element => {
 					)}
 				</DndContext>
 				<CreateList/>
+				<CardDetails/>
 			</CollaborativeMouseTracker>
 		</Container>
 	);
