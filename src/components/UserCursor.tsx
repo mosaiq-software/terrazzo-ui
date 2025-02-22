@@ -27,7 +27,6 @@ const UserCursor = (props: UserCursorProps) => {
             position: "absolute",
             left: props.position.x,
             top: props.position.y,
-            transform: "translate(0%, -50%)",
         }}>
             <GiArrowCursor 
                 size={"1.25rem"}

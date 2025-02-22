@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTRZ } from '@trz/util/TRZ-context';
-import { ClientSE, ClientSEReplies, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
-import { Board, TextBlock, TextBlockEvent, TextBlockId} from '@mosaiq/terrazzo-common/types';
+import { ClientSE, ClientSEPayload, ClientSEReplies, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
+import { Board, Card, List, TextBlock, TextBlockEvent, TextBlockId} from '@mosaiq/terrazzo-common/types';
 import { NoteType, notify } from '@trz/util/notifications';
 import { useIdle, useThrottledCallback } from '@mantine/hooks';
 import { getCaretCoordinates, IDLE_TIMEOUT_MS, MOUSE_UPDATE_THROTTLE_MS, TEXT_EVENT_EMIT_THROTTLE_MS, TextObject } from './textUtils';
 import { executeTextBlockEvent } from '@mosaiq/terrazzo-common/utils/textUtils';
+import { arrayMove } from '@mosaiq/terrazzo-common/utils/arrayUtils';
 
 type SocketContextType = {
     sid?: SocketId;
@@ -27,6 +28,11 @@ type SocketContextType = {
     setCollaborativeTextObject: React.Dispatch<React.SetStateAction<TextObject>>;
     receiveCollabTextEvent: (event: TextBlockEvent, element: HTMLTextAreaElement | undefined, emit: boolean) => void;
     syncCaretPosition: (element: HTMLTextAreaElement | undefined) => void;
+    moveList: (listId: string, position: number) => Promise<void>;
+    moveCard: (cardId: string, toList: string, position?: number) => Promise<void>;
+    setDraggingObject: React.Dispatch<React.SetStateAction<{list?: string;card?: string;}>>;
+    moveListToPos: (listId: string, position: number) => void;
+    moveCardToListAndPos: (cardId: string, toList: string, position?: number) => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -41,6 +47,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const [connected, setConnected] = useState<boolean>(false);
     const [boardData, setBoardData] = useState<Board>();
     const [collaborativeTextObject, setCollaborativeTextObject] = useState<TextObject>({text: '', caret: undefined, relative: undefined, queue:[]});
+    const [draggingObject, setDraggingObject] = useState<{list?: string, card?: string}>({});
 
     useEffect(() => {
         setIdle(idle);
@@ -207,6 +214,44 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             }));
         });
 
+        sock.on(ServerSE.MOVE_LIST, (payload: ServerSEPayload[ServerSE.MOVE_LIST]) => {
+            moveListToPos(payload.listId, payload.position)
+            setRoomUsersState((prev)=>{
+                return prev.map((ru)=>{
+                    if(ru.mouseRoomData?.draggingList === payload.listId){
+                        return {
+                            ...ru,
+                            mouseRoomData: {
+                                ...ru.mouseRoomData,
+                                draggingList: undefined,
+                            }
+                        }
+                    }else{
+                        return ru;
+                    }
+                })
+            })
+        });
+
+        sock.on(ServerSE.MOVE_CARD, (payload: ServerSEPayload[ServerSE.MOVE_CARD]) => {
+            moveCardToListAndPos(payload.cardId, payload.toList, payload.position);
+            setRoomUsersState((prev)=>{
+                return prev.map((ru)=>{
+                    if(ru.mouseRoomData?.draggingCard === payload.cardId){
+                        return {
+                            ...ru,
+                            mouseRoomData: {
+                                ...ru.mouseRoomData,
+                                draggingList: undefined,
+                            }
+                        }
+                    }else{
+                        return ru;
+                    }
+                })
+            })
+        });
+
         
         return () => {
             setConnected(false);
@@ -229,7 +274,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     
     const moveMouse = (pos: Position) => {
         if (!socket || !room || !connected || roomUsers.length === 0) {return;}
-        socket.volatile.emit(ClientSE.MOUSE_MOVE, pos, (response: ClientSEReplies[ClientSE.MOUSE_MOVE], error?: string) => {
+        const payload: ClientSEPayload[ClientSE.MOUSE_MOVE] = {pos, draggingList: draggingObject.list, draggingCard: draggingObject.card};
+        socket.volatile.emit(ClientSE.MOUSE_MOVE, payload, (response: ClientSEReplies[ClientSE.MOUSE_MOVE], error?: string) => {
             if(error) {
                 console.error("Error moving mouse:", error);
             }
@@ -413,6 +459,67 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }, MOUSE_UPDATE_THROTTLE_MS);
 
+    const moveList = async (listId: string, position: number): Promise<void> => {
+        moveListToPos(listId, position);
+        if(!socket) return;
+        const payload: ClientSEPayload[ClientSE.MOVE_LIST] = {listId, position};
+        socket.emit(ClientSE.MOVE_LIST, payload, (response: ClientSEReplies[ClientSE.MOVE_LIST], error?: string) => {
+            if (error) {
+                console.error("Error moving list ", listId, "to", position);
+            }
+        });
+    }
+
+    const moveListToPos = (listId: string, position: number) => setBoardData((prevBoard)=>{
+        if(!prevBoard)return prevBoard;
+        const index = prevBoard.lists.findIndex((l)=>l.id === listId);
+        if(index < 0) {
+            console.error("Error moving list, list not found in prev lists");
+            return prevBoard;
+        }
+        return{
+            ...prevBoard,
+            lists: arrayMove<List>(prevBoard.lists, index, position)
+        }
+    });
+
+    const moveCard = async (cardId: string, toList: string, position?: number): Promise<void> => {
+        moveCardToListAndPos(cardId, toList, position);
+        if(!socket) return;
+        const payload: ClientSEPayload[ClientSE.MOVE_CARD] = {cardId, toList, position};
+        socket.emit(ClientSE.MOVE_CARD, payload, (response: ClientSEReplies[ClientSE.MOVE_CARD], error?: string) => {
+            if (error) {
+                console.error("Error moving card", cardId, "to", toList, "at", position);
+            }
+        });
+    }
+
+    const moveCardToListAndPos = (cardId: string, toList: string, position?: number) => setBoardData((prevBoard)=>{
+        if(!prevBoard)return prevBoard;
+        let currentListIndex: number = -1;
+        let currentCardIndexInCurrentList = -1;
+        let card: Card | null = null;
+        let newListIndex: number = -1;
+        prevBoard.lists.forEach((l, li)=>{
+            if(l.id === toList)
+                newListIndex = li;
+            l.cards.forEach((c, ci)=>{
+                if(c.id === cardId){
+                    card = c;
+                    currentListIndex = li;
+                    currentCardIndexInCurrentList = ci;
+                }
+            })
+        })
+        if(currentListIndex < 0 || newListIndex < 0 || currentCardIndexInCurrentList < 0 || card === null){
+            console.error("Error moving card to list, list or card not found");
+            return prevBoard;
+        }
+        prevBoard.lists[currentListIndex].cards.splice(currentCardIndexInCurrentList, 1);
+        prevBoard.lists[newListIndex].cards.splice(position ?? prevBoard.lists[newListIndex].cards.length, 0, card);
+        return {...prevBoard};
+    });
+
 
     return (
         <SocketContext.Provider value={{
@@ -433,7 +540,12 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             collaborativeTextObject,
             setCollaborativeTextObject,
             receiveCollabTextEvent,
-            syncCaretPosition
+            syncCaretPosition,
+            moveList,
+            moveCard,
+            setDraggingObject,
+            moveListToPos,
+            moveCardToListAndPos
         }}>
             {children}
         </SocketContext.Provider>

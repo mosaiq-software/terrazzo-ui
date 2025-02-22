@@ -8,7 +8,7 @@ export interface TextObject {
 }
 
 export const IDLE_TIMEOUT_MS = 1000 * 60 * 3;
-export const MOUSE_UPDATE_THROTTLE_MS = 250;
+export const MOUSE_UPDATE_THROTTLE_MS = 100;
 export const TEXT_EVENT_EMIT_THROTTLE_MS = 100;
 export const TAB_CHAR = '    ';
 
