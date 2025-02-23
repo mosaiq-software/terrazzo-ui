@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTRZ } from '@trz/util/TRZ-context';
 import { ClientSE, ClientSEPayload, ClientSEReplies, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
-import { Board, BoardId, CardHeader, CardId, List, ListId, TextBlock, TextBlockEvent, TextBlockId} from '@mosaiq/terrazzo-common/types';
+import { Board, BoardId, CardHeader, CardId, List, ListId, OrganizationId, ProjectId, TextBlock, TextBlockEvent, TextBlockId, UserId} from '@mosaiq/terrazzo-common/types';
 import { NoteType, notify } from '@trz/util/notifications';
 import { useIdle, useThrottledCallback } from '@mantine/hooks';
 import { getCaretCoordinates, IDLE_TIMEOUT_MS, MOUSE_UPDATE_THROTTLE_MS, TEXT_EVENT_EMIT_THROTTLE_MS, TextObject } from './textUtils';
@@ -19,16 +19,18 @@ type SocketContextType = {
     moveMouse: (pos: Position) => void;
     setIdle: (idle: boolean) => void;
     getBoardData: (boardId: BoardId) => Promise<void>;
-    createBoard: (name: string, boardCode: string) => Promise<BoardId | undefined>;
-    addList: (boardID: BoardId, listName: string) => Promise< undefined>;
-    addCard: (listID: ListId, cardName: string) => Promise<undefined>;
+    createOrganization: (name: string, creator: UserId) => Promise<OrganizationId | undefined>
+    createProject: (name: string, orgId: OrganizationId) => Promise<ProjectId | undefined>
+    createBoard: (name: string, boardCode: string, projectId: ProjectId) => Promise<BoardId | undefined>;
+    createList: (boardID: BoardId, listName: string) => Promise< undefined>;
+    createCard: (listID: ListId, cardName: string) => Promise<undefined>;
     initializeTextBlockData: (textBlockId: TextBlockId) => Promise<void>;
     collaborativeTextObject: TextObject;
     setCollaborativeTextObject: React.Dispatch<React.SetStateAction<TextObject>>;
     receiveCollabTextEvent: (event: TextBlockEvent, element: HTMLTextAreaElement | undefined, emit: boolean) => void;
     syncCaretPosition: (element: HTMLTextAreaElement | undefined) => void;
     moveList: (listId: ListId, position: number) => Promise<void>;
-    moveCard: (cardId: CardId, toList: string, position?: number) => Promise<void>;
+    moveCard: (cardId: CardId, toList: ListId, position?: number) => Promise<void>;
     setDraggingObject: React.Dispatch<React.SetStateAction<{list?: ListId, card?: CardId}>>;
     moveListToPos: (listId: ListId, position: number) => void;
     moveCardToListAndPos: (cardId: CardId, toList: ListId, position?: number) => void;
@@ -326,15 +328,23 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         }
     }
 
-    const createBoard = async (name: string, boardCode:string):Promise<BoardId | undefined> => {
-        return (await emit<ClientSE.CREATE_BOARD>(ClientSE.CREATE_BOARD, {name, boardCode}))?.boardID;
+    const createOrganization = async (name: string, creator:UserId):Promise<OrganizationId | undefined> => {
+        return await emit<ClientSE.CREATE_ORG>(ClientSE.CREATE_ORG, {name, creator});
     }
 
-    const addList = async (boardID:BoardId, listName:string):Promise<undefined> => {
+    const createProject = async (name: string, orgId: OrganizationId):Promise<ProjectId | undefined> => {
+        return await emit<ClientSE.CREATE_PROJECT>(ClientSE.CREATE_PROJECT, {name, orgId});
+    }
+
+    const createBoard = async (name: string, boardCode:string, projectId: ProjectId):Promise<BoardId | undefined> => {
+        return await emit<ClientSE.CREATE_BOARD>(ClientSE.CREATE_BOARD, {name, boardCode, projectId});
+    }
+
+    const createList = async (boardID:BoardId, listName:string):Promise<undefined> => {
         await emit<ClientSE.CREATE_LIST>(ClientSE.CREATE_LIST, {boardID, listName});
     }
 
-    const addCard = async (listID:ListId, cardName:string):Promise<undefined> => {
+    const createCard = async (listID:ListId, cardName:string):Promise<undefined> => {
         await emit<ClientSE.CREATE_CARD>(ClientSE.CREATE_CARD, {listID, cardName});
     }
 
@@ -495,9 +505,11 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             moveMouse,
             setIdle,
             getBoardData,
+            createOrganization,
+            createProject,
             createBoard,
-            addList,
-            addCard,
+            createList,
+            createCard,
             initializeTextBlockData,
             collaborativeTextObject,
             setCollaborativeTextObject,

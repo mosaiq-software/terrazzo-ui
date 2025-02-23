@@ -1,7 +1,7 @@
 import React from "react";
 import CardElement from "@trz/components/CardElement";
 import ListElement from "@trz/components/ListElement";
-import {List, Card, CardHeader} from "@mosaiq/terrazzo-common/types";
+import {List, Card, CardHeader, UID} from "@mosaiq/terrazzo-common/types";
 import { defaultDropAnimationSideEffects, DropAnimation } from "@dnd-kit/core";
 
 export const horizontalCollisionDetection = (args): string | null => {
@@ -14,7 +14,7 @@ export const horizontalCollisionDetection = (args): string | null => {
             const center = l.rect.current.left + (l.rect.current.width / 2.0);
             const delta = Math.abs(center - ptrCrds.x);
             if(delta < minDelta){
-                intersectingId = l.id.toString();
+                intersectingId = l.id.toString() as UID;
                 minDelta = delta;
             }
         }

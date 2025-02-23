@@ -2,14 +2,15 @@ import React, { createContext, useContext, useState } from 'react';
 import { revokeUserAccessToGithubAuth, tryLoginWithGithub } from './githubAuth';
 import { readSessionStorageValue, useSessionStorage } from '@mantine/hooks';
 import { LocalStorageKey } from '@mosaiq/terrazzo-common/constants';
+import { CardId } from '@mosaiq/terrazzo-common/types';
 
 type TRZContextType = {
     githubAuthToken: string | null;
     githubData: any | null;
     githubLogin: (code: string | undefined) => Promise<{route:string, success:boolean}>;
     logoutAll: () => void;
-    openedCardModal: string | null;
-    setOpenedCardModal: React.Dispatch<React.SetStateAction<string | null>>;
+    openedCardModal: CardId | null;
+    setOpenedCardModal: React.Dispatch<React.SetStateAction<CardId | null>>;
 }
 
 const TRZContext = createContext<TRZContextType | undefined>(undefined);
@@ -22,7 +23,7 @@ const TRZProvider: React.FC<any> = ({ children }) => {
     const [githubData, setGithubData] = useState<any | null>(null);
     const [loginRouteDestination, setLoginRouteDestination] = useSessionStorage({ key: "loginRouteDestination" });
 
-    const [openedCardModal, setOpenedCardModal] = useState<string | null>(null);
+    const [openedCardModal, setOpenedCardModal] = useState<CardId | null>(null);
 
     const githubLogin = async (code: string | undefined): Promise<{route:string, success:boolean}> => {
         if(githubAuthToken && githubData){

@@ -39,7 +39,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
         }
 
         try{
-            await sockCtx.addCard(props.listType.id, cardTitle)
+            await sockCtx.createCard(props.listType.id, cardTitle)
         } catch (e) {
             console.error(e);
             notify(NoteType.CARD_CREATION_ERROR);
@@ -115,7 +115,6 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     type="title"
                     titleProps={{order: 6, c: "#ffffff"}}
                     style={{
-                        cursor: "text",
                         width: "90%",
                     }}
                 />

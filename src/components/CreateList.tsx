@@ -29,7 +29,7 @@ const CreateList = (): React.JSX.Element => {
             return;
         }
         try {
-            await sockCtx.addList(sockCtx.boardData!.id, title)
+            await sockCtx.createList(sockCtx.boardData!.id, title)
         } catch (e) {
             notify(NoteType.LIST_CREATION_ERROR);
             console.error(e);
