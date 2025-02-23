@@ -262,6 +262,7 @@ const BoardElement = (): React.JSX.Element => {
 													key={card.id + "i"+cardIndex}
 													cardType={card}
 													disabled={isSortingList}
+													boardCode={sockCtx.boardData?.boardCode ?? "#"}
 												/>
 											);
 										})
@@ -274,8 +275,8 @@ const BoardElement = (): React.JSX.Element => {
 						<DragOverlay dropAnimation={boardDropAnimation}>
 						{activeObject
 							? allListIds.includes(activeObject.id.toString())
-							? renderContainerDragOverlay(activeObject as List)
-							: renderSortableItemDragOverlay(activeObject as Card)
+							? renderContainerDragOverlay(activeObject as List, sockCtx.boardData?.boardCode ?? "#")
+							: renderSortableItemDragOverlay(activeObject as Card, sockCtx.boardData?.boardCode ?? "#")
 							: null}
 						</DragOverlay>,
 						document.body

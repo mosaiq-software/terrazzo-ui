@@ -11,6 +11,7 @@ interface CardElementProps {
 	cardType: Card;
 	dragging: boolean;
 	isOverlay: boolean;
+	boardCode: string;
 }
 const CardElement = (props: CardElementProps): React.JSX.Element => {
 	const trzCtx = useTRZ();
@@ -70,7 +71,7 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 					textWrap: "wrap"
 				}}
 			>{title}</Title>
-			<Text size='xs' c="#878787">{props.cardType.id.substring(0,2)}  {"TRZ"} - {props.cardType.cardNumber}</Text>
+			<Text size='xs' c="#878787">{props.boardCode} - {props.cardType.cardNumber}</Text>
 			<Group>
 				{/* icons for info abt the card */}
 			</Group>
