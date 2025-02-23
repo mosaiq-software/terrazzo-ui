@@ -1,35 +1,28 @@
-// Utility
 import React, {useEffect, useState} from "react";
-
-//Components
-import CardElement from "@trz/components/CardElement";
 import EditableTextbox from "@trz/components/EditableTextbox";
 import {Button, Group, Paper, Stack, Title, CloseButton, TextInput, Flex, FocusTrap} from "@mantine/core";
 import {useClickOutside, getHotkeyHandler, useInViewport} from "@mantine/hooks";
-import {Card, List} from "@mosaiq/terrazzo-common/types";
+import {List} from "@mosaiq/terrazzo-common/types";
 import {useSocket} from "@trz/util/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
+import { captureDraggableEvents, captureEvent, forAllClickEvents } from "@trz/util/eventUtils";
+
 
 interface ListElementProps {
-    listType: List
+    listType: List;
+    children?: React.ReactNode;
+    dragging: boolean;
+    droppableSetNodeRef?: (element: HTMLElement | null) => void;
+    handleProps?: any;
+    isOverlay: boolean;
 }
-
-/**BoardList Component
- *
- * State: none
- *
- * Props: none
- */
-
 function ListElement(props: ListElementProps): React.JSX.Element {
     const [listTitle, setListTitle] = React.useState(props.listType.name || "List Title");
-
     const [visible, setVisible] = useState(false);
     const [error, setError] = useState("");
     const [cardTitle, setCardTitle] = useState("");
     const clickOutsideRef = useClickOutside(() => onBlur());
     const sockCtx = useSocket();
-    const { ref:inViewportRef, inViewport } = useInViewport();
     
     function onSubmit() {
         setError("")
@@ -85,16 +78,36 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
-                alignItems: "stretch",
+                alignItems: "center",
                 minWidth: "250px",
-                maxWidth: "250px"
+                maxWidth: "250px",
+                minHeight: "5rem",
+                maxHeight: "88vh",
+                transition: `transform .1s, box-shadow .1s, filter 0ms linear ${props.dragging ? '0ms' : '225ms'}`,
+                ...(props.dragging ? props.isOverlay ? {
+                    transform: "rotateZ(3deg) scale(1.02)",
+                    boxShadow: "10px 8px 25px black",
+                    border: "1px solid #14222e",
+                    zIndex: 11,
+            } : {
+                    filter: "grayscale(1) contrast(0) brightness(0) blur(6px)",
+                    opacity: .4,
+                    zIndex: 10,
+            } : undefined)
             }}
-            ref={inViewportRef}
         >
             <Group
+                {...props.handleProps}
                 justify="space-between"
                 align="center"
-                p="xs"
+                wrap="nowrap"
+                py="xs"
+                px="sm"
+                w="100%"
+                style={{
+                    cursor:"pointer",
+                    height: "3rem",
+                }}
             >
                 <EditableTextbox 
                     value={listTitle}
@@ -102,26 +115,30 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     placeholder="Click to edit!"
                     type="title"
                     titleProps={{order: 6, c: "#ffffff"}}
+                    style={{
+                        cursor: "text",
+                        width: "90%",
+                    }}
                 />
-                <Button variant="subtle" c="#ffffff" h="xs"><Title order={6} c="#ffffff">•••</Title></Button>
+                <Button 
+                    {...captureDraggableEvents(captureEvent, forAllClickEvents((e)=>{captureEvent(e)}))}
+                    variant="subtle" 
+                    c="#ffffff"
+                    h="100%"
+                    px={5}
+                ><Title order={6} c="#ffffff">•••</Title></Button>
             </Group>
             <Stack
-                mt="md"
+                ref={props.droppableSetNodeRef}
                 mb="md"
-                gap={10}
-                mah="75vh"
+                gap={5}
                 flex={1}
                 style={{
-                    overflowY: "scroll",
+                    overflowY: "auto",
                     overflowX: "hidden"
-
                 }}
             >
-                {
-                    inViewport && props.listType?.cards.map((card:Card, index) => (
-						<CardElement key={index} cardType={card}/>
-					))
-                }
+                { props.children }
                 <Group>
                     {visible &&
                         <Paper 
@@ -163,7 +180,13 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 <Button 
                     w="100%"
                     variant="light"
-                    onClick={() => setVisible((v) => !v)}
+                    onClickCapture={(e) => {
+                        setVisible((v) => !v)
+                    }}
+                    style={{
+                        maxHeight: '2.25rem',
+                        minHeight: '2.25rem',
+                    }}
                 >
                     Add Card +
                 </Button>

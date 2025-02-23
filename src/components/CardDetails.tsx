@@ -16,6 +16,8 @@ import { AvatarRow } from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
 import {useSocket} from "@trz/util/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
+import { useTRZ } from "@trz/util/TRZ-context";
+import { getCard } from "@trz/util/boardUtils";
 
 interface CardDetailsProps {
 	boardCode: string;
@@ -23,9 +25,20 @@ interface CardDetailsProps {
 	toggle: () => void;
 	open: boolean;
 }
-const CardDetails = (props: CardDetailsProps): React.JSX.Element => {
-	const [title, setTitle] = React.useState(props.card.name || "Card Title");
+const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
+	const trzCtx = useTRZ();
 	const sockCtx = useSocket();
+	const [title, setTitle] = React.useState(props.card.name || "Card Title");
+
+	useEffect(() => {
+		setTitle(props.card.name);
+	}, [props.card.name]);
+
+	const isOpen = !!trzCtx.openedCardModal;
+	
+	const onCloseModal = () => {
+		trzCtx.setOpenedCardModal(null);
+	}
 
 	function onTitleChange(value:string) {
 		setTitle(value);
@@ -39,14 +52,22 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element => {
 		});
 	}
 
-	useEffect(() => {
-		setTitle(props.card.name);
-	}, [props.card.name]);
+	if(!sockCtx.boardData || !trzCtx.openedCardModal){
+		return null;
+	}
+
+	const boardCode = sockCtx.boardData.boardCode;
+	const card = getCard(trzCtx.openedCardModal, sockCtx.boardData.lists);
+	if(!card) {
+		console.error("No card found when opening card details modal");
+		onCloseModal();
+		return null;
+	}
 
 	return (
 		<Modal.Root
-			opened={props.open}
-			onClose={props.toggle}
+			opened={isOpen}
+			onClose={onCloseModal}
 			centered
 			size={"auto"}
 		>
@@ -78,7 +99,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element => {
 								w:"100%"
 							}}
 						/>
-						<Text fz="sm">{props.boardCode} - {props.card.cardNumber}</Text>
+						<Text fz="sm">{boardCode} - {card.cardNumber}</Text>
 					</Modal.Title>
 					<Modal.CloseButton />
 				</Modal.Header>
@@ -115,7 +136,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element => {
 									</Pill.Group>
 								</Grid.Col>
 							</Grid>
-							<CollaborativeTextArea textBlockId={props.card.descriptionTextBlockId} maxLineLength={66} />
+							<CollaborativeTextArea textBlockId={card.descriptionTextBlockId} maxLineLength={66} />
 						</Stack>
 						<Stack justify='flex-start' align='stretch' pt="md">
 							<Menu>
