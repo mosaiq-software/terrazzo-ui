@@ -1,13 +1,13 @@
 {
     "compilerOptions": {
         "target": "es2015",
-        "module": "es6",
+        "module": "ES2022",
         "baseUrl": "./",
         "paths": {
             "@trz/*": ["src/*/index", "src/*"],
         },
         "strict": true,
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "jsx": "react",
         "outDir": "./dist/",
         "sourceMap": true,
@@ -15,6 +15,7 @@
         "allowJs": true,
         "allowSyntheticDefaultImports": true,
         "esModuleInterop": true,
+        "skipLibCheck": true,
     },
     "include": ["./src/*"],
     "exclude": ["node_modules"]
