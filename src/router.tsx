@@ -4,11 +4,13 @@ import { GithubAuth } from "@trz/pages/auth/github";
 import { Dashboard } from "@trz/pages/Dashboard";
 import {AuthWrapper} from "@trz/wrappers/AuthWrapper";
 import Navbar from "@trz/components/Navbar";
+import Home from "@trz/components/Home";
 import BoardElement from "@trz/components/BoardElement";
 import {CreateBoardModal} from "@trz/components/CreateBoard";
 import {ModalsProvider} from "@mantine/modals";
 import {LoginPage} from '@trz/pages/auth/LoginPage'
 import {SetUpAccount} from "@trz/pages/auth/SetUpAccount";
+import Workspace from "@trz/components/Workspace";
 
 const Router = () => {
 	return (
@@ -25,7 +27,9 @@ const Router = () => {
 					<Route element={<AuthWrapper />}>
 						<Route path='/dashboard' element={<Dashboard />} />
 						<Route path='/boards/:boardId' element={<BoardElement/>}></Route>
-					</Route>
+                        <Route path='/home' element={<Home/>} />
+						<Route path='/workspace' element={<Workspace/>} />
+                    </Route>
 				</Routes>
 			</ModalsProvider>
 		</BrowserRouter>
