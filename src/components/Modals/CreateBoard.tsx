@@ -1,20 +1,13 @@
-//Utility
 import React, {useState} from "react";
-
-//Components
 import {TextInput, Container, Flex, Button} from "@mantine/core";
 import {getHotkeyHandler} from "@mantine/hooks";
 import {ContextModalProps} from "@mantine/modals";
 import {useSocket} from "@trz/util/socket-context";
 import {useNavigate} from "react-router-dom";
 import {NoteType, notify} from "@trz/util/notifications";
+import { ProjectId } from "@mosaiq/terrazzo-common/types";
 
-const CreateBoard = ({
-                         context,
-                         id,
-                         innerProps,
-                     }: ContextModalProps<{ modalBody: string }>): React.JSX.Element => {
-
+const CreateBoard = (props: ContextModalProps<{ modalBody: string, projectId: ProjectId }>): React.JSX.Element => {
     const [boardName, setBoardName] = React.useState("");
     const [boardAbbreviation, setBoardAbbreviation] = React.useState("");
     const [errorName, setErrorName] = useState("");
@@ -46,15 +39,14 @@ const CreateBoard = ({
             return;
         }
         try {
-            const board = await sockCtx.createBoard(boardName, boardAbbreviation);
-            navigate(`/boards/${board}`);
-            context.closeModal(id);
+            const board = await sockCtx.createBoard(boardName, boardAbbreviation, props.innerProps.projectId);
+            navigate(`/board/${board}`);
         } catch (e) {
             console.error(e);
             navigate(`/dashboard`);
             notify(NoteType.BOARD_CREATION_ERROR);
-            return;
         }
+        props.context.closeModal(props.id);
     }
 
     return (
@@ -96,12 +88,4 @@ const CreateBoard = ({
     )
 }
 
-export const CreateBoardModal = ({
-                       context,
-                       id,
-                       innerProps,
-                   }: ContextModalProps<{ modalBody: string }>) => (
-    <>
-        <CreateBoard context={context} id={id} innerProps={innerProps}/>
-    </>
-);
+export const CreateBoardModal = (props: ContextModalProps<{ modalBody: string, projectId: ProjectId }>) => (<CreateBoard {...props}/>);

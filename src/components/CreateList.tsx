@@ -1,15 +1,10 @@
-//Utility
 import React, {useState} from "react";
-
-//Components
 import {Button, CloseButton, Paper, TextInput, Flex, FocusTrap} from "@mantine/core";
 import {useClickOutside, getHotkeyHandler} from "@mantine/hooks";
 import {useSocket} from "@trz/util/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
 
-
 const CreateList = (): React.JSX.Element => {
-
     const [visible, setVisible] = useState(false);
     const [error, setError] = useState("");
     const [title, setTitle] = useState("");

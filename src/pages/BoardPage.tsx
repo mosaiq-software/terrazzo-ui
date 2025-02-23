@@ -33,7 +33,7 @@ import { createPortal } from "react-dom";
 import {boardDropAnimation, horizontalCollisionDetection, renderContainerDragOverlay, renderSortableItemDragOverlay} from "@trz/util/dragAndDropUtils";
 import CardDetails from "@trz/components/CardDetails";
 
-const BoardElement = (): React.JSX.Element => {
+const BoardPage = (): React.JSX.Element => {
 	const [activeObject, setActiveObject] = useState<List | Card | null>(null);
 	const lastOverId = useRef<string | null>(null);
 	const params = useParams();
@@ -288,4 +288,4 @@ const BoardElement = (): React.JSX.Element => {
 	);
 };
 
-export default BoardElement;
+export default BoardPage;

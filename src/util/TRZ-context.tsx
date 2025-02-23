@@ -22,8 +22,8 @@ const TRZProvider: React.FC<any> = ({ children }) => {
     const [githubAuthToken, setGithubAuthToken] = useState<string | null>(null);
     const [githubData, setGithubData] = useState<any | null>(null);
     const [loginRouteDestination, setLoginRouteDestination] = useSessionStorage({ key: "loginRouteDestination" });
-
     const [openedCardModal, setOpenedCardModal] = useState<CardId | null>(null);
+    
 
     const githubLogin = async (code: string | undefined): Promise<{route:string, success:boolean}> => {
         if(githubAuthToken && githubData){

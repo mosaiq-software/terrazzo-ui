@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTRZ } from '@trz/util/TRZ-context';
 import { ClientSE, ClientSEPayload, ClientSEReplies, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
-import { Board, BoardId, CardHeader, CardId, List, ListId, OrganizationId, ProjectId, TextBlock, TextBlockEvent, TextBlockId, UserId} from '@mosaiq/terrazzo-common/types';
+import { Board, BoardId, CardHeader, CardId, List, ListId, Organization, OrganizationId, Project, ProjectId, TextBlock, TextBlockEvent, TextBlockId, UserId} from '@mosaiq/terrazzo-common/types';
 import { NoteType, notify } from '@trz/util/notifications';
 import { useIdle, useThrottledCallback } from '@mantine/hooks';
 import { getCaretCoordinates, IDLE_TIMEOUT_MS, MOUSE_UPDATE_THROTTLE_MS, TEXT_EVENT_EMIT_THROTTLE_MS, TextObject } from './textUtils';
@@ -35,6 +35,9 @@ type SocketContextType = {
     moveListToPos: (listId: ListId, position: number) => void;
     moveCardToListAndPos: (cardId: CardId, toList: ListId, position?: number) => void;
     updateListField: (listId: ListId, partialList: Partial<List>) => Promise<void>;
+    getMyOrganizations: (userId: UserId) => Promise<ClientSEReplies[ClientSE.GET_USERS_ENTITIES] | undefined>;
+    getOrganizationData: (orgId: OrganizationId) => Promise<Organization | undefined>;
+    getProjectData: (projectId: ProjectId) => Promise<Project | undefined>;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -47,7 +50,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const [room, setRoomState] = useState<RoomId>(null);
     const [roomUsers, setRoomUsersState] = useState<UserData[]>([]);
     const [connected, setConnected] = useState<boolean>(false);
-    const [boardData, setBoardData] = useState<Board>();
+    const [boardData, setBoardData] = useState<Board | undefined>();
     const [collaborativeTextObject, setCollaborativeTextObject] = useState<TextObject>({text: '', caret: undefined, relative: undefined, queue:[]});
     const [draggingObject, setDraggingObject] = useState<{list?: ListId, card?: CardId}>({});
 
@@ -319,11 +322,48 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         emit<ClientSE.USER_IDLE>(ClientSE.USER_IDLE, idle);
     }
 
+    const getMyOrganizations = async (userId: UserId): Promise<ClientSEReplies[ClientSE.GET_USERS_ENTITIES] | undefined> => {
+        try {
+            const response = await emit<ClientSE.GET_USERS_ENTITIES>(ClientSE.GET_USERS_ENTITIES, userId);
+            if(!response) throw new Error("No data found for user "+userId);
+            return response;
+        } catch (e:any){
+            console.error(e);
+            notify(NoteType.BOARD_DATA_ERROR);
+            return undefined;
+        }
+    }
+
+    const getOrganizationData = async (orgId: OrganizationId): Promise<Organization | undefined> => {
+        try {
+            const org = await emit<ClientSE.GET_ORGANIZATION>(ClientSE.GET_ORGANIZATION, orgId);
+            if(!org) throw new Error("No data found for organization "+orgId);
+            return org;
+        } catch (e:any){
+            console.error(e);
+            notify(NoteType.ORG_DATA_ERROR);
+            return undefined;
+        }
+    }
+
+    const getProjectData = async (projectId: ProjectId): Promise<Project | undefined> => {
+        try {
+            const project = await emit<ClientSE.GET_PROJECT>(ClientSE.GET_PROJECT, projectId);
+            if(!project) throw new Error("No data found for project "+projectId);
+            return project;
+        } catch (e:any){
+            console.error(e);
+            notify(NoteType.PROJECT_DATA_ERROR);
+            return undefined;
+        }
+    }
+
     const getBoardData = async (boardId: BoardId): Promise<void> => {
         try {
-            const response = await emit<ClientSE.GET_BOARD>(ClientSE.GET_BOARD, boardId)
-            setBoardData(response?.board);
+            const response = await emit<ClientSE.GET_BOARD>(ClientSE.GET_BOARD, boardId);
+            setBoardData(response);
         } catch (e:any){
+            console.error(e);
             notify(NoteType.BOARD_DATA_ERROR);
         }
     }
@@ -504,6 +544,9 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             boardData,
             moveMouse,
             setIdle,
+            getMyOrganizations,
+            getOrganizationData,
+            getProjectData,
             getBoardData,
             createOrganization,
             createProject,

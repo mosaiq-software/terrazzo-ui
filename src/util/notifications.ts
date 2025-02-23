@@ -78,7 +78,20 @@ export const NoteType = {
     TEXT_EVENT_WARN: {
         title: "Error updating text block",
         color: NoteColor.WARNING
+    },
+    ORG_CREATION_ERROR: {
+        title: "Error creating the organization"
+    },
+    ORG_DATA_ERROR: {
+        title: "Error getting the organization"
+    },
+    PROJECT_CREATION_ERROR: {
+        title: "Error creating the project"
+    },
+    PROJECT_DATA_ERROR: {
+        title: "There was an error getting the project's data"
     }
+
 }
 
 export const notify = (note?: Note) => {

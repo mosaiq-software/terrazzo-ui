@@ -7,7 +7,7 @@ import { useSessionStorage } from "@mantine/hooks";
 interface LoginPageProps {
 
 }
-export const LoginPage = (props:LoginPageProps) => {
+const LoginPage = (props:LoginPageProps) => {
     const [rememberMe, setRememberMe] = useSessionStorage({ key: "remember-me" });
     const onRememberMe = (remember:boolean) => {
         setRememberMe(remember?"true":"false");
@@ -46,3 +46,5 @@ export const LoginPage = (props:LoginPageProps) => {
         </Container>
     );
 }
+
+export default LoginPage;
