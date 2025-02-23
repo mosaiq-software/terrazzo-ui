@@ -590,8 +590,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             moveCard,
             setDraggingObject,
             moveListToPos,
-            moveCardToListAndPos
-            syncCaretPosition,
+            moveCardToListAndPos,
             getUserViaGithub,
             setupUser,
             checkUserNameTaken
