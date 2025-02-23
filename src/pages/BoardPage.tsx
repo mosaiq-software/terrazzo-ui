@@ -32,6 +32,7 @@ import SortableCard from "@trz/components/DragAndDrop/SortableCard";
 import { createPortal } from "react-dom";
 import {boardDropAnimation, horizontalCollisionDetection, renderContainerDragOverlay, renderSortableItemDragOverlay} from "@trz/util/dragAndDropUtils";
 import CardDetails from "@trz/components/CardDetails";
+import { NotFound } from "@trz/components/NotFound";
 
 const BoardPage = (): React.JSX.Element => {
 	const [activeObject, setActiveObject] = useState<List | Card | null>(null);
@@ -201,7 +202,7 @@ const BoardPage = (): React.JSX.Element => {
 	};
 
 	if (!params.boardId || ! sockCtx.boardData) {
-		return <div>Board not found</div>;
+		return <NotFound itemType="Board"/>
 	}
 
 	return (

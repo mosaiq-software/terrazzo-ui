@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Box, Avatar, Group, Flex, Title, Text, Tabs, Select, Divider, Button, ScrollArea, Center, Loader, Stack} from "@mantine/core";
-import {AddBoardListCard, BoardListCard} from "../components/BoardListCards";
+import {BoardListCard} from "@trz/components/BoardListCards";
 import {AvatarRow} from "@trz/components/AvatarRow";
 import {Project, ProjectId} from "@mosaiq/terrazzo-common/types";
 import { modals } from "@mantine/modals";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSocket } from "@trz/util/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
-import { useImageColor } from "@trz/util/useImageColor";
+import { NotFound } from "@trz/components/NotFound";
 
 const ProjectPage = (): React.JSX.Element => {
     const [project, setProject] = useState<Project | undefined>();
@@ -39,7 +39,7 @@ const ProjectPage = (): React.JSX.Element => {
     }))
 
     if(!project){
-        return <p>Project not found</p>
+        return <NotFound itemType="Project"/>
     }
 
     return (
@@ -73,6 +73,8 @@ const ProjectPage = (): React.JSX.Element => {
                     justifyContent: 'flex-start',
                 }}>
                     <Title c='white' pb='20' order={2} maw='200'>Boards</Title>
+                    {/* 
+                    // TODO implement board sorting
                     <Group maw='40%'>
                         <Select data={['Sort by: Alphabetical A-Z', 'Date', 'Creator']}
                                 defaultValue='Sort by: Alphabetical A-Z'
@@ -96,7 +98,7 @@ const ProjectPage = (): React.JSX.Element => {
                         <Divider orientation='vertical' color='#868e96'/>
                         <Button size='compact-sm' color='#27292E' fw='500'>Grid</Button>
                         <Button size='compact-sm' color='#27292E' fw='500'>List</Button>
-                    </Group>
+                    </Group> */}
                     <Box style={{
                         width: "100%",
                         display: "flex",
@@ -112,7 +114,8 @@ const ProjectPage = (): React.JSX.Element => {
                                     <BoardListCard 
                                         key={board.id}
                                         title={board.name}
-                                        color={'#121314'}
+                                        bgColor={'#121314'}
+                                        color="white"
                                         onClick={()=>{
                                             navigate("/board/"+board.id);
                                         }}
@@ -125,8 +128,11 @@ const ProjectPage = (): React.JSX.Element => {
                                     <Loader type="bars"/>
                                 </Center>
                             }
-                            <AddBoardListCard 
+                            <BoardListCard
+                                centered
                                 title="+ Add Board"
+                                bgColor={'#121314'}
+                                color="white"
                                 onClick={() =>
                                     modals.openContextModal({
                                         modal: 'board',

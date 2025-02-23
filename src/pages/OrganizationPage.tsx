@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Box, Avatar, Group, Flex, Title, Text, Tabs, Select, Divider, Button, ScrollArea, Center, Loader, Stack} from "@mantine/core";
-import {AddBoardListCard, BoardListCard} from "@trz/components/BoardListCards";
+import {BoardListCard} from "@trz/components/BoardListCards";
 import {AvatarRow} from "@trz/components/AvatarRow";
 import {Organization, OrganizationId} from "@mosaiq/terrazzo-common/types";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSocket } from "@trz/util/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
 import {modals} from "@mantine/modals";
+import {NotFound} from "@trz/components/NotFound";
 
 const OrganizationPage = (): React.JSX.Element => {
     const [orgData, setOrgData] = useState<Organization | undefined>();
@@ -39,7 +40,7 @@ const OrganizationPage = (): React.JSX.Element => {
     }))
 
     if(!orgData){
-        return <p>Organization not found</p>
+        return <NotFound itemType="Organization"/>
     }
 
     return (
@@ -73,6 +74,8 @@ const OrganizationPage = (): React.JSX.Element => {
                     justifyContent: 'flex-start',
                 }}>
                     <Title c='white' pb='20' order={2} maw='200'>Projects</Title>
+                    {/* 
+                    //TODO implement project sorting
                     <Group maw='40%'>
                         <Select data={['Sort by: Alphabetical A-Z', 'Date', 'Creator']}
                                 defaultValue='Sort by: Alphabetical A-Z'
@@ -96,7 +99,7 @@ const OrganizationPage = (): React.JSX.Element => {
                         <Divider orientation='vertical' color='#868e96'/>
                         <Button size='compact-sm' color='#27292E' fw='500'>Grid</Button>
                         <Button size='compact-sm' color='#27292E' fw='500'>List</Button>
-                    </Group>
+                    </Group> */}
                     <Box style={{
                         width: "100%",
                         display: "flex",
@@ -111,7 +114,8 @@ const OrganizationPage = (): React.JSX.Element => {
                                 orgData.projects.map((project) => (
                                     <BoardListCard 
                                         key={project.id}
-                                        color={'#121314'}
+                                        bgColor={'#121314'}
+                                        color="white"
                                         title={project.name}
                                         onClick={()=>{
                                             navigate("/project/"+project.id);
@@ -125,8 +129,11 @@ const OrganizationPage = (): React.JSX.Element => {
                                     <Loader type="bars"/>
                                 </Center>
                             }
-                            <AddBoardListCard 
+                            <BoardListCard 
+                                centered
                                 title="+ Add Project"
+                                bgColor={'#121314'}
+                                color="white"
                                 onClick={() =>
                                     modals.openContextModal({
                                         modal: 'project',
