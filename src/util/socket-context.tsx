@@ -82,8 +82,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             const engine = sock.io.engine;
             setConnected(false);
             engine.once("upgrade", () => {
-                if (engine.transport.name === "websocket") {
-                } else {
+                if (engine.transport.name !== "websocket") {
                     notify(NoteType.CONNECTION_ERROR);
                     sock.disconnect();
                 }
@@ -228,7 +227,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             if (!payload) {
                 return;
             }
-            for (let event of payload.events){
+            for (const event of payload.events){
                 receiveCollabTextEvent(event, undefined, false);
             }
         });

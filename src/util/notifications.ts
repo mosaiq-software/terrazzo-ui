@@ -94,6 +94,10 @@ export const NoteType = {
     },
     PROJECT_DATA_ERROR: {
         title: "There was an error getting the project's data"
+    },
+    API_ERROR: {
+        title: "API Error",
+        message: "There was an issue with the API server"
     }
 
 }
