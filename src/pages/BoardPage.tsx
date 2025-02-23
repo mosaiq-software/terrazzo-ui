@@ -59,9 +59,8 @@ const BoardPage = (): React.JSX.Element => {
 			}
 			await sockCtx.getBoardData(params.boardId as BoardId)
 				.catch((err) => {
-					console.error(err);
+					notify(NoteType.BOARD_DATA_ERROR, err);
 					navigate("/dashboard");
-					notify(NoteType.BOARD_DATA_ERROR);
 					return
 				});
 		};

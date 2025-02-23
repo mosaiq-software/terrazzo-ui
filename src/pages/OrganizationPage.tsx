@@ -24,9 +24,8 @@ const OrganizationPage = (): React.JSX.Element => {
                 const data = await sockCtx.getOrganizationData(params.orgId as OrganizationId)
                 setOrgData(data);
             } catch(err) {
-                console.error(err);
+                notify(NoteType.ORG_DATA_ERROR, err);
                 navigate("/dashboard");
-                notify(NoteType.ORG_DATA_ERROR);
                 return;
 			}
 		};

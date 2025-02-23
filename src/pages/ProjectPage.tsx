@@ -24,9 +24,8 @@ const ProjectPage = (): React.JSX.Element => {
                 const data = await sockCtx.getProjectData(params.projectId as ProjectId);
                 setProject(data);
             } catch(err) {
-                console.error(err);
+                notify(NoteType.PROJECT_DATA_ERROR, err);
                 navigate("/dashboard");
-                notify(NoteType.PROJECT_DATA_ERROR);
                 return;
 			}
 		};

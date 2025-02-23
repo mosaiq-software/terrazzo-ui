@@ -13,11 +13,11 @@ interface CardElementProps {
 }
 const CardElement = (props: CardElementProps): React.JSX.Element => {
 	const trzCtx = useTRZ();
-	const [title, setTitle] = React.useState(props.cardType.name || "Card Title");
+	const [title, setTitle] = React.useState(props.cardHeader.name || "Card Title");
 
 	useEffect(() => {
-		setTitle(props.cardType.name);
-	}, [props.cardType.name]);
+		setTitle(props.cardHeader.name);
+	}, [props.cardHeader.name]);
 
 	const testUsers = Array.from({ length: 1 }).map((_, index) => ({
 		name: "John Doe",
@@ -69,7 +69,7 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 					textWrap: "wrap"
 				}}
 			>{title}</Title>
-			<Text size='xs' c="#878787">{props.boardCode} - {props.cardType.cardNumber}</Text>
+			<Text size='xs' c="#878787">{props.boardCode} - {props.cardHeader.cardNumber}</Text>
 			<Group>
 				{/* icons for info abt the card */}
 			</Group>

@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTRZ } from '@trz/util/TRZ-context';
 import { ClientSE, ClientSEPayload, ClientSEReplies, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
-import { Board, BoardId, CardHeader, CardId, List, ListId, Organization, OrganizationId, Project, ProjectId, TextBlock, TextBlockEvent, TextBlockId, UserId} from '@mosaiq/terrazzo-common/types';
+import { Board, BoardHeader, BoardId, Card, CardHeader, CardId, List, ListId, Organization, OrganizationId, Project, ProjectId, TextBlock, TextBlockEvent, TextBlockId, UID, UserId} from '@mosaiq/terrazzo-common/types';
 import { NoteType, notify } from '@trz/util/notifications';
 import { useIdle, useThrottledCallback } from '@mantine/hooks';
 import { getCaretCoordinates, IDLE_TIMEOUT_MS, MOUSE_UPDATE_THROTTLE_MS, TEXT_EVENT_EMIT_THROTTLE_MS, TextObject } from './textUtils';
@@ -24,7 +24,6 @@ type SocketContextType = {
     createBoard: (name: string, boardCode: string, projectId: ProjectId) => Promise<BoardId | undefined>;
     createList: (boardID: BoardId, listName: string) => Promise< undefined>;
     createCard: (listID: ListId, cardName: string) => Promise<undefined>;
-    updateCardTitle: (cardID: string, newName: string) => Promise<boolean | undefined>;
     initializeTextBlockData: (textBlockId: TextBlockId) => Promise<void>;
     collaborativeTextObject: TextObject;
     setCollaborativeTextObject: React.Dispatch<React.SetStateAction<TextObject>>;
@@ -35,10 +34,14 @@ type SocketContextType = {
     setDraggingObject: React.Dispatch<React.SetStateAction<{list?: ListId, card?: CardId}>>;
     moveListToPos: (listId: ListId, position: number) => void;
     moveCardToListAndPos: (cardId: CardId, toList: ListId, position?: number) => void;
-    updateListField: (listId: ListId, partialList: Partial<List>) => Promise<void>;
     getMyOrganizations: (userId: UserId) => Promise<ClientSEReplies[ClientSE.GET_USERS_ENTITIES] | undefined>;
     getOrganizationData: (orgId: OrganizationId) => Promise<Organization | undefined>;
     getProjectData: (projectId: ProjectId) => Promise<Project | undefined>;
+    updateOrgField: (id: OrganizationId, partial: Partial<Organization>) => Promise<void>;
+    updateProjectField: (id: ProjectId, partial: Partial<Project>) => Promise<void>;
+    updateBoardField: (id: BoardId, partial: Partial<Board>) => Promise<void>;
+    updateListField: (id: ListId, partial: Partial<List>) => Promise<void>;
+    updateCardField: (id: CardId, partial: Partial<Card>) => Promise<void>;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -181,6 +184,13 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             });
         });
 
+        sock.on(ServerSE.UPDATE_BOARD_FIELD, (payload: ServerSEPayload[ServerSE.UPDATE_BOARD_FIELD]) => {
+            setBoardData(prev => {
+                if(!prev) {return prev;}
+                return updateBaseFromPartial<Board>(prev, payload);
+            });
+        });
+
         sock.on(ServerSE.UPDATE_LIST_FIELD, (payload: ServerSEPayload[ServerSE.UPDATE_LIST_FIELD]) => {
             setBoardData(prev => {
                 if(!prev) {return prev;}
@@ -196,24 +206,19 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             });
         });
 
-        sock.on(ServerSE.UPDATE_CARD_TITLE, (payload: ServerSEPayload[ServerSE.UPDATE_CARD_TITLE]) => {
+        sock.on(ServerSE.UPDATE_CARD_FIELD, (payload: ServerSEPayload[ServerSE.UPDATE_CARD_FIELD]) => {
             setBoardData(prev => {
                 if(!prev) {return prev;}
                 return {
                     ...prev,
                     lists: prev.lists.map(list => {
-                        return {
-                            ...list,
-                            cards: list.cards.map(card => {
-                                if(card.id === payload.cardID) {
-                                    return {
-                                        ...card,
-                                        name: payload.title
-                                    }
-                                }
-                                return card;
-                            })
-                        }
+                        list.cards.map(card=> {
+                            if(card.id === payload.id) {
+                                return updateBaseFromPartial<CardHeader>(card, payload)
+                            }
+                            return card;
+                        })
+                        return list;
                     })
                 }
             });
@@ -352,8 +357,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             if(!response) throw new Error("No data found for user "+userId);
             return response;
         } catch (e:any){
-            console.error(e);
-            notify(NoteType.BOARD_DATA_ERROR);
+            notify(NoteType.BOARD_DATA_ERROR, e);
             return undefined;
         }
     }
@@ -364,8 +368,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             if(!org) throw new Error("No data found for organization "+orgId);
             return org;
         } catch (e:any){
-            console.error(e);
-            notify(NoteType.ORG_DATA_ERROR);
+            notify(NoteType.ORG_DATA_ERROR, e);
             return undefined;
         }
     }
@@ -376,8 +379,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             if(!project) throw new Error("No data found for project "+projectId);
             return project;
         } catch (e:any){
-            console.error(e);
-            notify(NoteType.PROJECT_DATA_ERROR);
+            notify(NoteType.PROJECT_DATA_ERROR, e);
             return undefined;
         }
     }
@@ -387,8 +389,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             const response = await emit<ClientSE.GET_BOARD>(ClientSE.GET_BOARD, boardId);
             setBoardData(response);
         } catch (e:any){
-            console.error(e);
-            notify(NoteType.BOARD_DATA_ERROR);
+            notify(NoteType.BOARD_DATA_ERROR, e);
         }
     }
 
@@ -412,34 +413,41 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         await emit<ClientSE.CREATE_CARD>(ClientSE.CREATE_CARD, {listID, cardName});
     }
 
-    const updateListField = async (listId:ListId, partialList: Partial<List>): Promise<void> => {
-        await emit(ClientSE.UPDATE_LIST_FIELD, {...partialList, id: listId});
+    async function updateField<T extends (Card | List | Board | Project | Organization)>(
+        event:
+            ClientSE.UPDATE_ORG_FIELD |
+            ClientSE.UPDATE_PROJECT_FIELD |
+            ClientSE.UPDATE_BOARD_FIELD |
+            ClientSE.UPDATE_LIST_FIELD |
+            ClientSE.UPDATE_CARD_FIELD,
+        id: UID,
+        partial: Partial<T>
+    ): Promise<void> {
+        try {
+            await emit<typeof event>(event, {...partial, id});
+        } catch (e:any) {
+            notify({
+                [ClientSE.UPDATE_ORG_FIELD]: NoteType.ORG_DATA_ERROR,
+                [ClientSE.UPDATE_PROJECT_FIELD]: NoteType.PROJECT_DATA_ERROR,
+                [ClientSE.UPDATE_BOARD_FIELD]: NoteType.BOARD_DATA_ERROR,
+                [ClientSE.UPDATE_LIST_FIELD]: NoteType.LIST_UPDATE_ERROR,
+                [ClientSE.UPDATE_CARD_FIELD]: NoteType.CARD_UPDATE_ERROR,
+            }[event], e);
+        }
     }
 
-    const updateListTitle = async (listID:string, title:string):Promise<boolean | undefined> => {
-        if (!socket) {return undefined;}
-        return new Promise((resolve, reject) => {
-            socket.emit(ClientSE.UPDATE_LIST_TITLE, {listID, title}, (response: ClientSEReplies[ClientSE.UPDATE_LIST_TITLE], error?: string) => {
-                if(error) {
-                    reject(error);
-                } else {
-                    resolve(response.success);
-                }
-            });
-        });
-    }
+    const updateOrgField = async (id: OrganizationId, partial: Partial<Organization>) => updateField<Organization>(ClientSE.UPDATE_ORG_FIELD, id, partial);
+    const updateProjectField = async (id: ProjectId, partial: Partial<Project>) => updateField<Project>(ClientSE.UPDATE_PROJECT_FIELD, id, partial);
+    const updateBoardField = async (id: BoardId, partial: Partial<Board>) => updateField<Board>(ClientSE.UPDATE_BOARD_FIELD, id, partial);
+    const updateListField = async (id: ListId, partial: Partial<List>) => updateField<List>(ClientSE.UPDATE_LIST_FIELD, id, partial);
+    const updateCardField = async (id: CardId, partial: Partial<Card>) => updateField<Card>(ClientSE.UPDATE_CARD_FIELD, id, partial);
 
     const initializeTextBlockData = async (textBlockId:TextBlockId): Promise<void> => {
         try {
             const text = await emit<ClientSE.GET_TEXT_BLOCK>(ClientSE.GET_TEXT_BLOCK, textBlockId);
-            setCollaborativeTextObject({
-                text: text?.text ?? '',
-                caret: undefined,
-                relative: undefined,
-                queue: [],
-            });
+            setCollaborativeTextObject({ text: text?.text ?? '', caret: undefined, relative: undefined, queue: [] });
         } catch (e:any) {
-            notify(NoteType.TEXT_BLOCK_INIT_ERROR);
+            notify(NoteType.TEXT_BLOCK_INIT_ERROR, e);
         }
     };
 
@@ -448,7 +456,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             const res = await emit<ClientSE.UPDATE_TEXT_BLOCK>(ClientSE.UPDATE_TEXT_BLOCK, textBlockEvents);
             return res;
         } catch (e) {
-            notify(NoteType.TEXT_EVENT_WARN)
+            notify(NoteType.TEXT_EVENT_WARN, e)
         }
     };
 
@@ -590,7 +598,6 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             createBoard,
             createList,
             createCard,
-            updateCardTitle,
             initializeTextBlockData,
             collaborativeTextObject,
             setCollaborativeTextObject,
@@ -601,7 +608,11 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             setDraggingObject,
             moveListToPos,
             moveCardToListAndPos,
-            updateListField
+            updateOrgField,
+            updateProjectField,
+            updateBoardField,
+            updateListField,
+            updateCardField,
         }}>
             {children}
         </SocketContext.Provider>

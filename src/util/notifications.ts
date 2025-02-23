@@ -98,11 +98,17 @@ export const NoteType = {
 
 }
 
-export const notify = (note?: Note) => {
+export const notify = (note?: Note, data?:any) => {
     if (!note) {
         note = {
             title: "An error occurred"
         }
+    }
+    if(!note.color || note.color === NoteColor.ERROR){
+        console.error(note.title, note.message, data);
+    }
+    if(note.color === NoteColor.WARNING){
+        console.warn(note.title, note.message, data);
     }
     notifications.show({
         title: note.title,

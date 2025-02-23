@@ -19,8 +19,7 @@ const HomePage = (): React.JSX.Element => {
                 const data = await sockCtx.getMyOrganizations(userId);
                 setUsersEntities(data);
             } catch(err) {
-                console.error(err);
-                notify(NoteType.ORG_DATA_ERROR);
+                notify(NoteType.ORG_DATA_ERROR, err);
                 return;
 			}
 		};

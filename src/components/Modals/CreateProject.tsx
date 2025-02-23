@@ -29,9 +29,8 @@ const CreateProject = (props: ContextModalProps<{ modalBody: string, orgId: Orga
             const projectId = await sockCtx.createProject(projectName, props.innerProps.orgId);
             navigate(`/project/${projectId}`);
         } catch (e) {
-            console.error(e);
+            notify(NoteType.PROJECT_CREATION_ERROR, e);
             navigate(`/dashboard`);
-            notify(NoteType.PROJECT_CREATION_ERROR);
         }
         props.context.closeModal(props.id);
     }

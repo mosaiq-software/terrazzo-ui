@@ -26,8 +26,7 @@ const CreateList = (): React.JSX.Element => {
         try {
             await sockCtx.createList(sockCtx.boardData!.id, title)
         } catch (e) {
-            notify(NoteType.LIST_CREATION_ERROR);
-            console.error(e);
+            notify(NoteType.LIST_CREATION_ERROR, e);
             return;
         } 
         setVisible(false);

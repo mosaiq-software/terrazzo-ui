@@ -27,9 +27,8 @@ const CreateOrganization = (props: ContextModalProps<{ modalBody: string }>): Re
             const ordId = await sockCtx.createOrganization(orgName, "placeholder-7f7e-4b13-8554-e0c3d5daac6c");
             navigate(`/org/${ordId}`);
         } catch (e) {
-            console.error(e);
+            notify(NoteType.ORG_CREATION_ERROR, e);
             navigate(`/dashboard`);
-            notify(NoteType.ORG_CREATION_ERROR);
         }
         props.context.closeModal(props.id);
     }
