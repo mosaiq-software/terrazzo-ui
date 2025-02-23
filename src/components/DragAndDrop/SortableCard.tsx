@@ -9,6 +9,7 @@ import { createPortal } from "react-dom";
 interface SortableCardProps {
 	cardType: Card;
     disabled: boolean;
+    boardCode: string;
 }
 function SortableCard(props: SortableCardProps): React.JSX.Element {
     const sockCtx = useSocket();
@@ -41,7 +42,7 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
                 top: otherDraggingPos.y,
                 zIndex: 101,
             }}>
-                <CardElement cardType={props.cardType} dragging={true} isOverlay={true}/>
+                <CardElement cardType={props.cardType} dragging={true} isOverlay={true} boardCode={props.boardCode}/>
             </div>,
             document.body
         );
@@ -57,7 +58,7 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
                 zIndex: isDragging ? 101 : undefined,
             }}
         >
-            <CardElement cardType={props.cardType} dragging={isDragging} isOverlay={false}/>
+            <CardElement cardType={props.cardType} dragging={isDragging} isOverlay={false} boardCode={props.boardCode}/>
         </div>
     );
 }
