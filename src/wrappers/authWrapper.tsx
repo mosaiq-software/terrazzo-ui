@@ -3,14 +3,14 @@ import {Outlet} from "react-router-dom";
 import { DEFAULT_NO_AUTH_ROUTE, useTRZ } from "@trz/util/TRZ-context";
 import { useNavigate } from "react-router-dom";
 import { Loader } from "@mantine/core";
+import {useUser} from "@trz/contexts/user-context";
 
 
 export const AuthWrapper = () => {
     const trz = useTRZ();
+    const usr = useUser();
     const navigate = useNavigate();
     const currentRoute = window.location.pathname;
-
-    
 
     useEffect(() => {
         let strictIgnore = false;

@@ -7,6 +7,7 @@ import { NoteType, notify } from '@trz/util/notifications';
 import { useIdle, useThrottledCallback } from '@mantine/hooks';
 import { getCaretCoordinates, IDLE_TIMEOUT_MS, MOUSE_UPDATE_THROTTLE_MS, TEXT_EVENT_EMIT_THROTTLE_MS, TextObject } from './textUtils';
 import { executeTextBlockEvent } from '@mosaiq/terrazzo-common/utils/textUtils';
+import {User} from "../../../terrazzo-common/dist/types";
 
 type SocketContextType = {
     sid?: SocketId;
@@ -27,6 +28,9 @@ type SocketContextType = {
     setCollaborativeTextObject: React.Dispatch<React.SetStateAction<TextObject>>;
     receiveCollabTextEvent: (event: TextBlockEvent, element: HTMLTextAreaElement | undefined, emit: boolean) => void;
     syncCaretPosition: (element: HTMLTextAreaElement | undefined) => void;
+    getUserViaGithub: (userId: string) => Promise<User | undefined>;
+    setupUser: (id:string, username: string, firstName: string, lastName: string) => Promise<User | undefined>;
+    checkUserNameTaken: (username: string) => Promise<boolean | undefined>;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -413,6 +417,45 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }, MOUSE_UPDATE_THROTTLE_MS);
 
+    const getUserViaGithub = async (userId: string): Promise<User | undefined> => {
+        if (!socket) {return undefined;}
+        return new Promise((resolve, reject) => {
+            socket.emit(ClientSE.GET_USER, userId, (response: ClientSEReplies[ClientSE.GET_USER], error?: string) => {
+                if(error) {
+                    reject(error);
+                } else {
+                    resolve(response.user);
+                }
+            });
+        });
+    }
+
+    const setupUser = async (id: string, username: string, firstName: string, lastName:string): Promise<User | undefined> => {
+        if (!socket) {return undefined;}
+        return new Promise((resolve, reject) => {
+            socket.emit(ClientSE.SETUP_USER, {id, username, firstName, lastName}, (response: ClientSEReplies[ClientSE.SETUP_USER], error?: string) => {
+                if(error) {
+                    reject(error);
+                } else {
+                    resolve(response.user);
+                }
+            });
+        });
+    }
+
+    const checkUserNameTaken = async (username: string): Promise<boolean | undefined> => {
+        if (!socket) {return undefined;}
+        return new Promise((resolve, reject) => {
+            socket.volatile.emit(ClientSE.CHECK_USERNAME_TAKEN, username, (response: ClientSEReplies[ClientSE.CHECK_USERNAME_TAKEN], error?: string) => {
+                if(error) {
+                    reject(error);
+                } else {
+                    resolve(response.taken);
+                }
+            });
+        });
+    }
+
 
     return (
         <SocketContext.Provider value={{
@@ -433,7 +476,10 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             collaborativeTextObject,
             setCollaborativeTextObject,
             receiveCollabTextEvent,
-            syncCaretPosition
+            syncCaretPosition,
+            getUserViaGithub,
+            setupUser,
+            checkUserNameTaken
         }}>
             {children}
         </SocketContext.Provider>
