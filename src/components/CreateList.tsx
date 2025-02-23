@@ -16,7 +16,7 @@ const CreateList = (): React.JSX.Element => {
     const ref = useClickOutside(() => onBlur());
     const sockCtx = useSocket();
 
-    function onSubmit(){
+    async function onSubmit(){
         setError("")
         setTitle("");
         if(title.length < 1){
@@ -28,15 +28,13 @@ const CreateList = (): React.JSX.Element => {
             setError("Max 50 characters")
             return;
         }
-
-        sockCtx.addList(sockCtx.boardData!.id, title).then((success) => {
-            if(!success){
-                notify(NoteType.LIST_CREATION_ERROR);
-                return;
-            }
-        }).catch((err) => {
-            console.error(err);
-        });
+        try {
+            await sockCtx.addList(sockCtx.boardData!.id, title)
+        } catch (e) {
+            notify(NoteType.LIST_CREATION_ERROR);
+            console.error(e);
+            return;
+        } 
         setVisible(false);
     }
 

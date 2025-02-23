@@ -22,7 +22,7 @@ const CreateBoard = ({
     const sockCtx = useSocket();
     const navigate = useNavigate();
 
-    function onSubmit() {
+    async function onSubmit() {
         setErrorAbv("");
         setErrorName("");
 
@@ -45,14 +45,16 @@ const CreateBoard = ({
             setErrorAbv("Max 3 characters");
             return;
         }
-        sockCtx.createBoard(boardName, boardAbbreviation).then((board) => {
+        try {
+            const board = await sockCtx.createBoard(boardName, boardAbbreviation);
             navigate(`/boards/${board}`);
             context.closeModal(id);
-        }).catch((err) => {
-            console.error(err);
+        } catch (e) {
+            console.error(e);
             navigate(`/dashboard`);
             notify(NoteType.BOARD_CREATION_ERROR);
-        });
+            return;
+        }
     }
 
     return (

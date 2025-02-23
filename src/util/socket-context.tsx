@@ -2,12 +2,12 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTRZ } from '@trz/util/TRZ-context';
 import { ClientSE, ClientSEPayload, ClientSEReplies, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
-import { Board, BoardId, Card, CardHeader, CardId, List, ListId, TextBlock, TextBlockEvent, TextBlockId} from '@mosaiq/terrazzo-common/types';
+import { Board, BoardId, CardHeader, CardId, List, ListId, TextBlock, TextBlockEvent, TextBlockId} from '@mosaiq/terrazzo-common/types';
 import { NoteType, notify } from '@trz/util/notifications';
 import { useIdle, useThrottledCallback } from '@mantine/hooks';
 import { getCaretCoordinates, IDLE_TIMEOUT_MS, MOUSE_UPDATE_THROTTLE_MS, TEXT_EVENT_EMIT_THROTTLE_MS, TextObject } from './textUtils';
 import { executeTextBlockEvent } from '@mosaiq/terrazzo-common/utils/textUtils';
-import { arrayMove } from '@mosaiq/terrazzo-common/utils/arrayUtils';
+import { arrayMove, updateBaseFromPartial } from '@mosaiq/terrazzo-common/utils/arrayUtils';
 
 type SocketContextType = {
     sid?: SocketId;
@@ -18,11 +18,10 @@ type SocketContextType = {
     boardData: Board | undefined;
     moveMouse: (pos: Position) => void;
     setIdle: (idle: boolean) => void;
-    getBoardData: (boardId: BoardId) => Promise<boolean | undefined>;
+    getBoardData: (boardId: BoardId) => Promise<void>;
     createBoard: (name: string, boardCode: string) => Promise<BoardId | undefined>;
-    addList: (boardID: BoardId, listName: string) => Promise<boolean | undefined>;
-    addCard: (listID: ListId, cardName: string) => Promise<boolean | undefined>;
-    updateListTitle: (listID: ListId, newName: string) => Promise<boolean | undefined>;
+    addList: (boardID: BoardId, listName: string) => Promise< undefined>;
+    addCard: (listID: ListId, cardName: string) => Promise<undefined>;
     initializeTextBlockData: (textBlockId: TextBlockId) => Promise<void>;
     collaborativeTextObject: TextObject;
     setCollaborativeTextObject: React.Dispatch<React.SetStateAction<TextObject>>;
@@ -33,6 +32,7 @@ type SocketContextType = {
     setDraggingObject: React.Dispatch<React.SetStateAction<{list?: ListId, card?: CardId}>>;
     moveListToPos: (listId: ListId, position: number) => void;
     moveCardToListAndPos: (cardId: CardId, toList: ListId, position?: number) => void;
+    updateListField: (listId: ListId, partialList: Partial<List>) => Promise<void>;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -175,17 +175,14 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             });
         });
 
-        sock.on(ServerSE.UPDATE_LIST_TITLE, (payload: ServerSEPayload[ServerSE.UPDATE_LIST_TITLE]) => {
+        sock.on(ServerSE.UPDATE_LIST_FIELD, (payload: ServerSEPayload[ServerSE.UPDATE_LIST_FIELD]) => {
             setBoardData(prev => {
                 if(!prev) {return prev;}
                 return {
                     ...prev,
                     lists: prev.lists.map(list => {
-                        if(list.id === payload.listID) {
-                            return {
-                                ...list,
-                                name: payload.title
-                            }
+                        if(list.id === payload.id) {
+                            return updateBaseFromPartial<List>(list, payload)
                         }
                         return list;
                     })
@@ -258,132 +255,173 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             sock.disconnect();
         }
     }, [trz.githubAuthToken]);
-    
 
-    const setRoom = (room: RoomId) => {
-        setRoomState(room);
-        if (!socket) {return;}
-        const payload: ClientSEPayload[ClientSE.SET_ROOM] = room;
-        socket.emit(ClientSE.SET_ROOM, payload, (response: ClientSEReplies[ClientSE.SET_ROOM], error?: string) => {
-            if(error) {
-                console.error("Error changing room:", error);
-            } else {
-                setRoomUsersState(response.users);
+    /**
+        Emit events to the backend
+        @returns The servers response
+        @throws Server error
+    */
+    function emit<T extends ClientSE>(event: T, payload: ClientSEPayload[T]): Promise<ClientSEReplies[T] | undefined> {
+        return new Promise((resolve: (response: ClientSEReplies[T])=>void, reject: (error?: string)=>void) => {
+            if(!socket){
+                return undefined;
             }
-        });
-    }
-    
-    const moveMouse = (pos: Position) => {
-        if (!socket || !room || !connected || roomUsers.length === 0) {return;}
-        const payload: ClientSEPayload[ClientSE.MOUSE_MOVE] = {pos, draggingList: draggingObject.list, draggingCard: draggingObject.card};
-        socket.volatile.emit(ClientSE.MOUSE_MOVE, payload, (response: ClientSEReplies[ClientSE.MOUSE_MOVE], error?: string) => {
-            if(error) {
-                console.error("Error moving mouse:", error);
-            }
-        });
-    }
-    const throttledMoveMouse = useThrottledCallback(moveMouse, MOUSE_UPDATE_THROTTLE_MS);
-
-    const setIdle = (idle: boolean) => {
-        if (!socket) {return;}
-        const payload:ClientSEPayload[ClientSE.USER_IDLE] = idle;
-        socket.emit(ClientSE.USER_IDLE, payload, (response: ClientSEReplies[ClientSE.USER_IDLE], error?: string) => {
-            if(error) {
-                console.error("Error setting idle:", error);
-            }
-        });
-    }
-
-    const getBoardData = async (boardId: BoardId): Promise<boolean | undefined> => {
-        if (!socket) {return undefined;}
-        return new Promise((resolve, reject) => {
-            const payload:ClientSEPayload[ClientSE.GET_BOARD] = boardId;
-            socket.emit(ClientSE.GET_BOARD, payload, (response: ClientSEReplies[ClientSE.GET_BOARD], error?: string) => {
+            socket.emit(event, payload, (response: ClientSEReplies[T], error?: string) => {
                 if(error) {
                     reject(error);
                 } else {
-                    setBoardData(response.board);
-                    return true;
-                }
-            });
-        });
-    }
-
-    const createBoard = async (name: string, boardCode:string):Promise<BoardId | undefined> => {
-        if (!socket) {return undefined;}
-        return new Promise((resolve, reject) => {
-            const payload:ClientSEPayload[ClientSE.CREATE_BOARD] = {name, boardCode};
-            socket.emit(ClientSE.CREATE_BOARD, payload, (response: ClientSEReplies[ClientSE.CREATE_BOARD], error?: string) => {
-                if(error) {
-                    reject(error);
-                } else {
-                    resolve(response.boardID);
-                }
-            });
-        });
-    }
-
-    const addList = async (boardID:BoardId, listName:string):Promise<boolean | undefined> => {
-        if (!socket) {return undefined;}
-        return new Promise((resolve, reject) => {
-            const payload:ClientSEPayload[ClientSE.CREATE_LIST] = {boardID, listName};
-            socket.emit(ClientSE.CREATE_LIST, payload, (response: ClientSEReplies[ClientSE.CREATE_LIST], error?: string) => {
-                if(error) {
-                    reject(error);
-                } else {
-                    resolve(response.success);
-                }
-            });
-        });
-    }
-
-    const addCard = async (listID:ListId, cardName:string):Promise<boolean | undefined> => {
-        if (!socket) {return undefined;}
-        return new Promise((resolve, reject) => {
-            const payload:ClientSEPayload[ClientSE.CREATE_CARD] = {listID, cardName};
-            socket.emit(ClientSE.CREATE_CARD, payload, (response: ClientSEReplies[ClientSE.CREATE_CARD], error?: string) => {
-                if(error) {
-                    reject(error);
-                } else {
-                    resolve(response.success);
-                }
-            });
-        });
-    }
-
-    const updateListTitle = async (listID:string, title:string):Promise<boolean | undefined> => {
-        if (!socket) {return undefined;}
-        return new Promise((resolve, reject) => {
-            const payload:ClientSEPayload[ClientSE.UPDATE_LIST_TITLE] = {listID, title};
-            socket.emit(ClientSE.UPDATE_LIST_TITLE, payload, (response: ClientSEReplies[ClientSE.UPDATE_LIST_TITLE], error?: string) => {
-                if(error) {
-                    reject(error);
-                } else {
-                    resolve(response.success);
-                }
-            });
-        });
-    }
-
-    const initializeTextBlockData = async (textBlockId:TextBlockId): Promise<void> => {
-        if(!socket) {return undefined;}
-        const text: TextBlock | undefined = await new Promise((resolve, reject)=>{
-            const payload:ClientSEPayload[ClientSE.GET_TEXT_BLOCK] = textBlockId;
-            socket.emit(ClientSE.GET_TEXT_BLOCK, payload, (response: ClientSEReplies[ClientSE.GET_TEXT_BLOCK], error?:string)=>{
-                if(error) {
-                    reject(error);
-                } else{
                     resolve(response);
                 }
             });
         });
-        setCollaborativeTextObject({
-            text: text?.text ?? '',
-            caret: undefined,
-            relative: undefined,
-            queue: [],
+    }
+
+    /**
+     * Emit a volatile event. These will not queue and are not guaranteed delivery at all.
+     * @returns The servers reply
+     * @throws Any server error
+     */
+    function volatileEmit<T extends ClientSE>(event: ClientSE, payload: ClientSEPayload[T]): Promise<ClientSEReplies[T] | undefined> {
+        return new Promise((resolve: (response: ClientSEReplies[T])=>void, reject: (error?: string)=>void) => {
+            if (!socket || !room || !connected || roomUsers.length === 0) {
+                return undefined;
+            }
+            socket.volatile.emit(event, payload, (response: ClientSEReplies[T], error?: string) => {
+                if(error) {
+                    reject(error);
+                } else {
+                    resolve(response);
+                }
+            });
         });
+    }
+    
+
+
+    // EVENT EMITTERS
+
+    const setRoom = async (room: RoomId) => {
+        setRoomState(room);
+        const response = await emit<ClientSE.SET_ROOM>(ClientSE.SET_ROOM, room);
+        if(response) {
+            setRoomUsersState(response.users);
+        }
+    }
+    
+    const moveMouse = useThrottledCallback((pos: Position) => {
+        if (!socket || !room || !connected || roomUsers.length === 0) {return;}
+        volatileEmit<ClientSE.MOUSE_MOVE>(ClientSE.MOUSE_MOVE, {pos, draggingList: draggingObject.list, draggingCard: draggingObject.card});
+    }, MOUSE_UPDATE_THROTTLE_MS);
+
+    const setIdle = (idle: boolean) => {
+        emit<ClientSE.USER_IDLE>(ClientSE.USER_IDLE, idle);
+    }
+
+    const getBoardData = async (boardId: BoardId): Promise<void> => {
+        try {
+            const response = await emit<ClientSE.GET_BOARD>(ClientSE.GET_BOARD, boardId)
+            setBoardData(response?.board);
+        } catch (e:any){
+            notify(NoteType.BOARD_DATA_ERROR);
+        }
+    }
+
+    const createBoard = async (name: string, boardCode:string):Promise<BoardId | undefined> => {
+        return (await emit<ClientSE.CREATE_BOARD>(ClientSE.CREATE_BOARD, {name, boardCode}))?.boardID;
+    }
+
+    const addList = async (boardID:BoardId, listName:string):Promise<undefined> => {
+        await emit<ClientSE.CREATE_LIST>(ClientSE.CREATE_LIST, {boardID, listName});
+    }
+
+    const addCard = async (listID:ListId, cardName:string):Promise<undefined> => {
+        await emit<ClientSE.CREATE_CARD>(ClientSE.CREATE_CARD, {listID, cardName});
+    }
+
+    const updateListField = async (listId:ListId, partialList: Partial<List>): Promise<void> => {
+        await emit(ClientSE.UPDATE_LIST_FIELD, {...partialList, id: listId});
+    }
+
+    const initializeTextBlockData = async (textBlockId:TextBlockId): Promise<void> => {
+        try {
+            const text = await emit<ClientSE.GET_TEXT_BLOCK>(ClientSE.GET_TEXT_BLOCK, textBlockId);
+            setCollaborativeTextObject({
+                text: text?.text ?? '',
+                caret: undefined,
+                relative: undefined,
+                queue: [],
+            });
+        } catch (e:any) {
+            notify(NoteType.TEXT_BLOCK_INIT_ERROR);
+        }
     };
+
+    const emitTextBlockEvents = async (textBlockEvents:TextBlockEvent[]): Promise<string | undefined> => {
+        try{
+            const res = await emit<ClientSE.UPDATE_TEXT_BLOCK>(ClientSE.UPDATE_TEXT_BLOCK, textBlockEvents);
+            return res;
+        } catch (e) {
+            notify(NoteType.TEXT_EVENT_WARN)
+        }
+    };
+
+    const syncUpdatedCaret = useThrottledCallback((pos?: Position) => {
+        volatileEmit<ClientSE.TEXT_CARET>(ClientSE.TEXT_CARET, pos);
+    }, MOUSE_UPDATE_THROTTLE_MS);
+
+    const moveList = async (listId: ListId, position: number): Promise<void> => {
+        moveListToPos(listId, position);
+        await emit<ClientSE.MOVE_LIST>(ClientSE.MOVE_LIST, {listId, position});
+    }
+
+    const moveCard = async (cardId: CardId, toList: ListId, position?: number): Promise<void> => {
+        moveCardToListAndPos(cardId, toList, position);
+        await emit<ClientSE.MOVE_CARD>(ClientSE.MOVE_CARD, {cardId, toList, position});
+    }
+
+
+
+
+    // HELPERS
+
+    const moveListToPos = (listId: ListId, position: number) => setBoardData((prevBoard)=>{
+        if(!prevBoard)return prevBoard;
+        const index = prevBoard.lists.findIndex((l)=>l.id === listId);
+        if(index < 0) {
+            console.error("Error moving list, list not found in prev lists");
+            return prevBoard;
+        }
+        return{
+            ...prevBoard,
+            lists: arrayMove<List>(prevBoard.lists, index, position)
+        }
+    });
+
+    const moveCardToListAndPos = (cardId: CardId, toList: ListId, position?: number) => setBoardData((prevBoard)=>{
+        if(!prevBoard)return prevBoard;
+        let currentListIndex: number = -1;
+        let currentCardIndexInCurrentList = -1;
+        let card: CardHeader | null = null;
+        let newListIndex: number = -1;
+        prevBoard.lists.forEach((l, li)=>{
+            if(l.id === toList)
+                newListIndex = li;
+            l.cards.forEach((c, ci)=>{
+                if(c.id === cardId){
+                    card = c;
+                    currentListIndex = li;
+                    currentCardIndexInCurrentList = ci;
+                }
+            })
+        })
+        if(currentListIndex < 0 || newListIndex < 0 || currentCardIndexInCurrentList < 0 || card === null){
+            console.error("Error moving card to list, list or card not found");
+            return prevBoard;
+        }
+        prevBoard.lists[currentListIndex].cards.splice(currentCardIndexInCurrentList, 1);
+        prevBoard.lists[newListIndex].cards.splice(position ?? prevBoard.lists[newListIndex].cards.length, 0, card);
+        return {...prevBoard};
+    });
 
     const receiveCollabTextEvent = (event: TextBlockEvent, element: HTMLTextAreaElement | undefined, emit: boolean) => {
         setCollaborativeTextObject((prev)=>{
@@ -445,91 +483,6 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }, TEXT_EVENT_EMIT_THROTTLE_MS);
 
-    const emitTextBlockEvents = async (textBlockEvents:TextBlockEvent[]): Promise<string | undefined> => {
-        if(!socket) {return undefined;}
-        return new Promise((resolve, reject)=>{
-            const payload:ClientSEPayload[ClientSE.UPDATE_TEXT_BLOCK] = textBlockEvents;
-            socket.emit(ClientSE.UPDATE_TEXT_BLOCK, payload, (response: ClientSEReplies[ClientSE.UPDATE_TEXT_BLOCK], error?:string)=>{
-                if (error){
-                    reject(error);
-                } else {
-                    resolve(response);
-                }
-            });
-        });
-    };
-
-    const syncUpdatedCaret = useThrottledCallback((pos?: Position) => {
-        if (!socket || !room || !connected || roomUsers.length === 0) {return;}
-        const payload:ClientSEPayload[ClientSE.TEXT_CARET] = pos;
-        socket.volatile.emit(ClientSE.TEXT_CARET, payload, (response: ClientSEReplies[ClientSE.TEXT_CARET], error?: string) => {
-            if(error) {
-                console.error("Error moving caret:", error);
-            }
-        });
-    }, MOUSE_UPDATE_THROTTLE_MS);
-
-    const moveList = async (listId: ListId, position: number): Promise<void> => {
-        moveListToPos(listId, position);
-        if(!socket) return;
-        const payload: ClientSEPayload[ClientSE.MOVE_LIST] = {listId, position};
-        socket.emit(ClientSE.MOVE_LIST, payload, (response: ClientSEReplies[ClientSE.MOVE_LIST], error?: string) => {
-            if (error) {
-                console.error("Error moving list ", listId, "to", position);
-            }
-        });
-    }
-
-    const moveListToPos = (listId: ListId, position: number) => setBoardData((prevBoard)=>{
-        if(!prevBoard)return prevBoard;
-        const index = prevBoard.lists.findIndex((l)=>l.id === listId);
-        if(index < 0) {
-            console.error("Error moving list, list not found in prev lists");
-            return prevBoard;
-        }
-        return{
-            ...prevBoard,
-            lists: arrayMove<List>(prevBoard.lists, index, position)
-        }
-    });
-
-    const moveCard = async (cardId: CardId, toList: ListId, position?: number): Promise<void> => {
-        moveCardToListAndPos(cardId, toList, position);
-        if(!socket) return;
-        const payload: ClientSEPayload[ClientSE.MOVE_CARD] = {cardId, toList, position};
-        socket.emit(ClientSE.MOVE_CARD, payload, (response: ClientSEReplies[ClientSE.MOVE_CARD], error?: string) => {
-            if (error) {
-                console.error("Error moving card", cardId, "to", toList, "at", position);
-            }
-        });
-    }
-
-    const moveCardToListAndPos = (cardId: CardId, toList: ListId, position?: number) => setBoardData((prevBoard)=>{
-        if(!prevBoard)return prevBoard;
-        let currentListIndex: number = -1;
-        let currentCardIndexInCurrentList = -1;
-        let card: CardHeader | null = null;
-        let newListIndex: number = -1;
-        prevBoard.lists.forEach((l, li)=>{
-            if(l.id === toList)
-                newListIndex = li;
-            l.cards.forEach((c, ci)=>{
-                if(c.id === cardId){
-                    card = c;
-                    currentListIndex = li;
-                    currentCardIndexInCurrentList = ci;
-                }
-            })
-        })
-        if(currentListIndex < 0 || newListIndex < 0 || currentCardIndexInCurrentList < 0 || card === null){
-            console.error("Error moving card to list, list or card not found");
-            return prevBoard;
-        }
-        prevBoard.lists[currentListIndex].cards.splice(currentCardIndexInCurrentList, 1);
-        prevBoard.lists[newListIndex].cards.splice(position ?? prevBoard.lists[newListIndex].cards.length, 0, card);
-        return {...prevBoard};
-    });
-
 
     return (
         <SocketContext.Provider value={{
@@ -539,13 +492,12 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             setRoom,
             roomUsers,
             boardData,
-            moveMouse: throttledMoveMouse,
+            moveMouse,
             setIdle,
             getBoardData,
             createBoard,
             addList,
             addCard,
-            updateListTitle,
             initializeTextBlockData,
             collaborativeTextObject,
             setCollaborativeTextObject,
@@ -555,7 +507,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             moveCard,
             setDraggingObject,
             moveListToPos,
-            moveCardToListAndPos
+            moveCardToListAndPos,
+            updateListField
         }}>
             {children}
         </SocketContext.Provider>

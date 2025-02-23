@@ -12,7 +12,7 @@ interface Note {
     message?: string;
     color?: NoteColor;
 }
-export const NoteType: {[key:string]:Note} = {
+export const NoteType = {
     CONNECTION_ERROR: {
         title: 'Connection Error',
         message: 'An error occurred while connecting to the server. Could not upgrade to websocket',
@@ -72,6 +72,13 @@ export const NoteType: {[key:string]:Note} = {
         title: 'Error pasting text',
         message: 'Make sure the browser has this permission enabled',
     },
+    TEXT_BLOCK_INIT_ERROR: {
+        title: "Error initializing text block"
+    },
+    TEXT_EVENT_WARN: {
+        title: "Error updating text block",
+        color: NoteColor.WARNING
+    }
 }
 
 export const notify = (note?: Note) => {
