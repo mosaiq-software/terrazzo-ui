@@ -4,8 +4,10 @@ import { DEFAULT_NO_AUTH_ROUTE, useTRZ } from "@trz/util/TRZ-context";
 import { useNavigate } from "react-router-dom";
 import { Center, Loader } from "@mantine/core";
 
-
-export const AuthWrapper = () => {
+interface AuthWrapperProps {
+    children: any;
+}
+export const AuthWrapper = (props: AuthWrapperProps) => {
     const trz = useTRZ();
     const navigate = useNavigate();
     const currentRoute = window.location.pathname;
@@ -40,7 +42,5 @@ export const AuthWrapper = () => {
         );
     }
 
-    return (
-        <Outlet />
-    );
+    return props.children;
 }

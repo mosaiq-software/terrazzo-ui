@@ -8,7 +8,7 @@ interface BoardListCardProps {
 }
 export const BoardListCard = (props:BoardListCardProps): React.JSX.Element => {
     return (
-        <UnstyledButton m='10' onClick={props. onClick}>
+        <UnstyledButton m='10' onClick={props. onClick} w='350' display={"inline-block"}>
             <AspectRatio ratio={301/150} miw='350'>
                 <Paper bg={props.color} radius='md'>
                     <Text c='white' p='10'>{props.title}</Text>

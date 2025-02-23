@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Avatar, Group, Flex, Title, Text, Tabs, Select, Divider, Button, ScrollArea, Center, Loader} from "@mantine/core";
+import { Box, Avatar, Group, Flex, Title, Text, Tabs, Select, Divider, Button, ScrollArea, Center, Loader, Stack} from "@mantine/core";
 import {AddBoardListCard, BoardListCard} from "@trz/components/BoardListCards";
 import {AvatarRow} from "@trz/components/AvatarRow";
 import {Organization, OrganizationId} from "@mosaiq/terrazzo-common/types";
@@ -44,57 +44,69 @@ const OrganizationPage = (): React.JSX.Element => {
 
     return (
         <ScrollArea h='100vh'>
-            <Box bg='#15161A' mih='100vh' pb='10vh'>
-                <Box p='25'>
-                    <Group gap='xl'
-                        pl='50'>
-                        <Avatar size='75'
-                                radius='lg'/>
+            <Stack bg='#15161A' mih='100vh' pb='10vh' align="center">
+                <Box py='25' w='80%'>
+                    <Group gap='xl' pl='50'>
+                        <Avatar size='75' radius='lg'/>
                         <Flex direction='column'>
                             <Title c='white'>{orgData.name}</Title>
                             <Text c='#6C6C6C'>The Description of Organization</Text>
                         </Flex>
                     </Group>
-                    <Tabs defaultValue='Boards' pt='30' onChange={(e)=>console.log(e)}>
+                    <Tabs defaultValue='Projects' pt='30' onChange={(e)=>console.log(e)}>
                         <Tabs.List>
                             <Tabs.Tab value='Projects' color='#F2187E'><Text c='white' fw='bold'>Projects</Text></Tabs.Tab>
                             <Tabs.Tab value='Members' color='#F2187E'><Text c='white' fw='bold'>Members</Text></Tabs.Tab>
                             <Tabs.Tab value='Settings' color='#F2187E'><Text c='white' fw='bold'>Settings</Text></Tabs.Tab>
-                            <Flex ml='auto'
-                                align='center'>
+                            <Flex ml='auto' align='center'>
                                 <AvatarRow users={testUsers} maxUsers={5}/>
                             </Flex>
                         </Tabs.List>
                     </Tabs>
                 </Box>
-                <Center>
-                    <Box>
-                        <Title c='white' pb='20' order={2} maw='200'>Projects</Title>
-                        <Group maw='40%'>
-                            <Select data={['Sort by: Alphabetical A-Z', 'Date', 'Creator']}
-                                    defaultValue='Sort by: Alphabetical A-Z'
-                                    size='xs'
-                                    styles={{
-                                        input: {
-                                            backgroundColor: '#27292E',
-                                            color: 'white',
-                                            borderColor: '#1d2022',
-                                        },
-                                        dropdown: {
-                                            backgroundColor: '#27292E',
-                                            color: 'white',
-                                        },
-                                        option: {
-                                            backgroundColor: '#27292E',
-                                            color: 'white',
-                                        }
-                                    }}
-                            />
-                            <Divider orientation='vertical' color='#868e96'/>
-                            <Button size='compact-sm' color='#27292E' fw='500'>Grid</Button>
-                            <Button size='compact-sm' color='#27292E' fw='500'>List</Button>
-                        </Group>
-                        <Group justify='center' align='center' wrap='wrap' gap='1' w='fit-content' maw={380*4}>
+                <Box style={{
+                    width: "80%",
+                    display: "flex",
+                    flexDirection: 'column',
+                    flexWrap: 'nowrap',
+                    alignItems: 'flex-start',
+                    justifyContent: 'flex-start',
+                }}>
+                    <Title c='white' pb='20' order={2} maw='200'>Projects</Title>
+                    <Group maw='40%'>
+                        <Select data={['Sort by: Alphabetical A-Z', 'Date', 'Creator']}
+                                defaultValue='Sort by: Alphabetical A-Z'
+                                size='xs'
+                                styles={{
+                                    input: {
+                                        backgroundColor: '#27292E',
+                                        color: 'white',
+                                        borderColor: '#1d2022',
+                                    },
+                                    dropdown: {
+                                        backgroundColor: '#27292E',
+                                        color: 'white',
+                                    },
+                                    option: {
+                                        backgroundColor: '#27292E',
+                                        color: 'white',
+                                    }
+                                }}
+                        />
+                        <Divider orientation='vertical' color='#868e96'/>
+                        <Button size='compact-sm' color='#27292E' fw='500'>Grid</Button>
+                        <Button size='compact-sm' color='#27292E' fw='500'>List</Button>
+                    </Group>
+                    <Box style={{
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "center"
+                    }}>
+                        <Box style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fill, 360px)",
+                            maxWidth: "100%"
+                        }}>
                             {
                                 orgData.projects.map((project) => (
                                     <BoardListCard 
@@ -123,10 +135,10 @@ const OrganizationPage = (): React.JSX.Element => {
                                     })
                                 }
                             />
-                        </Group>
+                        </Box>
                     </Box>
-                </Center>
-            </Box>
+                </Box>
+            </Stack>
         </ScrollArea>
     )
 }

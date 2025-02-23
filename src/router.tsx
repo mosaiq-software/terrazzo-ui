@@ -1,12 +1,12 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { GithubAuth } from "@trz/pages/auth/github";
-import {AuthWrapper} from "@trz/wrappers/AuthWrapper";
 import Navbar from "@trz/components/Navbar";
 import {CreateBoardModal} from "@trz/components/modals/CreateBoard";
 import {CreateProjectModal} from "@trz/components/modals/CreateProject";
 import {CreateOrganizationModal} from "@trz/components/modals/CreateOrganization";
 import {ModalsProvider} from "@mantine/modals";
+import ContentPageWrapper from "@trz/wrappers/ContentPageWrapper";
 import LandingPage from "@trz/pages/LandingPage";
 import LoginPage from '@trz/pages/auth/LoginPage'
 import HomePage from "@trz/pages/HomePage";
@@ -24,14 +24,13 @@ const Router = () => {
 	return (
 		<BrowserRouter>
 			<ModalsProvider modals={modals}>
-				<Navbar/>
 				<Routes>
 					<Route path='/' element={<LandingPage/>} />
 					<Route path='/login' element={<LoginPage />} />
 					<Route path='/auth' element={<Outlet />}>
 						<Route path='github' element={<GithubAuth />} />
 					</Route>
-					<Route element={<AuthWrapper />}>
+					<Route element={<ContentPageWrapper />}>
 						<Route path='/dashboard' element={<HomePage />} />
 						<Route path='/board/:boardId' element={<BoardPage/>} />
 						<Route path='/project/:projectId' element={<ProjectPage/>} />
