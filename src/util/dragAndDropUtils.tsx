@@ -33,7 +33,7 @@ export const boardDropAnimation: DropAnimation = {
 	}),
 };
 
-export function renderContainerDragOverlay(list: List) {
+export function renderContainerDragOverlay(list: List, boardCode: string) {
 	return (
 		<ListElement
 			listType={list}
@@ -48,6 +48,7 @@ export function renderContainerDragOverlay(list: List) {
 							cardHeader={card}
 							dragging={false}
 							isOverlay={false}
+							boardCode={boardCode}
 						/>
 					);
 				})
@@ -56,12 +57,13 @@ export function renderContainerDragOverlay(list: List) {
 	);
 }
 
-export function renderSortableItemDragOverlay(card: Card) {
+export function renderSortableItemDragOverlay(card: Card, boardCode: string) {
 	return (
 		<CardElement
 			cardHeader={card}
 			dragging={true}
 			isOverlay={true}
+			boardCode={boardCode}
 		/>
 	);
 }

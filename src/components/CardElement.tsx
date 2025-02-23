@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { Group, Paper, Pill, Text, Title } from "@mantine/core";
 import {CardHeader} from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from "@trz/components/AvatarRow";
@@ -9,9 +9,16 @@ interface CardElementProps {
 	cardHeader: CardHeader;
 	dragging: boolean;
 	isOverlay: boolean;
+	boardCode: string;
 }
 const CardElement = (props: CardElementProps): React.JSX.Element => {
 	const trzCtx = useTRZ();
+	const [title, setTitle] = React.useState(props.cardType.name || "Card Title");
+
+	useEffect(() => {
+		setTitle(props.cardType.name);
+	}, [props.cardType.name]);
+
 	const testUsers = Array.from({ length: 1 }).map((_, index) => ({
 		name: "John Doe",
 		url: "https://avatars.githubusercontent.com/u/47070087?v=4"
@@ -61,8 +68,8 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 					wordWrap: "break-word",
 					textWrap: "wrap"
 				}}
-			>{props.cardHeader.name}</Title>
-			<Text size='xs' c="#878787">{props.cardHeader.id.substring(0,2)}  {"TRZ"} - {props.cardHeader.cardNumber}</Text>
+			>{title}</Title>
+			<Text size='xs' c="#878787">{props.boardCode} - {props.cardType.cardNumber}</Text>
 			<Group>
 				{/* icons for info abt the card */}
 			</Group>

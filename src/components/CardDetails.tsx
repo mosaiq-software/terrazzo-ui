@@ -1,41 +1,52 @@
-import React from "react";
-import {
-	Select,
-	Group,
-	Grid,
-	Stack,
-	Button,
-	Menu,
-	Modal,
-	Text,
-	Pill,
-} from "@mantine/core";
+import React, {useEffect} from "react";
+import { Select, Group, Grid, Stack, Button, Menu, Modal, Text, Pill} from "@mantine/core";
 import { CollaborativeTextArea } from "@trz/components/CollaborativeTextArea";
-import { Card } from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
+import {useSocket} from "@trz/util/socket-context";
+import {NoteType, notify} from "@trz/util/notifications";
 import { useTRZ } from "@trz/util/TRZ-context";
-import { useSocket } from "@trz/util/socket-context";
 import { getCard } from "@trz/util/boardUtils";
 
 interface CardDetailsProps {
-
 }
 const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 	const trzCtx = useTRZ();
 	const sockCtx = useSocket();
+	const boardCode = sockCtx.boardData?.boardCode;
+	const card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
+	const [title, setTitle] = React.useState<string>(card?.name || "Card Title");
+
+	useEffect(() => {
+		setTitle(card?.name || "Card Title");
+	}, [card]);
+
 	const isOpen = !!trzCtx.openedCardModal;
 	
 	const onCloseModal = () => {
 		trzCtx.setOpenedCardModal(null);
 	}
 
+	function onTitleChange(value:string) {
+		if(!card){
+			notify(NoteType.CARD_UPDATE_ERROR);
+			return;
+		}
+		setTitle(value);
+		sockCtx.updateCardTitle(card?.id, value).then((success) => {
+			if (!success) {
+				notify(NoteType.CARD_UPDATE_ERROR);
+				return;
+			}
+		}).catch((err) => {
+			console.error(err);
+		});
+	}
+
 	if(!sockCtx.boardData || !trzCtx.openedCardModal){
 		return null;
 	}
 
-	const boardCode = sockCtx.boardData.boardCode;
-	const card = getCard(trzCtx.openedCardModal, sockCtx.boardData.lists);
 	if(!card) {
 		console.error("No card found when opening card details modal");
 		onCloseModal();
@@ -65,8 +76,8 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 						w={"100%"}
 					>
 					<EditableTextbox 
-							value={card.name} 
-							onChange={()=>{}}
+							value={title}
+							onChange={onTitleChange}
 							type="title"
 							placeholder="Card name.."
 							titleProps={{

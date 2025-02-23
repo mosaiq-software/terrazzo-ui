@@ -64,6 +64,10 @@ export const NoteType = {
         title: 'List Update Error',
         message: 'An error occurred while updating the list',
     },
+    CARD_UPDATE_ERROR: {
+        title: 'Card Update Error',
+        message: 'An error occurred while updating the card',
+    },
     CLIPBOARD_COPY_ERROR: {
         title: 'Error copying text',
         message: 'Make sure the browser has this permission enabled',

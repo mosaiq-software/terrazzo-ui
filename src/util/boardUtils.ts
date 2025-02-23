@@ -1,6 +1,6 @@
 import {List, Card, CardId, CardHeader, ListId} from "@mosaiq/terrazzo-common/types";
 
-export const getCard = (cardId: CardId, inLists?: List[]): Card | null => {
+export const getCard = (cardId: CardId | null, inLists?: List[]): Card | null => {
     if(!inLists){
         return null;
     }
