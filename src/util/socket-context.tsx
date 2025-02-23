@@ -446,10 +446,12 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const checkUserNameTaken = async (username: string): Promise<boolean | undefined> => {
         if (!socket) {return undefined;}
         return new Promise((resolve, reject) => {
-            socket.volatile.emit(ClientSE.CHECK_USERNAME_TAKEN, username, (response: ClientSEReplies[ClientSE.CHECK_USERNAME_TAKEN], error?: string) => {
+            socket.emit(ClientSE.CHECK_USERNAME_TAKEN, username, (response: ClientSEReplies[ClientSE.CHECK_USERNAME_TAKEN], error?: string) => {
                 if(error) {
+                    console.error("Error checking username:", error);
                     reject(error);
                 } else {
+                    console.log("Username taken", response.taken);
                     resolve(response.taken);
                 }
             });

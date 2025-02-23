@@ -28,17 +28,17 @@ const UserProvider: React.FC<any> = ({ children }) => {
 
         const user = await sockCtx.getUserViaGithub(trz.githubData.id);
         if(user == undefined){
-            console.log("Account not found");
+            //No account found
             return {userRoute: DEFAULT_NO_AUTH_ROUTE};
         }
 
         setUser(user);
 
         if(user.firstName == "" || user.lastName == ""){
-            console.log("Account not finished");
+            //Account not set up yet
             return {userRoute: FINISH_ACCOUNT_CREATION_ROUTE};
         }
-        console.log("Account found");
+        //Account is set up
         return {userRoute:DEFAULT_AUTHED_ROUTE};
     }
 

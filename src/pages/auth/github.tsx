@@ -35,27 +35,15 @@ export const GithubAuth = () => {
             const {route, success} = await trz.githubLogin(code);
             if(!success) {
                 notify(NoteType.GITHUB_AUTH_ERROR);
-                navigate(route);
             }
+            navigate(route);
+
         };
         fetchData(code);
         return ()=>{
             strictIgnore = true;
         }
     }, [code]);
-
-    useEffect(() => {
-        const checkUser = async () => {
-            if(!sockCtx.connected){
-                return;
-            }
-            console.log("Checking for user");
-            console.log(trz.githubData);
-            const {userRoute} = await usr.checkForUser();
-            navigate(userRoute);
-        }
-        checkUser();
-    }, [sockCtx.connected]);
 
     return(
         <Container h="100%" fluid maw="100%" p="lg" bg="#1d2022">

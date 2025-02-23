@@ -3,10 +3,13 @@ import {Button, Center, Container, Paper, Space, Stack, Text, TextInput, Title} 
 import {useSocket} from "@trz/util/socket-context";
 import {useUser} from "@trz/contexts/user-context";
 import {useDebouncedValue} from "@mantine/hooks";
+import {useNavigate} from "react-router-dom";
+import {DEFAULT_AUTHED_ROUTE} from "@trz/util/TRZ-context";
 
 export const SetUpAccount = () => {
     const [username, setUsername] = React.useState("");
     const [usernameDebounce] = useDebouncedValue(username, 500);
+    const [usernameStatus, setUsernameStatus] = React.useState("");
     const [firstName, setFirstName] = React.useState("");
     const [lastName, setLastName] = React.useState("");
     const [errorUsername, setErrorUsername] = React.useState("");
@@ -14,6 +17,33 @@ export const SetUpAccount = () => {
     const [errorLastName, setErrorLastName] = React.useState("");
     const sockCtx = useSocket();
     const usr = useUser();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        setUsernameStatus("");
+        if(usernameDebounce === ""){
+            return;
+        }
+        checkUsername({} as any);
+        sockCtx.checkUserNameTaken(username).then((taken)=>{
+            if(taken === undefined){
+                setUsernameStatus("Error checking username");
+                return;
+            }
+            else if(taken){
+                setUsernameStatus("Username taken, please try another");
+                return;
+            }else{
+                setUsernameStatus("Username available");
+            }
+        });
+    }, [usernameDebounce, sockCtx.connected]);
+
+    useEffect(() => {
+        if(!sockCtx.connected){
+            navigate(DEFAULT_AUTHED_ROUTE);
+        }
+    }, []);
 
     const onSubmit = () => {
         setErrorUsername("");
@@ -31,34 +61,32 @@ export const SetUpAccount = () => {
             }
             return;
         }
-        console.log(username, firstName, lastName);
         sockCtx.setupUser(usr.userData!.id, username, firstName, lastName).then((res)=>{
             if(res){
                 console.log("User created");
                 usr.updateUser(res);
+                navigate(DEFAULT_AUTHED_ROUTE);
             }else {
                 console.log("Error creating user");
             }
         });
     }
 
-    useEffect(() => {
-        sockCtx.checkUserNameTaken(username).then((taken)=>{
-            if(taken){
-                setErrorUsername("Username taken, please try another");
-                console.log("Username taken");
-                return;
-            }else {
-                console.log("Username not taken");
-            }
-        });
-    }, [usernameDebounce]);
-
     const checkUsername = (e) => {
         setErrorUsername("");
-        setUsername(e.currentTarget.value)
-        if(e.currentTarget.value === ""){
+        if(e.currentTarget){
+            setUsername(e.currentTarget.value)
+        }
+        if(username === ""){
             setErrorUsername("Please fill out the username field");
+            return;
+        }
+        if(username.length < 3){
+            setErrorUsername("Username must be at least 3 characters");
+            return;
+        }
+        if(username.length > 13) {
+            setErrorUsername("Username must be less than 13 characters");
             return;
         }
     }
@@ -106,6 +134,7 @@ export const SetUpAccount = () => {
                             label="Username"
                             placeholder="Mosaiq"
                             error={errorUsername}
+                            description = {usernameStatus}
                             value = {username}
                             onChange = {checkUsername}
                             radius="md"
