@@ -1,6 +1,5 @@
 import React from "react";
 import {
-	Select,
 	Group,
 	Grid,
 	Stack,
@@ -8,12 +7,13 @@ import {
 	Menu,
 	Modal,
 	Text,
-	Pill,
+	Pill, Box,
 } from "@mantine/core";
 import { CollaborativeTextArea } from "@trz/components/CollaborativeTextArea";
 import { Card } from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
+import {PriorityButtons} from "@trz/components/PriorityButtons";
 
 interface CardDetailsProps {
 	boardCode: string;
@@ -21,6 +21,7 @@ interface CardDetailsProps {
 	toggle: () => void;
 	open: boolean;
 }
+
 const CardDetails = (props: CardDetailsProps): React.JSX.Element => {
 	return (
 		<Modal.Root
@@ -84,7 +85,11 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element => {
 										
 								<Grid.Col span={4}>
 									<Stack align='left'>
-										<Select label='Priority' placeholder='Low' data={["Low", "Medium", "High"]} />
+										{/*<Select label='Priority' placeholder='Low' data={["Low", "Medium", "High"]}*/}
+										Priority
+										<Box>
+
+										</Box>
 									</Stack>
 								</Grid.Col>
 								<Grid.Col span={4}>
@@ -106,6 +111,15 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element => {
 									<Menu.Item>Placeholder 1 Item</Menu.Item>
 									<Menu.Label>Placeholder 2</Menu.Label>
 									<Menu.Item>Placeholder 2 Item</Menu.Item>
+								</Menu.Dropdown>
+							</Menu>
+							<Menu position='bottom-start'>
+								<Menu.Target>
+									<Button bg='gray.8'>Card Priority</Button>
+								</Menu.Target>
+								<Menu.Dropdown ta='center'>
+									<Menu.Label>Card Priority</Menu.Label>
+									<PriorityButtons/>
 								</Menu.Dropdown>
 							</Menu>
 						</Stack>
