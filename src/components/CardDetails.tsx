@@ -1,14 +1,20 @@
 import React, {useEffect} from "react";
 import { Select, Group, Grid, Stack, Button, Menu, Modal, Text, Pill} from "@mantine/core";
 import { CollaborativeTextArea } from "@trz/components/CollaborativeTextArea";
+import { Card } from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
 import {useSocket} from "@trz/util/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
 import { useTRZ } from "@trz/util/TRZ-context";
 import { getCard } from "@trz/util/boardUtils";
+import {PriorityButtons} from "@trz/components/PriorityButtons";
 
 interface CardDetailsProps {
+	boardCode: string;
+	card: Card;
+	toggle: () => void;
+	open: boolean;
 }
 const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 	const trzCtx = useTRZ();
@@ -22,7 +28,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 	}, [card]);
 
 	const isOpen = !!trzCtx.openedCardModal;
-	
+
 	const onCloseModal = () => {
 		trzCtx.setOpenedCardModal(null);
 	}
@@ -115,7 +121,8 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 										
 								<Grid.Col span={4}>
 									<Stack align='left'>
-										<Select label='Priority' placeholder='Low' data={["Low", "Medium", "High"]} />
+										{/*<Select label='Priority' placeholder='Low' data={["Low", "Medium", "High"]}*/}
+										Priority
 									</Stack>
 								</Grid.Col>
 								<Grid.Col span={4}>
@@ -137,6 +144,15 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 									<Menu.Item>Placeholder 1 Item</Menu.Item>
 									<Menu.Label>Placeholder 2</Menu.Label>
 									<Menu.Item>Placeholder 2 Item</Menu.Item>
+								</Menu.Dropdown>
+							</Menu>
+							<Menu position='bottom-start'>
+								<Menu.Target>
+									<Button bg='gray.8'>Card Priority</Button>
+								</Menu.Target>
+								<Menu.Dropdown ta='center'>
+									<Menu.Label>Card Priority</Menu.Label>
+									<PriorityButtons/>
 								</Menu.Dropdown>
 							</Menu>
 						</Stack>
