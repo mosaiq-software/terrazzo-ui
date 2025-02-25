@@ -58,7 +58,7 @@ export const GithubAuth = () => {
                             Working on it...
                         </Title>
                         <Text>
-                            Hold tight, we're logging you in with Github.
+                            Hold tight, we&apos;re logging you in with Github.
                         </Text>
                         <Loader type="bars" size="xl" />
                     </Stack>

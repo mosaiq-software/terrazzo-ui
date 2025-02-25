@@ -2,10 +2,12 @@ import React, { useEffect } from "react";
 import {Outlet} from "react-router-dom";
 import { DEFAULT_NO_AUTH_ROUTE, useTRZ } from "@trz/util/TRZ-context";
 import { useNavigate } from "react-router-dom";
-import { Loader } from "@mantine/core";
+import { Center, Loader } from "@mantine/core";
 
-
-export const AuthWrapper = () => {
+interface AuthWrapperProps {
+    children: any;
+}
+export const AuthWrapper = (props: AuthWrapperProps) => {
     const trz = useTRZ();
     const navigate = useNavigate();
     const currentRoute = window.location.pathname;
@@ -34,11 +36,11 @@ export const AuthWrapper = () => {
 
     if (!trz.githubAuthToken || !trz.githubData) {
         return (
-            <Loader />
+            <Center w="100%" h="100%">
+                <Loader type="bars"/>
+            </Center>
         );
     }
 
-    return (
-        <Outlet />
-    );
+    return props.children;
 }

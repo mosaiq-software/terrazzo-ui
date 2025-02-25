@@ -1,10 +1,10 @@
-import {List, Card} from "@mosaiq/terrazzo-common/types";
+import {List, Card, CardId, CardHeader, ListId} from "@mosaiq/terrazzo-common/types";
 
-export const getCard = (cardId: string | null, inLists?: List[]): Card | null => {
-    if(!inLists){
+export const getCard = (cardId: CardId | null, inLists?: List[]): Card | null => {
+    if(!inLists || !cardId){
         return null;
     }
-    let card: Card | null = null;
+    let card: CardHeader | null = null;
     inLists.forEach(l=>{
         l.cards.forEach(c=>{
             if(c.id === cardId)
@@ -14,11 +14,11 @@ export const getCard = (cardId: string | null, inLists?: List[]): Card | null =>
     return card;
 }
 
-export const getList = (listId: string, fromLists?: List[]): List | null => {
+export const getList = (listId: ListId, fromLists?: List[]): List | null => {
     return fromLists?.find(l=>l.id === listId) ?? null;
 }
 
-export const getCardsList = (cardId: string, fromLists?: List[]): List | null => {
+export const getCardsList = (cardId: CardId, fromLists?: List[]): List | null => {
     if(!fromLists){
         return null;
     }

@@ -4,9 +4,10 @@ import UserCursor from "@trz/components/UserCursor";
 import { getRoomCode } from '@mosaiq/terrazzo-common/utils/socketUtils';
 import { RoomType } from '@mosaiq/terrazzo-common/socketTypes';
 import { Box, MantineStyleProp } from '@mantine/core';
+import { BoardId } from '@mosaiq/terrazzo-common/types';
 
 interface CollaborativeMouseTrackerProps {
-    boardId: string;
+    boardId: BoardId;
     style?: MantineStyleProp;
     children?: any;
 }

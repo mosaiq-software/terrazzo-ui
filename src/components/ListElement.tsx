@@ -24,7 +24,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
     const clickOutsideRef = useClickOutside(() => onBlur());
     const sockCtx = useSocket();
     
-    function onSubmit() {
+    async function onSubmit() {
         setError("")
         setCardTitle("");
 
@@ -38,25 +38,23 @@ function ListElement(props: ListElementProps): React.JSX.Element {
             return;
         }
 
-        sockCtx.addCard(props.listType.id, cardTitle).then((success) => {
-            if (!success) {
-                notify(NoteType.CARD_CREATION_ERROR);
-                return;
-            }
-        }).catch((err) => {
-            console.error(err);
-        });
+        try{
+            await sockCtx.createCard(props.listType.id, cardTitle)
+        } catch (e) {
+            notify(NoteType.CARD_CREATION_ERROR, e);
+            return;
+        }
         setVisible(false);
     }
 
     function onTitleChange(value: string) {
         setListTitle(value);
-        sockCtx.updateListTitle(props.listType.id, value).then((success) => {
-            if (!success) {
-                notify(NoteType.LIST_UPDATE_ERROR);
-                return;
-            }
-        });
+        try {
+            sockCtx.updateListField(props.listType.id, {name: value})
+        } catch (e: any){
+            notify(NoteType.LIST_UPDATE_ERROR, e);
+            return;
+        }
     }
 
     useEffect(() => {
@@ -116,7 +114,6 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     type="title"
                     titleProps={{order: 6, c: "#ffffff"}}
                     style={{
-                        cursor: "text",
                         width: "90%",
                     }}
                 />

@@ -1,33 +1,41 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { GithubAuth } from "@trz/pages/auth/github";
-import { Dashboard } from "@trz/pages/Dashboard";
-import {AuthWrapper} from "@trz/wrappers/AuthWrapper";
 import Navbar from "@trz/components/Navbar";
-import Home from "@trz/components/Home";
-import BoardElement from "@trz/components/BoardElement";
-import {CreateBoardModal} from "@trz/components/CreateBoard";
+import {CreateBoardModal} from "@trz/components/modals/CreateBoard";
+import {CreateProjectModal} from "@trz/components/modals/CreateProject";
+import {CreateOrganizationModal} from "@trz/components/modals/CreateOrganization";
 import {ModalsProvider} from "@mantine/modals";
-import {LoginPage} from '@trz/pages/auth/LoginPage'
-import Workspace from "@trz/components/Workspace";
+import ContentPageWrapper from "@trz/wrappers/ContentPageWrapper";
+import LandingPage from "@trz/pages/LandingPage";
+import LoginPage from '@trz/pages/auth/LoginPage'
+import HomePage from "@trz/pages/HomePage";
+import OrganizationPage from "@trz/pages/OrganizationPage";
+import ProjectPage from "@trz/pages/ProjectPage";
+import BoardPage from "@trz/pages/BoardPage";
+
+const modals = {
+	organization: CreateOrganizationModal,
+	project: CreateProjectModal,
+	board: CreateBoardModal,
+}
 
 const Router = () => {
 	return (
 		<BrowserRouter>
-			<ModalsProvider modals={{board: CreateBoardModal}}>
-				<Navbar/>
+			<ModalsProvider modals={modals}>
 				<Routes>
-					<Route path='/' element={<Outlet/>}/>
+					<Route path='/' element={<LandingPage/>} />
 					<Route path='/login' element={<LoginPage />} />
 					<Route path='/auth' element={<Outlet />}>
 						<Route path='github' element={<GithubAuth />} />
 					</Route>
-					<Route element={<AuthWrapper />}>
-						<Route path='/dashboard' element={<Dashboard />} />
-						<Route path='/boards/:boardId' element={<BoardElement/>}></Route>
-                        <Route path='/home' element={<Home/>} />
-						<Route path='/workspace' element={<Workspace/>} />
-                    </Route>
+					<Route element={<ContentPageWrapper />}>
+						<Route path='/dashboard' element={<HomePage />} />
+						<Route path='/board/:boardId' element={<BoardPage/>} />
+						<Route path='/project/:projectId' element={<ProjectPage/>} />
+						<Route path='/org/:orgId' element={<OrganizationPage/>} />
+					</Route>
 				</Routes>
 			</ModalsProvider>
 		</BrowserRouter>
