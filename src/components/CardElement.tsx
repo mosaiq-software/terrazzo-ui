@@ -1,51 +1,82 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { useDisclosure } from "@mantine/hooks";
 import { Group, Paper, Pill, Text, Title } from "@mantine/core";
 import CardDetails from "@trz/components/CardDetails";
 import {Card} from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from "@trz/components/AvatarRow";
+import { useTRZ } from "@trz/util/TRZ-context";
 
 
 interface CardElementProps {
-	cardType: Card
+	cardType: Card;
+	dragging: boolean;
+	isOverlay: boolean;
+	boardCode: string;
 }
 const CardElement = (props: CardElementProps): React.JSX.Element => {
-	const [opened, {open, close}] = useDisclosure(false);
+	const trzCtx = useTRZ();
+	const [title, setTitle] = React.useState(props.cardType.name || "Card Title");
+
+	useEffect(() => {
+		setTitle(props.cardType.name);
+	}, [props.cardType.name]);
+
 	const testUsers = Array.from({ length: 1 }).map((_, index) => ({
 		name: "John Doe",
 		url: "https://avatars.githubusercontent.com/u/47070087?v=4"
 	}))
 
+	const onOpenCardModal = () => {
+		if(props.dragging || props.isOverlay){
+			return;
+		}
+		trzCtx.setOpenedCardModal(props.cardType.id);
+	}
+
 	return (
-		<>
-			<Paper bg="#17191b" radius="md" p="sm" mx="xs" shadow="lg" bd="1px solid #757575" style={{ cursor: "pointer" }}
-				onClick={open}
-			>
-				<Pill.Group>
-					<Pill size="xs" bg='blue'>To Do</Pill>
-					<Pill size="xs" bg='red'>In Progress</Pill>
-				</Pill.Group>
-				<Title 
-					order={5} 
-					lineClamp={7} 
-					c="#ffffff"
-					style={{
-						wordWrap: "break-word",
-						textWrap: "wrap"
-					}}
-				>{props.cardType.name}</Title>
-				<Text size='xs' c="#878787">{"TRZ"} - {props.cardType.cardNumber}</Text>
-				<Group>
-					{/* icons for info abt the card */}
-				</Group>
-				<AvatarRow users={testUsers} maxUsers={3}/>
-			</Paper>
-			{
-				opened && (
-					<CardDetails card={props.cardType} open={opened} toggle={close} boardCode={"TRZ"}/>
-				)
-			}
-		</>
+		<Paper
+			bg="#17191b"
+			radius="md"
+			p="sm"
+			shadow="lg"
+			bd="1px solid #757575"
+			style={{
+				cursor: "pointer",
+				marginInline: "5px",
+				width: "230px",
+				transition: `transform .1s, box-shadow .1s, filter 0ms linear ${props.dragging ? '0ms' : '225ms'}`,
+				...(props.dragging ? props.isOverlay ? {
+					transform: "rotateZ(3deg) scale(1.02)",
+					boxShadow: "10px 8px 25px black",
+					border: "1px solid #14222e",
+					zIndex: 12,
+			} : {
+					filter: "grayscale(1) contrast(0) brightness(0) blur(6px)",
+					opacity: .4,
+					zIndex: 11,
+			} : undefined)
+			}}
+			onClick={onOpenCardModal}
+		>
+			<Pill.Group>
+				<Pill size="xs" bg='blue'>To Do</Pill>
+				<Pill size="xs" bg='red'>In Progress</Pill>
+			</Pill.Group>
+			<Title 
+				order={5} 
+				lineClamp={7} 
+				c="#ffffff"
+				style={{
+					wordWrap: "break-word",
+					textWrap: "wrap"
+				}}
+			>{title}</Title>
+			<Text size='xs' c="#878787">{props.boardCode} - {props.cardType.cardNumber}</Text>
+			<Group>
+				{/* icons for info abt the card */}
+			</Group>
+			<AvatarRow users={testUsers} maxUsers={3}/>
+		</Paper>
 	);
 };
 export default CardElement;
