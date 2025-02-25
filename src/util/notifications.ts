@@ -1,7 +1,7 @@
 import { notifications } from '@mantine/notifications';
 
 const AUTO_CLOSE_TIMEOUT = 5000;
-enum NoteColor {
+export enum NoteColor {
     ERROR = 'red',
     INFO = 'blue',
     WARNING = 'yellow',
@@ -98,6 +98,14 @@ export const NoteType = {
     API_ERROR: {
         title: "API Error",
         message: "There was an issue with the API server"
+    },
+    UNAUTHORIZED: {
+        title: "Unauthorized",
+        message: "You don't have permission to do this!"
+    },
+    CHANGES_SAVED: {
+        title: "Changes Saved",
+        color: NoteColor.SUCCESS
     }
 
 }

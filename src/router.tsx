@@ -32,9 +32,9 @@ const Router = () => {
 					</Route>
 					<Route element={<ContentPageWrapper />}>
 						<Route path='/dashboard' element={<HomePage />} />
-						<Route path='/board/:boardId' element={<BoardPage/>} />
-						<Route path='/project/:projectId' element={<ProjectPage/>} />
-						<Route path='/org/:orgId' element={<OrganizationPage/>} />
+						<Route path='/board/:boardId/:tabId?' element={<BoardPage/>} />
+						<Route path='/project/:projectId/:tabId?' element={<ProjectPage/>} />
+						<Route path='/org/:orgId/:tabId?' element={<OrganizationPage/>} />
 					</Route>
 				</Routes>
 			</ModalsProvider>
