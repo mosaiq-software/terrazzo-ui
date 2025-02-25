@@ -45,7 +45,7 @@
 }
 .trz-NavLink {
   font-size: calc(1.4rem * var(--mantine-scale));
-  color: var(--mantine-font-color);
+  color: var(--mantine-color-white);
   font-weight: var(--mantine-font-weight-md);
   text-decoration: none;
   padding-top: calc(0.25rem * var(--mantine-scale));
@@ -61,13 +61,12 @@
 
 /* sidebar navbar */
 .trz-Navbar-NavLink {
-  color: var(--mantine-font-color);
+  color: var(--mantine-color-white);
   text-decoration: none;
   padding-top: calc(0.5rem * var(--mantine-scale));
   padding-bottom: calc(0.5rem * var(--mantine-scale));
   padding-left: calc(0.82rem * var(--mantine-scale));
   width: var(--app-shell-navbar-width);
-  transition: 200ms;
 }
 .trz-Navbar-Group {
   width: calc(255px - calc(0.82rem * var(--mantine-scale)));
@@ -80,10 +79,12 @@
 
 /* Modal Search Button */
 .mantine-Input-input {
-  background-color: rgba(0,0,0,0);
   padding-right: 0.2rem;
   border-radius: 6px;
   transition: 200ms;
+}
+:root[data-pinned] .mantine-Input-input {
+  background-color: var(--mantine-color-dark-8);
 }
 :root[data-mantine-color-scheme="dark"] .mantine-Input-input:hover {
   background-color: var(--mantine-color-dark-6);

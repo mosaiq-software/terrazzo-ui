@@ -24,13 +24,11 @@ const Router = () => {
             <Route path='/auth' element={<Outlet />}>
               <Route path='github' element={<GithubAuth />} />
             </Route>
-            <Route element={<AuthWrapper />}>
               <Route path='/text' element={<CollaborativeTextArea maxLineLength={40} maxRows={20} textBlockId="6f77a4b2-990e-46be-8810-3813aba7d1f6" />} />
               <Route path='/dashboard' element={<Dashboard />} />
               <Route path='/boards/:boardId' element={<BoardElement/>}></Route>
               <Route path='/home' element={<Home/>} />
               <Route path='/workspace' element={<Workspace/>} />
-            </Route>
           </Route>
         </Routes>
       </ModalsProvider>

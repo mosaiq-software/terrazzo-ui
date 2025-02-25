@@ -1,7 +1,7 @@
 import React from "react";
 import { Outlet, NavLink } from "react-router"
 import { useDisclosure, useHotkeys, useWindowScroll } from "@mantine/hooks";
-import { AppShell, Burger, Flex, Group, Tooltip, ActionIcon, Kbd, Input, Text } from "@mantine/core";
+import { AppShell, Burger, Flex, Group, Tooltip, ActionIcon, Kbd, Divider, Input, Text } from "@mantine/core";
 
 import { MdOutlineAccountCircle, MdOutlineSearch } from 'react-icons/md';
 import { IconLayoutKanban, IconHome } from '@tabler/icons-react';
@@ -18,7 +18,6 @@ const TRZAppLayout = () => {
   const [scroll, scrollTo] = useWindowScroll();
   const pinned = scroll.y < 150;
 
-
   useHotkeys([
     ['ctrl+k', () => openModal()],
     ['[', () => toggleDesktop()],
@@ -27,18 +26,18 @@ const TRZAppLayout = () => {
   return (
     <AppShell
       withBorder={false}
+      transitionDuration={200}
       header={{
         height: "calc(3.5rem * var(--mantine-scale))"
       }}
       navbar={{
-        width: (desktopOpened) ? "255px" : "50px",
+        width: (desktopOpened) ? "255px" : "55px",
         breakpoint: "sm",
-        collapsed: {
-          mobile: !mobileOpened,
-        },
+        collapsed: { mobile: !mobileOpened },
       }}
     >
-      <AppShell.Header mod={{ pinned: !pinned, sidebar: desktopOpened }}>
+      <AppShell.Header
+        mod={{ pinned: !pinned, sidebar: desktopOpened }}>
         <header
           className="trzNavigationMenuRoot">
           <ul className="trzNavigationMenuList">
@@ -52,7 +51,7 @@ const TRZAppLayout = () => {
                 </Group>
               }>
               <Burger
-                transitionDuration={300}
+                transitionDuration={200}
                 opened={desktopOpened}
                 onClick={toggleDesktop}
                 size="sm" />
@@ -64,6 +63,7 @@ const TRZAppLayout = () => {
           <ul className="trzNavigationMenuList">
             <li className="trzNavigationMenuItem">
               <Input
+                mod={{ pinned: !pinned }}
                 pointer
                 component={"button"}
                 onClick={openModal}>
@@ -96,14 +96,15 @@ const TRZAppLayout = () => {
         </header>
       </AppShell.Header>
 
-      <AppShell.Navbar mod={{ pinned: !pinned, sidebar: desktopOpened }}>
+      <AppShell.Navbar
+        mod={{ pinned: !pinned, sidebar: desktopOpened }}>
         <Flex style={{ marginTop: "1rem" }} direction={"column"}>
           <NavLink className="trz-Navbar-NavLink trz-Focus" to={"/"}>
             <Group
               className="trz-Navbar-Group"
               gap={"calc(1.5rem * var(--mantine-scale))"}
               align={"center"}>
-              <IconLayoutKanban />
+              <IconLayoutKanban stroke={"0.109rem"}/>
               <Text className={"trz-Navbar-NavLink-text"} size={"md"}>
                 {(desktopOpened) ? "Boards" : "" }
               </Text>
@@ -114,7 +115,7 @@ const TRZAppLayout = () => {
               className="trz-Navbar-Group"
               gap={"calc(1.5rem * var(--mantine-scale))"}
               align={"center"}>
-              <IconHome />
+              <IconHome stroke={"0.109rem"} />
               <Text className={"trz-Navbar-NavLink-text"} size={"md"}>
                 {(desktopOpened) ? "Home" : "" }
               </Text>
