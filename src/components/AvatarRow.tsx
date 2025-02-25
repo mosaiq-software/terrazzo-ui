@@ -8,7 +8,7 @@ interface AvatarRowProps {
 export const AvatarRow = (props: AvatarRowProps) => {
 
     return (
-        <Avatar.Group spacing="sm" style={{ justifyContent: "flex-end" }}>
+        <Avatar.Group spacing="6" style={{ justifyContent: "flex-end" }}>
             {
                 // only take the first n users
                 props.users.slice(0, props.maxUsers).map((user, index) =>
