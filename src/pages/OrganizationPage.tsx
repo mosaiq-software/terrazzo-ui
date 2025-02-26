@@ -2,14 +2,16 @@ import React, { useEffect, useState } from "react";
 import { Box, Avatar, Group, Flex, Title, Text, Tabs, ScrollArea, Center, Loader, Stack, TextInput, Textarea, ButtonGroup, Button} from "@mantine/core";
 import {BoardListCard} from "@trz/components/BoardListCards";
 import {AvatarRow} from "@trz/components/AvatarRow";
-import {Organization, OrganizationHeader, OrganizationId, User} from "@mosaiq/terrazzo-common/types";
+import {Organization, OrganizationHeader, OrganizationId, User, UserHeader} from "@mosaiq/terrazzo-common/types";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSocket } from "@trz/util/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
 import {modals} from "@mantine/modals";
 import {NotFound} from "@trz/components/NotFound";
 import {MembershipRow} from "@trz/components/MembershipRow";
-import { Role } from "@mosaiq/terrazzo-common/constants";
+import { EntityType, Role } from "@mosaiq/terrazzo-common/constants";
+import {AddUser} from "@trz/components/AddUser";
+import {PendingInviteRow} from "@trz/components/PendingInviteRow";
 
 const OrganizationPage = (): React.JSX.Element => {
     const [orgData, setOrgData] = useState<Organization | undefined>();
@@ -42,6 +44,17 @@ const OrganizationPage = (): React.JSX.Element => {
     if(!orgData || !orgId){
         return <NotFound itemType="Organization"/>
     }
+
+    // const testUsers:UserHeader[] = Array.from({ length: 5 }).map(() => (
+    //     {
+    //         id:crypto.randomUUID(),
+    //         githubUserId:"",
+    //         firstName:"Matt",
+    //         lastName:"Hagger",
+    //         username:"Camo651",
+    //         profilePicture:"https://avatars.githubusercontent.com/u/47070087?v=4"
+    //     }
+    // ))
 
     const tabs = {
         "Projects": (
@@ -135,20 +148,70 @@ const OrganizationPage = (): React.JSX.Element => {
                 alignItems: 'flex-start',
                 justifyContent: 'flex-start',
             }}>
-                <Title c='white' pb='20' order={2} maw='200'>Members</Title>
+                <Group w="100%" justify="space-between">
+                    <Title c='white' pb='20' order={2} maw='200'>Members</Title>
+                    <AddUser
+                        disabled={myPermissionLevel < Role.ADMIN}
+                        onSubmit={async (username:string, role:Role)=>{
+                            try {
+                                return await sockCtx.sendInvite(username, orgId, EntityType.ORG, role);
+                            } catch (e) {
+                                notify(NoteType.GENERIC_ERROR, e);
+                                return false;
+                            }
+                        }}
+                    />
+                </Group>
                 <Stack style={{
                     width: "100%",
                     display: "flex",
                     justifyContent: "center",
                 }}>
-                    <MembershipRow
-                        user={{firstName:"Matt", lastName:"Hagger", username:"Camo651", profilePicture:"https://avatars.githubusercontent.com/u/47070087?v=4"} as User}
-                        userPerm={Role.OWNER}
-                        editorPermLevel={myPermissionLevel}
-                        onEditRole={()=>{}}
-                        onRemoveMember={()=>{}}
-                    />
+                    {
+                        orgData.members.map((m)=>(
+                            <MembershipRow
+                                key={m.user.id}
+                                user={m.user}
+                                userPerm={m.record.role}
+                                editorPermLevel={myPermissionLevel}
+                                onEditRole={()=>{
+
+                                }}
+                                onRemoveMember={()=>{
+                                    if(myPermissionLevel >= Role.ADMIN){
+                                        sockCtx.kickMemberFromEntity(m.record.id);
+                                    } else {
+                                        notify(NoteType.UNAUTHORIZED);
+                                    }
+                                }}
+                            />
+                        ))
+                    }
                 </Stack>
+                <Title order={4} c="#fff">Pending Invites</Title>
+                <Stack style={{
+                    width: "100%",
+                    display: "flex",
+                    justifyContent: "center",
+                }}>
+                    {
+                        orgData.invites.map((invite)=>(
+                            <PendingInviteRow
+                                key={invite.id}
+                                invite={invite}
+                                editorPermLevel={myPermissionLevel}
+                                onRevokeInvite={()=>{
+                                    if(myPermissionLevel >= Role.ADMIN){
+                                        sockCtx.replyInvite(invite.id, false);
+                                    } else {
+                                        notify(NoteType.UNAUTHORIZED);
+                                    }
+                                }}
+                            />
+                        ))
+                    }
+                </Stack>
+                
             </Box>
         ),
         "Settings": (
@@ -252,12 +315,6 @@ const OrganizationPage = (): React.JSX.Element => {
         return (tabId && tabId in tabs) ? tabId : Object.keys(tabs)[0];
     }
 
-
-    const testUsers = Array.from({ length: 5 }).map(() => ({
-        name: "John Doe",
-        url: "https://avatars.githubusercontent.com/u/47070087?v=4"
-    }))
-
     return (
         <ScrollArea h='100vh'>
             <Stack bg='#15161A' mih='100vh' pb='10vh' align="center">
@@ -277,7 +334,7 @@ const OrganizationPage = (): React.JSX.Element => {
                                 })
                             }
                             <Flex ml='auto' align='center'>
-                                <AvatarRow users={testUsers} maxUsers={5}/>
+                                <AvatarRow users={orgData.members.map(m=>m.user)} maxUsers={5}/>
                             </Flex>
                         </Tabs.List>
                     </Tabs>

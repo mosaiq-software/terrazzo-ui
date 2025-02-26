@@ -33,7 +33,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 			return;
 		}
 		try{
-			await sockCtx.updateCardField(card.id, {name: value});
+			sockCtx.updateCardField(card.id, {name: value});
 			setTitle(value);
 		} catch (e) {
 			notify(NoteType.CARD_UPDATE_ERROR, e);

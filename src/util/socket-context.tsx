@@ -2,12 +2,13 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTRZ } from '@trz/util/TRZ-context';
 import { ClientSE, ClientSEPayload, ClientSEReplies, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
-import { Board, BoardHeader, BoardId, Card, CardHeader, CardId, List, ListId, Organization, OrganizationId, Project, ProjectId, TextBlock, TextBlockEvent, TextBlockId, UID, UserId} from '@mosaiq/terrazzo-common/types';
+import { Board, BoardHeader, BoardId, Card, CardHeader, CardId, EntityId, InviteId, List, ListId, MembershipRecordId, Organization, OrganizationId, Project, ProjectId, TextBlock, TextBlockEvent, TextBlockId, UID, UserId} from '@mosaiq/terrazzo-common/types';
 import { NoteType, notify } from '@trz/util/notifications';
 import { useIdle, useThrottledCallback } from '@mantine/hooks';
 import { getCaretCoordinates, IDLE_TIMEOUT_MS, MOUSE_UPDATE_THROTTLE_MS, TEXT_EVENT_EMIT_THROTTLE_MS, TextObject } from './textUtils';
 import { executeTextBlockEvent } from '@mosaiq/terrazzo-common/utils/textUtils';
 import { arrayMove, updateBaseFromPartial } from '@mosaiq/terrazzo-common/utils/arrayUtils';
+import { EntityType, Role } from '@mosaiq/terrazzo-common/constants';
 
 type SocketContextType = {
     sid?: SocketId;
@@ -42,6 +43,9 @@ type SocketContextType = {
     updateBoardField: (id: BoardId, partial: Partial<Board>) => Promise<void>;
     updateListField: (id: ListId, partial: Partial<List>) => Promise<void>;
     updateCardField: (id: CardId, partial: Partial<Card>) => Promise<void>;
+    sendInvite: (toUsername: string, entityId: EntityId, entityType: EntityType, role: Role) => Promise<boolean>;
+    replyInvite: (inviteId: InviteId, accept: boolean) => Promise<void>;
+    kickMemberFromEntity: (membershipRecordId: MembershipRecordId) => Promise<void>;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -282,6 +286,10 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             })
         });
 
+        sock.on(ServerSE.RECEIVE_INVITE, (payload: ServerSEPayload[ServerSE.RECEIVE_INVITE]) => {
+            notify(NoteType.INVITE_RECEIVED, [payload.fromName, payload.entityName]);
+        });
+
         
         return () => {
             setConnected(false);
@@ -473,6 +481,22 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         await emit<ClientSE.MOVE_CARD>(ClientSE.MOVE_CARD, {cardId, toList, position});
     }
 
+    const sendInvite = async (toUsername: string, entityId: EntityId, entityType: EntityType, role: Role) => {
+        try {
+             await emit<ClientSE.SEND_INVITE>(ClientSE.SEND_INVITE, {toUsername, entityId, entityType, role});
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    const replyInvite = async (inviteId: InviteId, accept:boolean) => {
+        await emit<ClientSE.RESPOND_INVITE>(ClientSE.RESPOND_INVITE, {inviteId, response:accept});
+    }
+
+    const kickMemberFromEntity = async (membershipRecordId: MembershipRecordId) => {
+        await emit<ClientSE.KICK_MEMBER>(ClientSE.KICK_MEMBER, membershipRecordId);
+    }
 
 
 
@@ -612,6 +636,9 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             updateBoardField,
             updateListField,
             updateCardField,
+            sendInvite,
+            replyInvite,
+            kickMemberFromEntity,
         }}>
             {children}
         </SocketContext.Provider>

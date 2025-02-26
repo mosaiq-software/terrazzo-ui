@@ -1,12 +1,12 @@
 import React from "react";
-import {User, UserId} from "@mosaiq/terrazzo-common/types";
+import {UserHeader, UserId} from "@mosaiq/terrazzo-common/types";
 import { Role, RoleNames } from "@mosaiq/terrazzo-common/constants";
 import { Avatar, Title, Grid, Button, Select, Tooltip} from "@mantine/core";
 import { IoMdClose } from "react-icons/io";
 import { NoteColor } from "@trz/util/notifications";
 
 interface MembershipRowProps {
-    user: User;
+    user: UserHeader;
     userPerm: Role;
     editorPermLevel: Role;
     onEditRole: (userId:UserId, role:Role) => void;
