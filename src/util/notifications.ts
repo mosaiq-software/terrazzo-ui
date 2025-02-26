@@ -11,6 +11,7 @@ interface Note {
     title: string;
     message?: string;
     color?: NoteColor;
+    persist?: boolean;
 }
 export const NoteType = {
     CONNECTION_ERROR: {
@@ -106,26 +107,98 @@ export const NoteType = {
     CHANGES_SAVED: {
         title: "Changes Saved",
         color: NoteColor.SUCCESS
+    },
+    INVITE_SENT_SUCCESS: {
+        title: "Invitation sent!",
+        color: NoteColor.SUCCESS
+    },
+    INVITE_RECEIVED: {
+        title: "New Invitation!",
+        message: "$ has invited you to join $.",
+        persist: true,
+        color: NoteColor.INFO
+    },
+    GENERIC_ERROR: {
+        title: "An error occurred!",
+        message: "See console for details",
     }
 
 }
 
-export const notify = (note?: Note, data?:any) => {
-    if (!note) {
-        note = {
-            title: "An error occurred"
-        }
-    }
+/**
+ * 
+ * @param note The NoteType to send
+ * @param data Any data to be replaced into the text (Will replace each $ in the text in order of vars)
+ */
+export const notify = (note: Note, data?:any) => {
     if(!note.color || note.color === NoteColor.ERROR){
         console.error(note.title, note.message, data);
     }
     if(note.color === NoteColor.WARNING){
         console.warn(note.title, note.message, data);
     }
+    try {
+        const {title, message} = replaceVars(note, data);
+        note.title = title;
+        note.message = message;
+    } catch (e) {
+        console.error(e);
+        note = NoteType.GENERIC_ERROR;
+    }
     notifications.show({
         title: note.title,
         message: note.message || "",
         color: note.color || NoteColor.ERROR,
-        autoClose: AUTO_CLOSE_TIMEOUT,
+        autoClose: note.persist ? false : AUTO_CLOSE_TIMEOUT,
     });
+}
+
+const replaceVars = (note:Note, data:any) => {
+    const vars:any[] = [];
+    if("number bigint string boolean".includes(typeof data)){
+        vars.push(data);
+    } else if(typeof data === "object") {
+        if(Array.isArray(data)){
+            vars.push(...data);
+        } else {
+            try {
+                vars.push(...Object.keys(data));
+            } catch (e) {
+                throw new Error("Cant determine data type");
+            }
+        }
+    }
+
+    let varIndex = 0;
+    const titleSegments = note.title.split("$");
+    if(titleSegments.length - 1 > vars.length){
+        throw new Error("Not enough variables for title");
+    }
+    let title = '';
+    let message:string|undefined = undefined;
+    for(let i = 0; i < titleSegments.length; i++){
+        title += titleSegments[i];
+        if(i < titleSegments.length - 1){
+            title += vars[varIndex];
+            varIndex++;
+        }
+    }
+    
+
+    if(note.message) {
+        const messageSegments = note.message.split("$");
+        message = '';
+        if(messageSegments.length - 1 > vars.length - varIndex){
+            throw new Error("Not enough variables for message");
+        }
+        for(let i = 0; i < messageSegments.length; i++){
+            message += messageSegments[i];
+            if(i < messageSegments.length - 1){
+                message += vars[varIndex];
+                varIndex++;
+            }
+        }
+    }
+
+    return {title, message};
 }
