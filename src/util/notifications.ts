@@ -98,6 +98,9 @@ export const NoteType = {
     API_ERROR: {
         title: "API Error",
         message: "There was an issue with the API server"
+    },
+    USER_CREATION_ERROR: {
+        title: "Error creating the user"
     }
 
 }

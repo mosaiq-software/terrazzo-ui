@@ -1,4 +1,4 @@
-import React, {createContext, useEffect, useState} from 'react';
+import React, {createContext, useState} from 'react';
 import {User} from "@mosaiq/terrazzo-common/types";
 import {DEFAULT_AUTHED_ROUTE, DEFAULT_NO_AUTH_ROUTE, useTRZ} from "@trz/util/TRZ-context";
 import {useSocket} from "@trz/util/socket-context";
@@ -34,7 +34,7 @@ const UserProvider: React.FC<any> = ({ children }) => {
 
         setUser(user);
 
-        if(user.firstName == "" || user.lastName == ""){
+        if(user.firstName?.length == 0 || user.lastName?.length == 0){
             //Account not set up yet
             return {userRoute: FINISH_ACCOUNT_CREATION_ROUTE};
         }

@@ -39,6 +39,7 @@ export const AuthWrapper = (props: AuthWrapperProps) => {
 
     useEffect(() => {
         const checkUser = async () => {
+            console.log("Checking for user");
             if(!sockCtx.connected){
                 return;
             }
