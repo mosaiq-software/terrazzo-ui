@@ -6,7 +6,6 @@ import {CreateBoardModal} from "@trz/components/modals/CreateBoard";
 import {CreateProjectModal} from "@trz/components/modals/CreateProject";
 import {CreateOrganizationModal} from "@trz/components/modals/CreateOrganization";
 import {ModalsProvider} from "@mantine/modals";
-import {LoginPage} from '@trz/pages/auth/LoginPage'
 import {SetUpAccount} from "@trz/pages/auth/SetUpAccount";
 import ContentPageWrapper from "@trz/wrappers/ContentPageWrapper";
 import LandingPage from "@trz/pages/LandingPage";
@@ -14,6 +13,7 @@ import HomePage from "@trz/pages/HomePage";
 import OrganizationPage from "@trz/pages/OrganizationPage";
 import ProjectPage from "@trz/pages/ProjectPage";
 import BoardPage from "@trz/pages/BoardPage";
+import LoginPage from "@trz/pages/auth/LoginPage";
 
 const modals = {
 	organization: CreateOrganizationModal,
