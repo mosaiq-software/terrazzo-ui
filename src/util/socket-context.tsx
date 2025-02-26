@@ -1,14 +1,46 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
-import { useTRZ } from '@trz/util/TRZ-context';
-import { ClientSE, ClientSEPayload, ClientSEReplies, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
-import { Board, BoardHeader, BoardId, Card, CardHeader, CardId, List, ListId, Organization, OrganizationId, Project, ProjectId, TextBlock, TextBlockEvent, TextBlockId, UID, UserId} from '@mosaiq/terrazzo-common/types';
-import { NoteType, notify } from '@trz/util/notifications';
-import { useIdle, useThrottledCallback } from '@mantine/hooks';
-import { getCaretCoordinates, IDLE_TIMEOUT_MS, MOUSE_UPDATE_THROTTLE_MS, TEXT_EVENT_EMIT_THROTTLE_MS, TextObject } from './textUtils';
-import { executeTextBlockEvent } from '@mosaiq/terrazzo-common/utils/textUtils';
-import { arrayMove, updateBaseFromPartial } from '@mosaiq/terrazzo-common/utils/arrayUtils';
-import {User} from "../../../terrazzo-common/dist/types";
+import React, {createContext, useContext, useEffect, useState} from 'react';
+import {io, Socket} from 'socket.io-client';
+import {useTRZ} from '@trz/util/TRZ-context';
+import {
+    ClientSE,
+    ClientSEPayload,
+    ClientSEReplies,
+    ClientSocketIOEvent,
+    Position,
+    RoomId,
+    ServerSE,
+    ServerSEPayload,
+    SocketId,
+    UserData
+} from '@mosaiq/terrazzo-common/socketTypes';
+import {
+    Board,
+    BoardId,
+    Card,
+    CardHeader,
+    CardId,
+    List,
+    ListId,
+    Organization,
+    OrganizationId,
+    Project,
+    ProjectId,
+    TextBlockEvent,
+    TextBlockId,
+    UID, User,
+    UserId
+} from '@mosaiq/terrazzo-common/types';
+import {NoteType, notify} from '@trz/util/notifications';
+import {useIdle, useThrottledCallback} from '@mantine/hooks';
+import {
+    getCaretCoordinates,
+    IDLE_TIMEOUT_MS,
+    MOUSE_UPDATE_THROTTLE_MS,
+    TEXT_EVENT_EMIT_THROTTLE_MS,
+    TextObject
+} from './textUtils';
+import {executeTextBlockEvent} from '@mosaiq/terrazzo-common/utils/textUtils';
+import {arrayMove, updateBaseFromPartial} from '@mosaiq/terrazzo-common/utils/arrayUtils';
 
 type SocketContextType = {
     sid?: SocketId;
@@ -582,44 +614,15 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     }, TEXT_EVENT_EMIT_THROTTLE_MS);
 
     const getUserViaGithub = async (userId: string): Promise<User | undefined> => {
-        if (!socket) {return undefined;}
-        return new Promise((resolve, reject) => {
-            socket.emit(ClientSE.GET_USER, userId, (response: ClientSEReplies[ClientSE.GET_USER], error?: string) => {
-                if(error) {
-                    reject(error);
-                } else {
-                    resolve(response.user);
-                }
-            });
-        });
+        return await emit<ClientSE.GET_USER>(ClientSE.GET_USER, userId);
     }
 
     const setupUser = async (id: string, username: string, firstName: string, lastName:string): Promise<User | undefined> => {
-        if (!socket) {return undefined;}
-        return new Promise((resolve, reject) => {
-            socket.emit(ClientSE.SETUP_USER, {id, username, firstName, lastName}, (response: ClientSEReplies[ClientSE.SETUP_USER], error?: string) => {
-                if(error) {
-                    reject(error);
-                } else {
-                    resolve(response.user);
-                }
-            });
-        });
+        return await emit<ClientSE.SETUP_USER>(ClientSE.SETUP_USER, {id, username, firstName, lastName});
     }
 
     const checkUserNameTaken = async (username: string): Promise<boolean | undefined> => {
-        if (!socket) {return undefined;}
-        return new Promise((resolve, reject) => {
-            socket.emit(ClientSE.CHECK_USERNAME_TAKEN, username, (response: ClientSEReplies[ClientSE.CHECK_USERNAME_TAKEN], error?: string) => {
-                if(error) {
-                    console.error("Error checking username:", error);
-                    reject(error);
-                } else {
-                    console.log("Username taken", response.taken);
-                    resolve(response.taken);
-                }
-            });
-        });
+        return await emit<ClientSE.CHECK_USERNAME_TAKEN>(ClientSE.CHECK_USERNAME_TAKEN, username);
     }
 
     return (
