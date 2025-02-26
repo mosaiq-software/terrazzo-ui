@@ -1,7 +1,7 @@
 import React from "react";
 import CardElement from "@trz/components/CardElement";
 import ListElement from "@trz/components/ListElement";
-import {List, Card} from "@mosaiq/terrazzo-common/types";
+import {List, Card, CardHeader, UID} from "@mosaiq/terrazzo-common/types";
 import { defaultDropAnimationSideEffects, DropAnimation } from "@dnd-kit/core";
 
 export const horizontalCollisionDetection = (args): string | null => {
@@ -14,7 +14,7 @@ export const horizontalCollisionDetection = (args): string | null => {
             const center = l.rect.current.left + (l.rect.current.width / 2.0);
             const delta = Math.abs(center - ptrCrds.x);
             if(delta < minDelta){
-                intersectingId = l.id.toString();
+                intersectingId = l.id.toString() as UID;
                 minDelta = delta;
             }
         }
@@ -33,7 +33,7 @@ export const boardDropAnimation: DropAnimation = {
 	}),
 };
 
-export function renderContainerDragOverlay(list: List) {
+export function renderContainerDragOverlay(list: List, boardCode: string) {
 	return (
 		<ListElement
 			listType={list}
@@ -41,13 +41,14 @@ export function renderContainerDragOverlay(list: List) {
 			isOverlay={true}
 		>
 			{
-				list.cards.map((card: Card, cardIndex: number) => {
+				list.cards.map((card: CardHeader, cardIndex: number) => {
 					return (
 						<CardElement
 							key={cardIndex}
-							cardType={card}
+							cardHeader={card}
 							dragging={false}
 							isOverlay={false}
+							boardCode={boardCode}
 						/>
 					);
 				})
@@ -56,12 +57,13 @@ export function renderContainerDragOverlay(list: List) {
 	);
 }
 
-export function renderSortableItemDragOverlay(card: Card) {
+export function renderSortableItemDragOverlay(card: Card, boardCode: string) {
 	return (
 		<CardElement
-			cardType={card}
+			cardHeader={card}
 			dragging={true}
 			isOverlay={true}
+			boardCode={boardCode}
 		/>
 	);
 }

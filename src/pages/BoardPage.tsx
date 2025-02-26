@@ -4,7 +4,7 @@ import CollaborativeMouseTracker from "@trz/wrappers/CollaborativeMouseTracker";
 import {useNavigate, useParams} from "react-router-dom";
 import {useSocket} from "@trz/util/socket-context";
 import CreateList from "@trz/components/CreateList";
-import {Card, List} from "@mosaiq/terrazzo-common/types";
+import {BoardId, Card, CardHeader, List, ListId, UID} from "@mosaiq/terrazzo-common/types";
 import {NoteType, notify} from "@trz/util/notifications";
 import SortableList from "@trz/components/DragAndDrop/SortableList";
 import {getCard, getCardsList, getList} from "@trz/util/boardUtils";
@@ -32,8 +32,9 @@ import SortableCard from "@trz/components/DragAndDrop/SortableCard";
 import { createPortal } from "react-dom";
 import {boardDropAnimation, horizontalCollisionDetection, renderContainerDragOverlay, renderSortableItemDragOverlay} from "@trz/util/dragAndDropUtils";
 import CardDetails from "@trz/components/CardDetails";
+import { NotFound } from "@trz/components/NotFound";
 
-const BoardElement = (): React.JSX.Element => {
+const BoardPage = (): React.JSX.Element => {
 	const [activeObject, setActiveObject] = useState<List | Card | null>(null);
 	const lastOverId = useRef<string | null>(null);
 	const params = useParams();
@@ -56,11 +57,10 @@ const BoardElement = (): React.JSX.Element => {
 			if (!params.boardId) {
 				return;
 			}
-			await sockCtx.getBoardData(params.boardId)
+			await sockCtx.getBoardData(params.boardId as BoardId)
 				.catch((err) => {
-					console.error(err);
+					notify(NoteType.BOARD_DATA_ERROR, err);
 					navigate("/dashboard");
-					notify(NoteType.BOARD_DATA_ERROR);
 					return
 				});
 		};
@@ -71,10 +71,10 @@ const BoardElement = (): React.JSX.Element => {
 		return sockCtx.boardData?.lists.map(l=>l.id) ?? [];
 	}, [sockCtx.boardData?.lists])
 
-	const isSortingList = !!(activeObject && allListIds.includes(activeObject.id.toString()))
+	const isSortingList = !!(activeObject && allListIds.includes(activeObject.id.toString() as ListId))
 
 	function handleDragStart(event: DragStartEvent) {
-		const activeId = event.active.id.toString();
+		const activeId = event.active.id.toString() as UID;
 		if(allListIds.includes(activeId)) {
 			// is dragging list
 			setActiveObject(getList(activeId, sockCtx.boardData?.lists));
@@ -88,8 +88,8 @@ const BoardElement = (): React.JSX.Element => {
 
 	function handleDragOver(event: DragOverEvent) {
 		const {active, over} = event;
-		const activeId = active.id.toString();
-		const overId = over?.id.toString();
+		const activeId = active.id.toString() as UID;
+		const overId = over?.id.toString() as UID;
 		if(activeId === overId){
 			return;
 		}
@@ -122,8 +122,8 @@ const BoardElement = (): React.JSX.Element => {
 
 	function handleDragEnd(event: DragEndEvent) {
 		const {active, over} = event;
-		const activeId = active.id.toString();
-		const overId = over?.id.toString() ?? "NULL OBJECT";
+		const activeId = active.id.toString() as UID;
+		const overId = over?.id.toString() as UID;
 		sockCtx.setDraggingObject({});
 		setActiveObject(null);
 		if (!sockCtx.boardData?.lists || !over) {
@@ -170,8 +170,8 @@ const BoardElement = (): React.JSX.Element => {
 	}
 
 	const collisionDetectionStrategy: CollisionDetection = (args) => {
-		const onlyListArgs = {...args, droppableContainers: args.droppableContainers.filter((container) => allListIds.includes(container.id.toString()))};
-		let intersectingId = horizontalCollisionDetection(onlyListArgs);
+		const onlyListArgs = {...args, droppableContainers: args.droppableContainers.filter((container) => allListIds.includes(container.id.toString() as UID))};
+		let intersectingId = horizontalCollisionDetection(onlyListArgs) as UID;
 		if(args.active.data.current?.type === "list"){
 			if(!intersectingId) {
 				return lastOverId.current ? [{ id: lastOverId.current }] : [];
@@ -190,7 +190,7 @@ const BoardElement = (): React.JSX.Element => {
 						droppableContainers: args.droppableContainers.filter((droppable) =>
 							droppable.id !== list.id && !!list.cards.find(l=>l.id === droppable.id)
 					)};
-					intersectingId = closestCenter(onlyContainerArgs)[0]?.id.toString();
+					intersectingId = closestCenter(onlyContainerArgs)[0]?.id.toString() as UID;
 				}
 				lastOverId.current = intersectingId;
 				return [{ id: intersectingId }];
@@ -201,7 +201,7 @@ const BoardElement = (): React.JSX.Element => {
 	};
 
 	if (!params.boardId || ! sockCtx.boardData) {
-		return <div>Board not found</div>;
+		return <NotFound itemType="Board"/>
 	}
 
 	return (
@@ -216,7 +216,7 @@ const BoardElement = (): React.JSX.Element => {
 			}}
 		>
 			<CollaborativeMouseTracker
-				boardId={params.boardId}
+				boardId={params.boardId as BoardId}
 				style={{
 					height: "95%",
 					width: "fit-content",
@@ -256,12 +256,13 @@ const BoardElement = (): React.JSX.Element => {
 										items={list.cards}
 										strategy={verticalListSortingStrategy}
 									>{
-										list.cards.map((card: Card, cardIndex: number) => {
+										list.cards.map((card: CardHeader, cardIndex: number) => {
 											return (
 												<SortableCard
 													key={card.id + "i"+cardIndex}
-													cardType={card}
+													cardHeader={card}
 													disabled={isSortingList}
+													boardCode={sockCtx.boardData?.boardCode ?? "#"}
 												/>
 											);
 										})
@@ -273,9 +274,9 @@ const BoardElement = (): React.JSX.Element => {
 					{createPortal(
 						<DragOverlay dropAnimation={boardDropAnimation}>
 						{activeObject
-							? allListIds.includes(activeObject.id.toString())
-							? renderContainerDragOverlay(activeObject as List)
-							: renderSortableItemDragOverlay(activeObject as Card)
+							? allListIds.includes(activeObject.id.toString() as UID)
+							? renderContainerDragOverlay(activeObject as List, sockCtx.boardData?.boardCode ?? "#")
+							: renderSortableItemDragOverlay(activeObject as Card, sockCtx.boardData?.boardCode ?? "#")
 							: null}
 						</DragOverlay>,
 						document.body
@@ -288,4 +289,4 @@ const BoardElement = (): React.JSX.Element => {
 	);
 };
 
-export default BoardElement;
+export default BoardPage;
