@@ -1,13 +1,46 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
-import { useTRZ } from '@trz/util/TRZ-context';
-import { ClientSE, ClientSEPayload, ClientSEReplies, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
-import { Board, BoardHeader, BoardId, Card, CardHeader, CardId, List, ListId, Organization, OrganizationId, Project, ProjectId, TextBlock, TextBlockEvent, TextBlockId, UID, UserId} from '@mosaiq/terrazzo-common/types';
-import { NoteType, notify } from '@trz/util/notifications';
-import { useIdle, useThrottledCallback } from '@mantine/hooks';
-import { getCaretCoordinates, IDLE_TIMEOUT_MS, MOUSE_UPDATE_THROTTLE_MS, TEXT_EVENT_EMIT_THROTTLE_MS, TextObject } from './textUtils';
-import { executeTextBlockEvent } from '@mosaiq/terrazzo-common/utils/textUtils';
-import { arrayMove, updateBaseFromPartial } from '@mosaiq/terrazzo-common/utils/arrayUtils';
+import React, {createContext, useContext, useEffect, useState} from 'react';
+import {io, Socket} from 'socket.io-client';
+import {useTRZ} from '@trz/util/TRZ-context';
+import {
+    ClientSE,
+    ClientSEPayload,
+    ClientSEReplies,
+    ClientSocketIOEvent,
+    Position,
+    RoomId,
+    ServerSE,
+    ServerSEPayload,
+    SocketId,
+    UserData
+} from '@mosaiq/terrazzo-common/socketTypes';
+import {
+    Board,
+    BoardId,
+    Card,
+    CardHeader,
+    CardId,
+    List,
+    ListId,
+    Organization,
+    OrganizationId,
+    Project,
+    ProjectId,
+    TextBlockEvent,
+    TextBlockId,
+    UID, User,
+    UserId
+} from '@mosaiq/terrazzo-common/types';
+import {NoteType, notify} from '@trz/util/notifications';
+import {useIdle, useThrottledCallback} from '@mantine/hooks';
+import {
+    getCaretCoordinates,
+    IDLE_TIMEOUT_MS,
+    MOUSE_UPDATE_THROTTLE_MS,
+    TEXT_EVENT_EMIT_THROTTLE_MS,
+    TextObject
+} from './textUtils';
+import {executeTextBlockEvent} from '@mosaiq/terrazzo-common/utils/textUtils';
+import {arrayMove, updateBaseFromPartial} from '@mosaiq/terrazzo-common/utils/arrayUtils';
 
 type SocketContextType = {
     sid?: SocketId;
@@ -42,6 +75,9 @@ type SocketContextType = {
     updateBoardField: (id: BoardId, partial: Partial<Board>) => Promise<void>;
     updateListField: (id: ListId, partial: Partial<List>) => Promise<void>;
     updateCardField: (id: CardId, partial: Partial<Card>) => Promise<void>;
+    getUserViaGithub: (userId: string) => Promise<User | undefined>;
+    setupUser: (id:string, username: string, firstName: string, lastName: string) => Promise<User | undefined>;
+    checkUserNameTaken: (username: string) => Promise<boolean | undefined>;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -282,7 +318,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             })
         });
 
-        
+
         return () => {
             setConnected(false);
             sock.disconnect();
@@ -328,7 +364,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             });
         });
     }
-    
+
 
 
     // EVENT EMITTERS
@@ -340,7 +376,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             setRoomUsersState(response.users);
         }
     }
-    
+
     const moveMouse = useThrottledCallback((pos: Position) => {
         if (!socket || !room || !connected || roomUsers.length === 0) {return;}
         volatileEmit<ClientSE.MOUSE_MOVE>(ClientSE.MOUSE_MOVE, {pos, draggingList: draggingObject.list, draggingCard: draggingObject.card});
@@ -577,6 +613,17 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }, TEXT_EVENT_EMIT_THROTTLE_MS);
 
+    const getUserViaGithub = async (userId: string): Promise<User | undefined> => {
+        return await emit<ClientSE.GET_USER>(ClientSE.GET_USER, userId);
+    }
+
+    const setupUser = async (id: string, username: string, firstName: string, lastName:string): Promise<User | undefined> => {
+        return await emit<ClientSE.SETUP_USER>(ClientSE.SETUP_USER, {id, username, firstName, lastName});
+    }
+
+    const checkUserNameTaken = async (username: string): Promise<boolean | undefined> => {
+        return await emit<ClientSE.CHECK_USERNAME_TAKEN>(ClientSE.CHECK_USERNAME_TAKEN, username);
+    }
 
     return (
         <SocketContext.Provider value={{
@@ -612,6 +659,9 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             updateBoardField,
             updateListField,
             updateCardField,
+            getUserViaGithub,
+            setupUser,
+            checkUserNameTaken
         }}>
             {children}
         </SocketContext.Provider>

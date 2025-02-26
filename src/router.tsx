@@ -6,13 +6,14 @@ import {CreateBoardModal} from "@trz/components/modals/CreateBoard";
 import {CreateProjectModal} from "@trz/components/modals/CreateProject";
 import {CreateOrganizationModal} from "@trz/components/modals/CreateOrganization";
 import {ModalsProvider} from "@mantine/modals";
+import {SetUpAccount} from "@trz/pages/auth/SetUpAccount";
 import ContentPageWrapper from "@trz/wrappers/ContentPageWrapper";
 import LandingPage from "@trz/pages/LandingPage";
-import LoginPage from '@trz/pages/auth/LoginPage'
 import HomePage from "@trz/pages/HomePage";
 import OrganizationPage from "@trz/pages/OrganizationPage";
 import ProjectPage from "@trz/pages/ProjectPage";
 import BoardPage from "@trz/pages/BoardPage";
+import LoginPage from "@trz/pages/auth/LoginPage";
 
 const modals = {
 	organization: CreateOrganizationModal,
@@ -30,7 +31,8 @@ const Router = () => {
 					<Route path='/auth' element={<Outlet />}>
 						<Route path='github' element={<GithubAuth />} />
 					</Route>
-					<Route element={<ContentPageWrapper />}>
+                    <Route path='/create-account' element={<SetUpAccount/>}/>
+                    <Route element={<ContentPageWrapper />}>
 						<Route path='/dashboard' element={<HomePage />} />
 						<Route path='/board/:boardId' element={<BoardPage/>} />
 						<Route path='/project/:projectId' element={<ProjectPage/>} />
