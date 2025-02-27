@@ -1,5 +1,5 @@
 import React from "react";
-import {UserHeader, UserId} from "@mosaiq/terrazzo-common/types";
+import {MembershipRecord, MembershipRecordId, UserHeader, UserId} from "@mosaiq/terrazzo-common/types";
 import { Role, RoleNames } from "@mosaiq/terrazzo-common/constants";
 import { Avatar, Title, Grid, Button, Select, Tooltip} from "@mantine/core";
 import { IoMdClose } from "react-icons/io";
@@ -7,10 +7,10 @@ import { NoteColor } from "@trz/util/notifications";
 
 interface MembershipRowProps {
     user: UserHeader;
-    userPerm: Role;
+    record: MembershipRecord;
     editorPermLevel: Role;
-    onEditRole: (userId:UserId, role:Role) => void;
-    onRemoveMember: (userId: UserId) => void;
+    onEditRole: (record: MembershipRecordId, role:Role) => void;
+    onRemoveMember: () => void;
 }
 export const MembershipRow = (props: MembershipRowProps) => {
     return (
@@ -35,9 +35,12 @@ export const MembershipRow = (props: MembershipRowProps) => {
                             RoleNames[Role.WRITE],
                             RoleNames[Role.ADMIN]
                         ]}
-                        value={RoleNames[props.userPerm]}
+                        value={RoleNames[props.record.role]}
                         allowDeselect={false}
-                        disabled={props.editorPermLevel < Role.ADMIN || props.userPerm === Role.OWNER}
+                        disabled={props.editorPermLevel < Role.ADMIN || props.record.role === Role.OWNER}
+                        onChange={(e)=>{
+                            props.onEditRole(props.record.id, RoleNames.indexOf(e ?? RoleNames[Role.READ]));
+                        }}
                     />
                 }
             </Grid.Col>
@@ -47,7 +50,13 @@ export const MembershipRow = (props: MembershipRowProps) => {
                         label="Remove Member"
                         bg={NoteColor.ERROR}
                     >
-                        <Button variant="subtle" c={NoteColor.ERROR}><IoMdClose/></Button>
+                        <Button
+                            variant="subtle"
+                            c={NoteColor.ERROR}
+                            onClick={()=>{
+                                props.onRemoveMember();
+                            }}
+                        ><IoMdClose/></Button>
                     </Tooltip>
                 }
             </Grid.Col>

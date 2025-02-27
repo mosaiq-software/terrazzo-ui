@@ -96,6 +96,9 @@ export const NoteType = {
     PROJECT_DATA_ERROR: {
         title: "There was an error getting the project's data"
     },
+    DASH_ERROR: {
+        title: "There was an error loading the dashboard"
+    },
     API_ERROR: {
         title: "API Error",
         message: "There was an issue with the API server"
@@ -103,6 +106,9 @@ export const NoteType = {
     UNAUTHORIZED: {
         title: "Unauthorized",
         message: "You don't have permission to do this!"
+    },
+    MEMBERSHIP_UPDATE_ERROR: {
+        title: "Membership Update Error",
     },
     CHANGES_SAVED: {
         title: "Changes Saved",

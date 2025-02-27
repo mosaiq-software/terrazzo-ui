@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Box, Avatar, Group, Flex, Title, Text, Tabs, ScrollArea, Center, Loader, Stack, TextInput, Textarea, ButtonGroup, Button} from "@mantine/core";
 import {BoardListCard} from "@trz/components/BoardListCards";
 import {AvatarRow} from "@trz/components/AvatarRow";
-import {Organization, OrganizationHeader, OrganizationId, User, UserHeader} from "@mosaiq/terrazzo-common/types";
+import {Organization, OrganizationHeader, OrganizationId, User, UserHeader, UserId} from "@mosaiq/terrazzo-common/types";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSocket } from "@trz/util/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
@@ -172,10 +172,14 @@ const OrganizationPage = (): React.JSX.Element => {
                             <MembershipRow
                                 key={m.user.id}
                                 user={m.user}
-                                userPerm={m.record.role}
+                                record={m.record}
                                 editorPermLevel={myPermissionLevel}
-                                onEditRole={()=>{
-
+                                onEditRole={(recordId, role)=>{
+                                    if(myPermissionLevel >= Role.ADMIN){
+                                        sockCtx.updateMembershipRecordField(recordId, {role: role});
+                                    } else {
+                                        notify(NoteType.UNAUTHORIZED);
+                                    }
                                 }}
                                 onRemoveMember={()=>{
                                     if(myPermissionLevel >= Role.ADMIN){

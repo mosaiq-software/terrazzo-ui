@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
-import {Box, Group, ScrollArea, Title, Flex, Divider, Select, Button, Text, Loader, Center} from "@mantine/core";
+import {Box, Group, ScrollArea, Title, Flex, Divider, Select, Button, Text, Loader, Center, Paper} from "@mantine/core";
 import { BoardListCard} from "@trz/components/BoardListCards";
-import { OrganizationHeader, ProjectHeader, UserId} from "@mosaiq/terrazzo-common/types";
+import { OrganizationHeader, ProjectHeader, UserDash, UserId} from "@mosaiq/terrazzo-common/types";
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "@trz/util/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
 
 
 const HomePage = (): React.JSX.Element => {
-    const [usersEntities, setUsersEntities] = useState<{organizations: OrganizationHeader[], projects: ProjectHeader[] } | undefined>();
+    const [dash, setDash] = useState<UserDash | undefined>();
 	const sockCtx = useSocket();
 	const navigate = useNavigate();
 
@@ -16,10 +16,10 @@ const HomePage = (): React.JSX.Element => {
 		const fetchOrgData = async () => {
             try{
                 const userId:UserId = "placeholder-7f7e-4b13-8554-e0c3d5daac6c";
-                const data = await sockCtx.getMyOrganizations(userId);
-                setUsersEntities(data);
+                const data = await sockCtx.getUsersDash(userId);
+                setDash(data);
             } catch(err) {
-                notify(NoteType.ORG_DATA_ERROR, err);
+                notify(NoteType.DASH_ERROR, err);
                 return;
 			}
 		};
@@ -75,7 +75,7 @@ const HomePage = (): React.JSX.Element => {
                             maxWidth: "100%"
                         }}>
                         {
-                            usersEntities && usersEntities.organizations.map((org) => {
+                            dash && dash.organizations.map((org) => {
                                 return (
                                     <BoardListCard
                                         key={org.id}
@@ -90,7 +90,33 @@ const HomePage = (): React.JSX.Element => {
                             })
                         }
                         {
-                            (!usersEntities) && 
+                            dash && dash.projects.map((project) => {
+                                return (
+                                    <BoardListCard
+                                        key={project.id}
+                                        title={project.name}
+                                        bgColor="#3ac9a2"
+                                        color="white"
+                                        onClick={()=>{
+                                            navigate("/project/"+project.id);
+                                        }}
+                                    />
+                                )
+                            })
+                        }
+                        {
+                            dash && dash.invites.map((invite) => {
+                                return (
+                                    <Paper
+                                        key={invite.id}
+                                    >
+                                        <Title>Invite to {invite.entityId}</Title>
+                                    </Paper>
+                                )
+                            })
+                        }
+                        {
+                            (!dash) && 
                             <Center w="100%" h="100%">
                                 <Loader type="bars"/>
                             </Center>

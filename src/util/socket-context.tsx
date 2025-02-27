@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTRZ } from '@trz/util/TRZ-context';
 import { ClientSE, ClientSEPayload, ClientSEReplies, ClientSocketIOEvent, Position, RoomId, ServerSE, ServerSEPayload, SocketId, UserData } from '@mosaiq/terrazzo-common/socketTypes';
-import { Board, BoardHeader, BoardId, Card, CardHeader, CardId, EntityId, InviteId, List, ListId, MembershipRecordId, Organization, OrganizationId, Project, ProjectId, TextBlock, TextBlockEvent, TextBlockId, UID, UserId} from '@mosaiq/terrazzo-common/types';
+import { Board, BoardHeader, BoardId, Card, CardHeader, CardId, EntityId, InviteId, List, ListHeader, ListId, MembershipRecord, MembershipRecordId, Organization, OrganizationHeader, OrganizationId, Project, ProjectHeader, ProjectId, TextBlock, TextBlockEvent, TextBlockId, UID, UserDash, UserId} from '@mosaiq/terrazzo-common/types';
 import { NoteType, notify } from '@trz/util/notifications';
 import { useIdle, useThrottledCallback } from '@mantine/hooks';
 import { getCaretCoordinates, IDLE_TIMEOUT_MS, MOUSE_UPDATE_THROTTLE_MS, TEXT_EVENT_EMIT_THROTTLE_MS, TextObject } from './textUtils';
@@ -35,7 +35,7 @@ type SocketContextType = {
     setDraggingObject: React.Dispatch<React.SetStateAction<{list?: ListId, card?: CardId}>>;
     moveListToPos: (listId: ListId, position: number) => void;
     moveCardToListAndPos: (cardId: CardId, toList: ListId, position?: number) => void;
-    getMyOrganizations: (userId: UserId) => Promise<ClientSEReplies[ClientSE.GET_USERS_ENTITIES] | undefined>;
+    getUsersDash: (userId: UserId) => Promise<UserDash | undefined>;
     getOrganizationData: (orgId: OrganizationId) => Promise<Organization | undefined>;
     getProjectData: (projectId: ProjectId) => Promise<Project | undefined>;
     updateOrgField: (id: OrganizationId, partial: Partial<Organization>) => Promise<void>;
@@ -46,6 +46,7 @@ type SocketContextType = {
     sendInvite: (toUsername: string, entityId: EntityId, entityType: EntityType, role: Role) => Promise<boolean>;
     replyInvite: (inviteId: InviteId, accept: boolean) => Promise<void>;
     kickMemberFromEntity: (membershipRecordId: MembershipRecordId) => Promise<void>;
+    updateMembershipRecordField: (id: MembershipRecordId, partial: Partial<MembershipRecord>) => Promise<void>;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -287,7 +288,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
 
         sock.on(ServerSE.RECEIVE_INVITE, (payload: ServerSEPayload[ServerSE.RECEIVE_INVITE]) => {
-            notify(NoteType.INVITE_RECEIVED, [payload.fromName, payload.entityName]);
+            notify(NoteType.INVITE_RECEIVED, );
         });
 
         
@@ -358,9 +359,9 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         emit<ClientSE.USER_IDLE>(ClientSE.USER_IDLE, idle);
     }
 
-    const getMyOrganizations = async (userId: UserId): Promise<ClientSEReplies[ClientSE.GET_USERS_ENTITIES] | undefined> => {
+    const getUsersDash = async (userId: UserId): Promise<UserDash | undefined> => {
         try {
-            const response = await emit<ClientSE.GET_USERS_ENTITIES>(ClientSE.GET_USERS_ENTITIES, userId);
+            const response = await emit<ClientSE.GET_USER_DASH>(ClientSE.GET_USER_DASH, userId);
             if(!response) throw new Error("No data found for user "+userId);
             return response;
         } catch (e:any){
@@ -420,13 +421,14 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         await emit<ClientSE.CREATE_CARD>(ClientSE.CREATE_CARD, {listID, cardName});
     }
 
-    async function updateField<T extends (Card | List | Board | Project | Organization)>(
+    async function updateField<T extends (CardHeader | ListHeader | BoardHeader | ProjectHeader | OrganizationHeader | MembershipRecord)>(
         event:
             ClientSE.UPDATE_ORG_FIELD |
             ClientSE.UPDATE_PROJECT_FIELD |
             ClientSE.UPDATE_BOARD_FIELD |
             ClientSE.UPDATE_LIST_FIELD |
-            ClientSE.UPDATE_CARD_FIELD,
+            ClientSE.UPDATE_CARD_FIELD |
+            ClientSE.UPDATE_MEMBERSHIP_RECORD_FIELD,
         id: UID,
         partial: Partial<T>
     ): Promise<void> {
@@ -439,15 +441,17 @@ const SocketProvider: React.FC<any> = ({ children }) => {
                 [ClientSE.UPDATE_BOARD_FIELD]: NoteType.BOARD_DATA_ERROR,
                 [ClientSE.UPDATE_LIST_FIELD]: NoteType.LIST_UPDATE_ERROR,
                 [ClientSE.UPDATE_CARD_FIELD]: NoteType.CARD_UPDATE_ERROR,
+                [ClientSE.UPDATE_MEMBERSHIP_RECORD_FIELD]: NoteType.MEMBERSHIP_UPDATE_ERROR,
             }[event], e);
         }
     }
 
-    const updateOrgField = async (id: OrganizationId, partial: Partial<Organization>) => updateField<Organization>(ClientSE.UPDATE_ORG_FIELD, id, partial);
-    const updateProjectField = async (id: ProjectId, partial: Partial<Project>) => updateField<Project>(ClientSE.UPDATE_PROJECT_FIELD, id, partial);
-    const updateBoardField = async (id: BoardId, partial: Partial<Board>) => updateField<Board>(ClientSE.UPDATE_BOARD_FIELD, id, partial);
-    const updateListField = async (id: ListId, partial: Partial<List>) => updateField<List>(ClientSE.UPDATE_LIST_FIELD, id, partial);
-    const updateCardField = async (id: CardId, partial: Partial<Card>) => updateField<Card>(ClientSE.UPDATE_CARD_FIELD, id, partial);
+    const updateOrgField = async (id: OrganizationId, partial: Partial<OrganizationHeader>) => updateField<OrganizationHeader>(ClientSE.UPDATE_ORG_FIELD, id, partial);
+    const updateProjectField = async (id: ProjectId, partial: Partial<ProjectHeader>) => updateField<ProjectHeader>(ClientSE.UPDATE_PROJECT_FIELD, id, partial);
+    const updateBoardField = async (id: BoardId, partial: Partial<BoardHeader>) => updateField<BoardHeader>(ClientSE.UPDATE_BOARD_FIELD, id, partial);
+    const updateListField = async (id: ListId, partial: Partial<ListHeader>) => updateField<ListHeader>(ClientSE.UPDATE_LIST_FIELD, id, partial);
+    const updateCardField = async (id: CardId, partial: Partial<CardHeader>) => updateField<CardHeader>(ClientSE.UPDATE_CARD_FIELD, id, partial);
+    const updateMembershipRecordField = async (id: MembershipRecordId, partial: Partial<MembershipRecord>) => updateField<MembershipRecord>(ClientSE.UPDATE_MEMBERSHIP_RECORD_FIELD, id, partial);
 
     const initializeTextBlockData = async (textBlockId:TextBlockId): Promise<void> => {
         try {
@@ -612,7 +616,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             boardData,
             moveMouse,
             setIdle,
-            getMyOrganizations,
+            getUsersDash,
             getOrganizationData,
             getProjectData,
             getBoardData,
@@ -636,6 +640,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             updateBoardField,
             updateListField,
             updateCardField,
+            updateMembershipRecordField,
             sendInvite,
             replyInvite,
             kickMemberFromEntity,
