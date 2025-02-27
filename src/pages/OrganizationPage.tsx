@@ -4,7 +4,7 @@ import {BoardListCard} from "@trz/components/BoardListCards";
 import {AvatarRow} from "@trz/components/AvatarRow";
 import {Organization, OrganizationHeader, OrganizationId, User, UserHeader, UserId} from "@mosaiq/terrazzo-common/types";
 import { useNavigate, useParams } from "react-router-dom";
-import { useSocket } from "@trz/util/socket-context";
+import { useSocket } from "@trz/contexts/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
 import {modals} from "@mantine/modals";
 import {NotFound} from "@trz/components/NotFound";
@@ -154,7 +154,14 @@ const OrganizationPage = (): React.JSX.Element => {
                         disabled={myPermissionLevel < Role.ADMIN}
                         onSubmit={async (username:string, role:Role)=>{
                             try {
-                                return await sockCtx.sendInvite(username, orgId, EntityType.ORG, role);
+                                const invite = await sockCtx.sendInvite(username, orgId, EntityType.ORG, role);
+                                if(invite && orgData){
+                                    setOrgData({
+                                        ...orgData,
+                                        invites: [...orgData.invites, invite]
+                                    });
+                                }
+                                return !!invite;
                             } catch (e) {
                                 notify(NoteType.GENERIC_ERROR, e);
                                 return false;
@@ -244,7 +251,7 @@ const OrganizationPage = (): React.JSX.Element => {
                             placeholder="My Organization"
                             value={editedSettings.name ?? ''}
                             onChange={(e)=>{
-                                setEditedSettings({...editedSettings, name: e.target.value})
+                                setEditedSettings({...editedSettings, name: e.target.value});
                             }}
                             disabled={myPermissionLevel < Role.ADMIN}
                         />
@@ -256,7 +263,7 @@ const OrganizationPage = (): React.JSX.Element => {
                             placeholder="Write some info about your organization"
                             value={editedSettings.description ?? ''}
                             onChange={(e)=>{
-                                setEditedSettings({...editedSettings, description: e.target.value})
+                                setEditedSettings({...editedSettings, description: e.target.value});
                             }}
                             disabled={myPermissionLevel < Role.ADMIN}
                         />
@@ -268,7 +275,7 @@ const OrganizationPage = (): React.JSX.Element => {
                             placeholder="https://mosaiq.dev/logo.png"
                             value={editedSettings.logoUrl ?? ''}
                             onChange={(e)=>{
-                                setEditedSettings({...editedSettings, logoUrl: e.target.value})
+                                setEditedSettings({...editedSettings, logoUrl: e.target.value});
                             }}
                             disabled={myPermissionLevel < Role.ADMIN}
                         />

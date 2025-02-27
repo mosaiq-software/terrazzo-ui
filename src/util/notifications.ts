@@ -130,6 +130,9 @@ export const NoteType = {
     GENERIC_ERROR: {
         title: "An error occurred!",
         message: "See console for details",
+    },
+    NOT_LOGGED_IN: {
+        title: "You must be logged into to do that!"
     }
 
 }

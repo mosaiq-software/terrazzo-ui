@@ -3,9 +3,9 @@ import { Select, Group, Grid, Stack, Button, Menu, Modal, Text, Pill} from "@man
 import { CollaborativeTextArea } from "@trz/components/CollaborativeTextArea";
 import { AvatarRow } from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
-import {useSocket} from "@trz/util/socket-context";
+import {useSocket} from "@trz/contexts/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
-import { useTRZ } from "@trz/util/TRZ-context";
+import { useTRZ } from "@trz/contexts/TRZ-context";
 import { getCard } from "@trz/util/boardUtils";
 
 interface CardDetailsProps {

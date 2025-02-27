@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import {CSS} from '@dnd-kit/utilities';
 import {useSortable} from '@dnd-kit/sortable';
 import {  CardHeader } from "@mosaiq/terrazzo-common/types";
-import { useSocket } from "@trz/util/socket-context";
+import { useSocket } from "@trz/contexts/socket-context";
 import CardElement from "../CardElement";
 import { createPortal } from "react-dom";
 

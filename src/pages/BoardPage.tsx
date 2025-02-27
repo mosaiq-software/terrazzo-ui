@@ -2,7 +2,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react";
 import {Container} from "@mantine/core";
 import CollaborativeMouseTracker from "@trz/wrappers/CollaborativeMouseTracker";
 import {useNavigate, useParams} from "react-router-dom";
-import {useSocket} from "@trz/util/socket-context";
+import {useSocket} from "@trz/contexts/socket-context";
 import CreateList from "@trz/components/CreateList";
 import {BoardId, Card, CardHeader, List, ListId, UID} from "@mosaiq/terrazzo-common/types";
 import {NoteType, notify} from "@trz/util/notifications";
@@ -33,6 +33,7 @@ import { createPortal } from "react-dom";
 import {boardDropAnimation, horizontalCollisionDetection, renderContainerDragOverlay, renderSortableItemDragOverlay} from "@trz/util/dragAndDropUtils";
 import CardDetails from "@trz/components/CardDetails";
 import { NotFound } from "@trz/components/NotFound";
+import {useEffectStrict} from "@trz/util/useEffectStrict";
 
 const BoardPage = (): React.JSX.Element => {
 	const [activeObject, setActiveObject] = useState<List | Card | null>(null);
@@ -52,11 +53,12 @@ const BoardPage = (): React.JSX.Element => {
 		})
 	);
 
-	useEffect(() => {
+	useEffectStrict(() => {
 		const fetchBoardData = async () => {
 			if (!params.boardId) {
 				return;
 			}
+			await new Promise((resolve)=>setTimeout(resolve, 0));
 			await sockCtx.getBoardData(params.boardId as BoardId)
 				.catch((err) => {
 					notify(NoteType.BOARD_DATA_ERROR, err);

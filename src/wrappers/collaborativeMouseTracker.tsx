@@ -1,5 +1,5 @@
 import React, { MouseEventHandler, useEffect, useRef, useState } from 'react';
-import { useSocket } from "@trz/util/socket-context";
+import { useSocket } from "@trz/contexts/socket-context";
 import UserCursor from "@trz/components/UserCursor";
 import { getRoomCode } from '@mosaiq/terrazzo-common/utils/socketUtils';
 import { RoomType } from '@mosaiq/terrazzo-common/socketTypes';

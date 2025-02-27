@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
-import { revokeUserAccessToGithubAuth, tryLoginWithGithub } from './githubAuth';
+import { revokeUserAccessToGithubAuth, tryLoginWithGithub } from '../util/githubAuth';
 import { readSessionStorageValue, useSessionStorage } from '@mantine/hooks';
 import { LocalStorageKey } from '@mosaiq/terrazzo-common/constants';
 import { CardId } from '@mosaiq/terrazzo-common/types';

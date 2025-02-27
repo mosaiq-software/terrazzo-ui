@@ -2,7 +2,7 @@ import React, {useState} from "react";
 import {TextInput, Container, Flex, Button} from "@mantine/core";
 import {getHotkeyHandler} from "@mantine/hooks";
 import {ContextModalProps} from "@mantine/modals";
-import {useSocket} from "@trz/util/socket-context";
+import {useSocket} from "@trz/contexts/socket-context";
 import {useNavigate, useParams} from "react-router-dom";
 import {NoteType, notify} from "@trz/util/notifications";
 import { OrganizationId } from "@mosaiq/terrazzo-common/types";

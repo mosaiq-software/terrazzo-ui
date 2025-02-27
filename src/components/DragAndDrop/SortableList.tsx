@@ -3,7 +3,7 @@ import ListElement from "@trz/components/ListElement"
 import {CSS, Transform} from '@dnd-kit/utilities';
 import {useSortable} from '@dnd-kit/sortable';
 import { List } from "@mosaiq/terrazzo-common/types";
-import { useSocket } from "@trz/util/socket-context";
+import { useSocket } from "@trz/contexts/socket-context";
 import { useDroppable } from "@dnd-kit/core";
 
 

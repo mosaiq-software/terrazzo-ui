@@ -2,7 +2,7 @@ import React from "react";
 import {Button} from "@mantine/core";
 import {modals} from "@mantine/modals";
 import { FaBell } from "react-icons/fa";
-import { useTRZ } from "@trz/util/TRZ-context";
+import { useTRZ } from "@trz/contexts/TRZ-context";
 
 const Navbar = () => {
 	const trz = useTRZ();

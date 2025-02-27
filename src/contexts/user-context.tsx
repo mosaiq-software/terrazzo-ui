@@ -1,7 +1,7 @@
 import React, {createContext, useState} from 'react';
 import {User} from "@mosaiq/terrazzo-common/types";
-import {DEFAULT_AUTHED_ROUTE, DEFAULT_NO_AUTH_ROUTE, useTRZ} from "@trz/util/TRZ-context";
-import {useSocket} from "@trz/util/socket-context";
+import {DEFAULT_AUTHED_ROUTE, DEFAULT_NO_AUTH_ROUTE, useTRZ} from "@trz/contexts/TRZ-context";
+import {useSocket} from "@trz/contexts/socket-context";
 
 type UserContextType = {
     userData: User | null;
@@ -27,6 +27,7 @@ const UserProvider: React.FC<any> = ({ children }) => {
         //If not, we redirect to the account creation page
 
         const user = await sockCtx.getUserViaGithub(trz.githubData.id);
+        console.log("user",user);
         if(user == undefined){
             //No account found
             return {userRoute: DEFAULT_NO_AUTH_ROUTE};

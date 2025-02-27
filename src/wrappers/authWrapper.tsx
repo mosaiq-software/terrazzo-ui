@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
 import {Outlet} from "react-router-dom";
-import {DEFAULT_AUTHED_ROUTE, DEFAULT_NO_AUTH_ROUTE, useTRZ} from "@trz/util/TRZ-context";
+import {DEFAULT_AUTHED_ROUTE, DEFAULT_NO_AUTH_ROUTE, useTRZ} from "@trz/contexts/TRZ-context";
 import { useNavigate } from "react-router-dom";
 import { Center, Loader } from "@mantine/core";
 import {useUser} from "@trz/contexts/user-context";
-import {useSocket} from "@trz/util/socket-context";
+import {useSocket} from "@trz/contexts/socket-context";
 
 interface AuthWrapperProps {
     children: any;
@@ -39,11 +39,12 @@ export const AuthWrapper = (props: AuthWrapperProps) => {
 
     useEffect(() => {
         const checkUser = async () => {
-            console.log("Checking for user");
+            console.log("Checking for user", sockCtx.connected);
             if(!sockCtx.connected){
                 return;
             }
             const {userRoute} = await usr.checkForUser();
+            console.log("to",userRoute);
             navigate(userRoute);
         }
         checkUser();

@@ -1,6 +1,6 @@
 import React, {createContext, useContext, useEffect, useState} from 'react';
 import {io, Socket} from 'socket.io-client';
-import {useTRZ} from '@trz/util/TRZ-context';
+import {useTRZ} from '@trz/contexts/TRZ-context';
 import {
     ClientSE,
     ClientSEPayload,
@@ -21,6 +21,7 @@ import {
     CardHeader,
     CardId,
     EntityId,
+    Invite,
     InviteId,
     List,
     ListHeader,
@@ -46,7 +47,7 @@ import {
     MOUSE_UPDATE_THROTTLE_MS,
     TEXT_EVENT_EMIT_THROTTLE_MS,
     TextObject
-} from './textUtils';
+} from '../util/textUtils';
 import {executeTextBlockEvent} from '@mosaiq/terrazzo-common/utils/textUtils';
 import {arrayMove, updateBaseFromPartial} from '@mosaiq/terrazzo-common/utils/arrayUtils';
 import { EntityType, Role } from '@mosaiq/terrazzo-common/constants';
@@ -87,7 +88,7 @@ type SocketContextType = {
     getUserViaGithub: (userId: string) => Promise<User | undefined>;
     setupUser: (id:string, username: string, firstName: string, lastName: string) => Promise<User | undefined>;
     checkUserNameTaken: (username: string) => Promise<boolean | undefined>;
-    sendInvite: (toUsername: string, entityId: EntityId, entityType: EntityType, role: Role) => Promise<boolean>;
+    sendInvite: (toUsername: string, entityId: EntityId, entityType: EntityType, role: Role) => Promise<Invite | undefined>;
     replyInvite: (inviteId: InviteId, accept: boolean) => Promise<void>;
     kickMemberFromEntity: (membershipRecordId: MembershipRecordId) => Promise<void>;
     updateMembershipRecordField: (id: MembershipRecordId, partial: Partial<MembershipRecord>) => Promise<void>;
@@ -531,10 +532,10 @@ const SocketProvider: React.FC<any> = ({ children }) => {
 
     const sendInvite = async (toUsername: string, entityId: EntityId, entityType: EntityType, role: Role) => {
         try {
-             await emit<ClientSE.SEND_INVITE>(ClientSE.SEND_INVITE, {toUsername, entityId, entityType, role});
-            return true;
+            const invite = await emit<ClientSE.SEND_INVITE>(ClientSE.SEND_INVITE, {toUsername, entityId, entityType, role});
+            return invite;
         } catch (e) {
-            return false;
+            return undefined;
         }
     }
 

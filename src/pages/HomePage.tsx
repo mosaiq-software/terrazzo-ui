@@ -3,20 +3,25 @@ import {Box, Group, ScrollArea, Title, Flex, Divider, Select, Button, Text, Load
 import { BoardListCard} from "@trz/components/BoardListCards";
 import { OrganizationHeader, ProjectHeader, UserDash, UserId} from "@mosaiq/terrazzo-common/types";
 import { useNavigate } from "react-router-dom";
-import { useSocket } from "@trz/util/socket-context";
+import { useSocket } from "@trz/contexts/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
+import { useUser } from "@trz/contexts/user-context";
 
 
 const HomePage = (): React.JSX.Element => {
     const [dash, setDash] = useState<UserDash | undefined>();
 	const sockCtx = useSocket();
+    const usr = useUser();
 	const navigate = useNavigate();
 
 	useEffect(() => {
 		const fetchOrgData = async () => {
             try{
-                const userId:UserId = "placeholder-7f7e-4b13-8554-e0c3d5daac6c";
-                const data = await sockCtx.getUsersDash(userId);
+                if(!usr.userData?.id){
+                    notify(NoteType.NOT_LOGGED_IN);
+                    return;
+                }
+                const data = await sockCtx.getUsersDash(usr.userData.id);
                 setDash(data);
             } catch(err) {
                 notify(NoteType.DASH_ERROR, err);
@@ -24,7 +29,7 @@ const HomePage = (): React.JSX.Element => {
 			}
 		};
 		fetchOrgData();
-	}, [sockCtx.connected]);
+	}, [sockCtx.connected, usr.userData]);
 
     return (
         <ScrollArea bg='#15161A' h='100vh'  w='100vw'>

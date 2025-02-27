@@ -1,10 +1,10 @@
 import React, {useEffect} from "react";
 import {Button, Center, Container, Loader, Paper, Space, Stack, Text, TextInput, Title} from "@mantine/core";
-import {useSocket} from "@trz/util/socket-context";
+import {useSocket} from "@trz/contexts/socket-context";
 import {useUser} from "@trz/contexts/user-context";
 import {useDebouncedValue} from "@mantine/hooks";
 import {useNavigate} from "react-router-dom";
-import {DEFAULT_AUTHED_ROUTE} from "@trz/util/TRZ-context";
+import {DEFAULT_AUTHED_ROUTE} from "@trz/contexts/TRZ-context";
 import {USERNAME_DEBOUNCE} from "@trz/util/textUtils";
 import {NoteType, notify} from "@trz/util/notifications";
 

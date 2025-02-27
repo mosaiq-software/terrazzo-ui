@@ -2,7 +2,7 @@ import React, {useEffect} from "react";
 import { Group, Paper, Pill, Text, Title } from "@mantine/core";
 import {CardHeader} from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from "@trz/components/AvatarRow";
-import { useTRZ } from "@trz/util/TRZ-context";
+import { useTRZ } from "@trz/contexts/TRZ-context";
 
 
 interface CardElementProps {

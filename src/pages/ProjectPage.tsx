@@ -5,7 +5,7 @@ import {AvatarRow} from "@trz/components/AvatarRow";
 import {Project, ProjectId} from "@mosaiq/terrazzo-common/types";
 import { modals } from "@mantine/modals";
 import { useNavigate, useParams } from "react-router-dom";
-import { useSocket } from "@trz/util/socket-context";
+import { useSocket } from "@trz/contexts/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
 import { NotFound } from "@trz/components/NotFound";
 

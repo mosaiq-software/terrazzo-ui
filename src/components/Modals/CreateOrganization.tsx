@@ -2,14 +2,16 @@ import React, {useState} from "react";
 import {TextInput, Container, Flex, Button} from "@mantine/core";
 import {getHotkeyHandler} from "@mantine/hooks";
 import {ContextModalProps} from "@mantine/modals";
-import {useSocket} from "@trz/util/socket-context";
+import {useSocket} from "@trz/contexts/socket-context";
 import {useNavigate} from "react-router-dom";
 import {NoteType, notify} from "@trz/util/notifications";
+import { useUser } from "@trz/contexts/user-context";
 
 const CreateOrganization = (props: ContextModalProps<{ modalBody: string }>): React.JSX.Element => {
     const [orgName, setOrgName] = React.useState("");
     const [errorName, setErrorName] = useState("");
     const sockCtx = useSocket();
+    const usr = useUser();
     const navigate = useNavigate();
 
     async function onSubmit() {
@@ -24,7 +26,12 @@ const CreateOrganization = (props: ContextModalProps<{ modalBody: string }>): Re
             return;
         }
         try {
-            const ordId = await sockCtx.createOrganization(orgName, "placeholder-7f7e-4b13-8554-e0c3d5daac6c");
+            const userId = usr.userData?.id;
+            if(!userId){
+                notify(NoteType.NOT_LOGGED_IN);
+                return;
+            }
+            const ordId = await sockCtx.createOrganization(orgName, userId);
             navigate(`/org/${ordId}`);
         } catch (e) {
             notify(NoteType.ORG_CREATION_ERROR, e);

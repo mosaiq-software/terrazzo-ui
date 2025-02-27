@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState} from "react";
-import {useSocket} from "@trz/util/socket-context";
+import {useSocket} from "@trz/contexts/socket-context";
 import { useClickOutside, useElementSize, useClipboard } from '@mantine/hooks';
 import { interceptPaste, TAB_CHAR } from "@trz/util/textUtils";
 import { TextBlockEvent, TextBlockId } from "@mosaiq/terrazzo-common/types";
