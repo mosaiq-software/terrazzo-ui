@@ -7,6 +7,7 @@ import { TRZProvider } from "@trz/util/TRZ-context";
 import { SocketProvider } from "@trz/util/socket-context";
 import { Notifications } from '@mantine/notifications';
 import Router from "./router";
+import {UserProvider} from "@trz/contexts/user-context";
 
 const theme = createTheme({});
 
@@ -16,7 +17,9 @@ const App = () => {
 			<Notifications/>
                 <TRZProvider>
                     <SocketProvider>
-                        <Router/>
+                        <UserProvider>
+                            <Router/>
+                        </UserProvider>
                     </SocketProvider>
                 </TRZProvider>
 		</MantineProvider>

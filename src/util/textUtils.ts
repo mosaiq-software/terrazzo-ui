@@ -12,6 +12,8 @@ export const MOUSE_UPDATE_THROTTLE_MS = 100;
 export const TEXT_EVENT_EMIT_THROTTLE_MS = 100;
 export const TAB_CHAR = '    ';
 
+export const USERNAME_DEBOUNCE = 500;
+
 const CSS_TA_PROPERTIES = [
     'direction',  // RTL support
     'boxSizing',

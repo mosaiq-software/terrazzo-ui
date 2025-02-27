@@ -103,6 +103,9 @@ export const NoteType = {
         title: "API Error",
         message: "There was an issue with the API server"
     },
+    USER_CREATION_ERROR: {
+        title: "Error creating the user"
+    },
     UNAUTHORIZED: {
         title: "Unauthorized",
         message: "You don't have permission to do this!"
