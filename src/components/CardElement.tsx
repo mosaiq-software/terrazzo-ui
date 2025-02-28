@@ -1,25 +1,23 @@
 import React, {useEffect} from "react";
-import { useDisclosure } from "@mantine/hooks";
 import { Group, Paper, Pill, Text, Title } from "@mantine/core";
-import CardDetails from "@trz/components/CardDetails";
-import {Card} from "@mosaiq/terrazzo-common/types";
+import {CardHeader} from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from "@trz/components/AvatarRow";
 import { useTRZ } from "@trz/util/TRZ-context";
 
 
 interface CardElementProps {
-	cardType: Card;
+	cardHeader: CardHeader;
 	dragging: boolean;
 	isOverlay: boolean;
 	boardCode: string;
 }
 const CardElement = (props: CardElementProps): React.JSX.Element => {
 	const trzCtx = useTRZ();
-	const [title, setTitle] = React.useState(props.cardType.name || "Card Title");
+	const [title, setTitle] = React.useState(props.cardHeader.name || "Card Title");
 
 	useEffect(() => {
-		setTitle(props.cardType.name);
-	}, [props.cardType.name]);
+		setTitle(props.cardHeader.name);
+	}, [props.cardHeader.name]);
 
 	const testUsers = Array.from({ length: 1 }).map((_, index) => ({
 		name: "John Doe",
@@ -30,7 +28,7 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 		if(props.dragging || props.isOverlay){
 			return;
 		}
-		trzCtx.setOpenedCardModal(props.cardType.id);
+		trzCtx.setOpenedCardModal(props.cardHeader.id);
 	}
 
 	return (
@@ -71,7 +69,7 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 					textWrap: "wrap"
 				}}
 			>{title}</Title>
-			<Text size='xs' c="#878787">{props.boardCode} - {props.cardType.cardNumber}</Text>
+			<Text size='xs' c="#878787">{props.boardCode} - {props.cardHeader.cardNumber}</Text>
 			<Group>
 				{/* icons for info abt the card */}
 			</Group>

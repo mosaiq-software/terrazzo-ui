@@ -1,20 +1,13 @@
-//Utility
 import React, {useState} from "react";
-
-//Components
 import {TextInput, Container, Flex, Button} from "@mantine/core";
 import {getHotkeyHandler} from "@mantine/hooks";
 import {ContextModalProps} from "@mantine/modals";
 import {useSocket} from "@trz/util/socket-context";
 import {useNavigate} from "react-router-dom";
 import {NoteType, notify} from "@trz/util/notifications";
+import { ProjectId } from "@mosaiq/terrazzo-common/types";
 
-const CreateBoard = ({
-                         context,
-                         id,
-                         innerProps,
-                     }: ContextModalProps<{ modalBody: string }>): React.JSX.Element => {
-
+const CreateBoard = (props: ContextModalProps<{ modalBody: string, projectId: ProjectId }>): React.JSX.Element => {
     const [boardName, setBoardName] = React.useState("");
     const [boardAbbreviation, setBoardAbbreviation] = React.useState("");
     const [errorName, setErrorName] = useState("");
@@ -22,7 +15,7 @@ const CreateBoard = ({
     const sockCtx = useSocket();
     const navigate = useNavigate();
 
-    function onSubmit() {
+    async function onSubmit() {
         setErrorAbv("");
         setErrorName("");
 
@@ -45,14 +38,14 @@ const CreateBoard = ({
             setErrorAbv("Max 3 characters");
             return;
         }
-        sockCtx.createBoard(boardName, boardAbbreviation).then((board) => {
-            navigate(`/boards/${board}`);
-            context.closeModal(id);
-        }).catch((err) => {
-            console.error(err);
+        try {
+            const board = await sockCtx.createBoard(boardName, boardAbbreviation, props.innerProps.projectId);
+            navigate(`/board/${board}`);
+        } catch (e) {
+            notify(NoteType.BOARD_CREATION_ERROR, e);
             navigate(`/dashboard`);
-            notify(NoteType.BOARD_CREATION_ERROR);
-        });
+        }
+        props.context.closeModal(props.id);
     }
 
     return (
@@ -94,12 +87,4 @@ const CreateBoard = ({
     )
 }
 
-export const CreateBoardModal = ({
-                       context,
-                       id,
-                       innerProps,
-                   }: ContextModalProps<{ modalBody: string }>) => (
-    <>
-        <CreateBoard context={context} id={id} innerProps={innerProps}/>
-    </>
-);
+export const CreateBoardModal = (props: ContextModalProps<{ modalBody: string, projectId: ProjectId }>) => (<CreateBoard {...props}/>);

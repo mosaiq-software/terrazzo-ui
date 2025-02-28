@@ -218,7 +218,7 @@ const extractLineData = (line: string): Line => {
         ['~', LineContentStyle.Subscript],
         ['@@', LineContentStyle.Keyboard],
     ] as [string, LineContentStyle][];
-    let contents = rootContents;
+    const contents = rootContents;
     for (let i = 0; i < delimiters.length; i++) {
         splitByDelimiter(contents, delimiters[i][0], delimiters[i][1]);
     }

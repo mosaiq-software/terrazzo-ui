@@ -33,8 +33,7 @@ export const getUserAccessTokenFromGithub = async (code: string) => {
         }
         return (json?.access_token);
     } catch (error) {
-        console.error("Error fetching user access token from GitHub", error);
-        notify(NoteType.GITHUB_AUTH_ERROR);
+        notify(NoteType.GITHUB_AUTH_ERROR, ("Error fetching user access token from GitHub " + error));
         return null;
     }
 }
@@ -49,8 +48,7 @@ export const getUserDataFromGithub = async (accessToken: string) => {
         }
         return (json);
     } catch (error) {
-        console.error("Error fetching user data from GitHub", error);
-        notify(NoteType.GITHUB_DATA_ERROR);
+        notify(NoteType.GITHUB_DATA_ERROR, ("Error fetching user data from GitHub "+error));
         return null;
     }
 }
@@ -97,8 +95,7 @@ export const revokeUserAccessToGithubAuth = async (access_token: string) => {
             throw new Error("Invalid status code "+status);
         }
     } catch (error) {
-        console.error("Error revoking user access from GitHub", error);
-        notify(NoteType.GITHUB_AUTH_ERROR);
+        notify(NoteType.GITHUB_AUTH_ERROR, ("Error revoking user access from GitHub "+error));
         return null;
     }
 }

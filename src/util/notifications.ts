@@ -1,23 +1,5 @@
 import { notifications } from '@mantine/notifications';
 
-export enum NoteType {
-    CONNECTION_ERROR = 'CONNECTION_ERROR',
-    DISCONNECTED = 'DISCONNECTED',
-    RECONNECTING = 'RECONNECTING',
-    RECONNECTING_SERVER_FOUND = 'RECONNECTING_SERVER_FOUND',
-    CONNECTION_ESTABLISHED = 'CONNECTION_ESTABLISHED',
-    GITHUB_AUTH_ERROR = 'GITHUB_AUTH_ERROR',
-    GITHUB_DATA_ERROR = 'GITHUB_DATA_ERROR',
-    BOARD_DATA_ERROR = 'BOARD_DATA_ERROR',
-    BOARD_CREATION_ERROR = 'BOARD_CREATION_ERROR',
-    LIST_CREATION_ERROR = 'LIST_CREATION_ERROR',
-    CARD_CREATION_ERROR = 'CARD_CREATION_ERROR',
-    LIST_UPDATE_ERROR = 'LIST_UPDATE_ERROR',
-    CARD_UPDATE_ERROR = 'CARD_UPDATE_ERROR',
-    CLIPBOARD_COPY_ERROR = 'CLIPBOARD_COPY_ERROR',
-    CLIPBOARD_PASTE_ERROR = 'CLIPBOARD_PASTE_ERROR'
-}
-
 const AUTO_CLOSE_TIMEOUT = 5000;
 enum NoteColor {
     ERROR = 'red',
@@ -25,92 +7,120 @@ enum NoteColor {
     WARNING = 'yellow',
     SUCCESS = 'green',
 }
-
-const noteMap = {
-    [NoteType.CONNECTION_ERROR]: {
+interface Note {
+    title: string;
+    message?: string;
+    color?: NoteColor;
+}
+export const NoteType = {
+    CONNECTION_ERROR: {
         title: 'Connection Error',
         message: 'An error occurred while connecting to the server. Could not upgrade to websocket',
-        color: NoteColor.ERROR,
     },
-    [NoteType.DISCONNECTED]: {
+    DISCONNECTED: {
         title: 'Disconnected',
         message: 'You have been disconnected from the server',
-        color: NoteColor.ERROR,
     },
-    [NoteType.RECONNECTING]: {
+    RECONNECTING: {
         title: 'Reconnecting',
         message: 'Searching for server...',
         color: NoteColor.INFO,
     },
-    [NoteType.RECONNECTING_SERVER_FOUND]: {
+    RECONNECTING_SERVER_FOUND: {
         title: 'Reconnecting',
         message: 'Server found. Attempting to reconnect',
         color: NoteColor.INFO,
     },
-    [NoteType.CONNECTION_ESTABLISHED]: {
+    CONNECTION_ESTABLISHED: {
         title: 'Connected',
         message: 'You have been connected to the server',
         color: NoteColor.SUCCESS,
     },
-    [NoteType.GITHUB_AUTH_ERROR]: {
+    GITHUB_AUTH_ERROR: {
         title: 'GitHub Authentication Error',
         message: 'An error occurred while authenticating with GitHub',
-        color: NoteColor.ERROR,
     },
-    [NoteType.GITHUB_DATA_ERROR]: {
+    GITHUB_DATA_ERROR: {
         title: 'GitHub Data Error',
         message: 'An error occurred while fetching data from GitHub',
-        color: NoteColor.ERROR,
     },
-    [NoteType.BOARD_DATA_ERROR]: {
+    BOARD_DATA_ERROR: {
         title: 'Board Data Error',
         message: 'An error occurred while fetching data from Board',
-        color: NoteColor.ERROR,
     },
-    [NoteType.BOARD_CREATION_ERROR]: {
+    BOARD_CREATION_ERROR: {
         title: 'Board Creation Error',
         message: 'An error occurred while creating a new board',
-        color: NoteColor.ERROR,
     },
-    [NoteType.LIST_CREATION_ERROR]: {
+    LIST_CREATION_ERROR: {
         title: 'List Creation Error',
         message: 'An error occurred while creating a new list',
-        color: NoteColor.ERROR,
     },
-    [NoteType.CARD_CREATION_ERROR]: {
+    CARD_CREATION_ERROR: {
         title: 'Card Creation Error',
         message: 'An error occurred while creating a new card',
-        color: NoteColor.ERROR,
     },
-    [NoteType.LIST_UPDATE_ERROR]: {
+    LIST_UPDATE_ERROR: {
         title: 'List Update Error',
         message: 'An error occurred while updating the list',
-        color: NoteColor.ERROR,
     },
-    [NoteType.CARD_UPDATE_ERROR]: {
+    CARD_UPDATE_ERROR: {
         title: 'Card Update Error',
         message: 'An error occurred while updating the card',
-        color: NoteColor.ERROR,
     },
-    [NoteType.CLIPBOARD_COPY_ERROR]: {
+    CLIPBOARD_COPY_ERROR: {
         title: 'Error copying text',
         message: 'Make sure the browser has this permission enabled',
-        color: NoteColor.ERROR
     },
-    [NoteType.CLIPBOARD_PASTE_ERROR]: {
+    CLIPBOARD_PASTE_ERROR: {
         title: 'Error pasting text',
         message: 'Make sure the browser has this permission enabled',
-        color: NoteColor.ERROR
+    },
+    TEXT_BLOCK_INIT_ERROR: {
+        title: "Error initializing text block"
+    },
+    TEXT_EVENT_WARN: {
+        title: "Error updating text block",
+        color: NoteColor.WARNING
+    },
+    ORG_CREATION_ERROR: {
+        title: "Error creating the organization"
+    },
+    ORG_DATA_ERROR: {
+        title: "Error getting the organization"
+    },
+    PROJECT_CREATION_ERROR: {
+        title: "Error creating the project"
+    },
+    PROJECT_DATA_ERROR: {
+        title: "There was an error getting the project's data"
+    },
+    API_ERROR: {
+        title: "API Error",
+        message: "There was an issue with the API server"
+    },
+    USER_CREATION_ERROR: {
+        title: "Error creating the user"
     }
+
 }
 
-export const notify = (note: NoteType) => {
-    const noteData = noteMap[note];
-    if (!noteData) {
-        throw new Error(`Notification type ${note} not found`);
+export const notify = (note?: Note, data?:any) => {
+    if (!note) {
+        note = {
+            title: "An error occurred"
+        }
+    }
+    if(!note.color || note.color === NoteColor.ERROR){
+        console.error(note.title, note.message, data);
+    }
+    if(note.color === NoteColor.WARNING){
+        console.warn(note.title, note.message, data);
     }
     notifications.show({
-        ...noteData,
+        title: note.title,
+        message: note.message || "",
+        color: note.color || NoteColor.ERROR,
         autoClose: AUTO_CLOSE_TIMEOUT,
     });
 }

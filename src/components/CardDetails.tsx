@@ -33,20 +33,18 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 		trzCtx.setOpenedCardModal(null);
 	}
 
-	function onTitleChange(value:string) {
+	async function onTitleChange(value:string) {
 		if(!card){
 			notify(NoteType.CARD_UPDATE_ERROR);
 			return;
 		}
-		setTitle(value);
-		sockCtx.updateCardTitle(card?.id, value).then((success) => {
-			if (!success) {
-				notify(NoteType.CARD_UPDATE_ERROR);
-				return;
-			}
-		}).catch((err) => {
-			console.error(err);
-		});
+		try{
+			await sockCtx.updateCardField(card.id, {name: value});
+			setTitle(value);
+		} catch (e) {
+			notify(NoteType.CARD_UPDATE_ERROR, e);
+			return;
+		}
 	}
 
 	if(!sockCtx.boardData || !trzCtx.openedCardModal){
