@@ -47,7 +47,7 @@ import {
     MOUSE_UPDATE_THROTTLE_MS,
     TEXT_EVENT_EMIT_THROTTLE_MS,
     TextObject
-} from '../util/textUtils';
+} from '@trz/util/textUtils';
 import {executeTextBlockEvent} from '@mosaiq/terrazzo-common/utils/textUtils';
 import {arrayMove, updateBaseFromPartial} from '@mosaiq/terrazzo-common/utils/arrayUtils';
 import { EntityType, Role } from '@mosaiq/terrazzo-common/constants';

@@ -31,7 +31,6 @@ export const AvatarRow = (props: AvatarRowProps) => {
                         <Avatar size="sm">+{props.users.length - 3}</Avatar>
                     </Tooltip>
                 )
-                        
             }
         </Avatar.Group>
     )
