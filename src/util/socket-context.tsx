@@ -367,7 +367,6 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     // EVENT EMITTERS
 
     const setRoom = async (room: RoomId) => {
-        console.log("Setting room to: ", room);
         setRoomState(room);
         const response = await emit<ClientSE.SET_ROOM>(ClientSE.SET_ROOM, room);
         if(response) {
