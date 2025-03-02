@@ -1,9 +1,11 @@
 import React from "react";
-import {Flex, Paper, Text, UnstyledButton, AspectRatio} from "@mantine/core";
+import {Flex, Paper, Text} from "@mantine/core";
 import { useHover } from "@mantine/hooks";
+import { useImageColor } from "@trz/util/useImageColor";
 
 interface BoardListCardProps {
     bgColor: string;
+    bgImage?: string;
     color: string;
     title: string;
     onClick: ()=>void;
@@ -11,10 +13,12 @@ interface BoardListCardProps {
 }
 export const BoardListCard = (props:BoardListCardProps): React.JSX.Element => {
     const { hovered, ref } = useHover();
+    const imageColor = useImageColor(props.bgImage, "DarkMuted")
+    
     return (
         <Paper
             ref={ref}
-            bg={props.bgColor}
+            bg={imageColor ?? props.bgColor}
             w='350'
             h='150'
             radius='md'

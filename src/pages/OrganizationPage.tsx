@@ -105,6 +105,7 @@ const OrganizationPage = (): React.JSX.Element => {
                                 <BoardListCard 
                                     key={project.id}
                                     bgColor={'#121314'}
+                                    bgImage={project.logoUrl}
                                     color="white"
                                     title={project.name}
                                     onClick={()=>{
