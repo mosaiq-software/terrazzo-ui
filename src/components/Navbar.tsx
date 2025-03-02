@@ -1,11 +1,11 @@
 import React from "react";
-import {Button} from "@mantine/core";
+import {Avatar, Button} from "@mantine/core";
 import {modals} from "@mantine/modals";
 import { FaBell } from "react-icons/fa";
-import { useTRZ } from "@trz/contexts/TRZ-context";
+import { useUser } from "@trz/contexts/user-context";
 
 const Navbar = () => {
-	const trz = useTRZ();
+	const usr = useUser();
 	return (
 		<div
 			style={{
@@ -78,8 +78,7 @@ const Navbar = () => {
 					}}
 				/>
 				<FaBell />
-				<button
-					className='profilieIcon'
+				<Avatar
 					style={{
 						display: "flex",
 						justifyContent: " center",
@@ -93,10 +92,9 @@ const Navbar = () => {
 						fontSize: " 22px",
 						color: "white",
 					}}
-					onClick={()=>trz.logoutAll()}
-				>
-					F
-				</button>
+					onClick={()=>usr.logoutAll()}
+					src={usr.userData?.profilePicture}
+				/>
 			</div>
 		</div>
 	);
