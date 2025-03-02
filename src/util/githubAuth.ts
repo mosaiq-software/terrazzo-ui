@@ -1,8 +1,10 @@
 import queryString from "query-string";
-import { callTrzApi } from "./apiUtils";
+import { callTrzApi } from "@trz/util//apiUtils";
 import { LocalStorageKey } from "@mosaiq/terrazzo-common/constants";
-import { NoteType, notify } from "./notifications";
+import { NoteType, notify } from "@trz/util/notifications";
 import { readSessionStorageValue } from "@mantine/hooks";
+import { RestRoutes } from "@mosaiq/terrazzo-common/apiTypes";
+import { UserHeader } from "@mosaiq/terrazzo-common/types";
 
 /*
     Returns the URL to redirect to for GitHub login.
@@ -27,11 +29,8 @@ export const getGithubLoginUrl = () => {
 */
 export const getUserAccessTokenFromGithub = async (code: string) => {
     try {
-        const {json, status} = await callTrzApi(`/user/github/auth?code=${code}`, "GET");
-        if(status !== 200){
-            throw new Error("Invalid status code "+status);
-        }
-        return (json?.access_token);
+        const token = await callTrzApi<RestRoutes.USER_GITHUB_AUTH>(RestRoutes.USER_GITHUB_AUTH, {code}, undefined);
+        return token;
     } catch (error) {
         notify(NoteType.GITHUB_AUTH_ERROR, ("Error fetching user access token from GitHub " + error));
         return null;
@@ -42,11 +41,8 @@ export const getUserAccessTokenFromGithub = async (code: string) => {
 */
 export const getUserDataFromGithub = async (accessToken: string) => {
     try {
-        const {json, status} = await callTrzApi(`/user/github/userdata?access_token=${accessToken}`, "GET");
-        if(status !== 200){
-            throw new Error("Invalid status code "+status);
-        }
-        return (json);
+        const data = await callTrzApi<RestRoutes.USER_GITHUB_DATA>(RestRoutes.USER_GITHUB_DATA, {access_token:accessToken}, undefined);
+        return data;
     } catch (error) {
         notify(NoteType.GITHUB_DATA_ERROR, ("Error fetching user data from GitHub "+error));
         return null;
@@ -56,7 +52,7 @@ export const getUserDataFromGithub = async (accessToken: string) => {
 /*
     Used on app load. Check if there is a saved access token in local storage and try to log in with it.
 */
-export const tryLoginWithGithub = async (callbackCode?:string): Promise<{authToken:string|null, data:any}> => {
+export const tryLoginWithGithub = async (callbackCode?:string): Promise<{authToken:string|null, user:UserHeader|null}> => {
     let authToken;
     let fromLocal = false;
     if(callbackCode) {
@@ -66,12 +62,12 @@ export const tryLoginWithGithub = async (callbackCode?:string): Promise<{authTok
         authToken = localStorage.getItem(LocalStorageKey.GITHUB_ACCESS_TOKEN);
         fromLocal = true;
         if (!authToken) {
-            return {authToken: null, data: null};
+            return {authToken: null, user: null};
         }
     }
-    const data = await getUserDataFromGithub(authToken);
-    if (!data) {
-        return {authToken: null, data: null};
+    const user = await getUserDataFromGithub(authToken);
+    if (!user || typeof user === "string") {
+        return {authToken: null, user: null};
     }
     const remember = readSessionStorageValue({key: "remember-me"});
     if(remember === "true" || fromLocal){
@@ -79,7 +75,7 @@ export const tryLoginWithGithub = async (callbackCode?:string): Promise<{authTok
     } else {
         localStorage.removeItem(LocalStorageKey.GITHUB_ACCESS_TOKEN);
     }
-    return {authToken, data};
+    return {authToken, user: user};
 }
 
 /*
@@ -90,10 +86,7 @@ export const revokeUserAccessToGithubAuth = async (access_token: string) => {
         if(!access_token){
             return;
         }
-        const {json, status} = await callTrzApi(`/user/github/revoke/${access_token}`, "DELETE");
-        if(status !== 200){
-            throw new Error("Invalid status code "+status);
-        }
+        await callTrzApi<RestRoutes.USER_GITHUB_REVOKE_TOKEN>(RestRoutes.USER_GITHUB_REVOKE_TOKEN, {accessToken:access_token}, undefined);
     } catch (error) {
         notify(NoteType.GITHUB_AUTH_ERROR, ("Error revoking user access from GitHub "+error));
         return null;

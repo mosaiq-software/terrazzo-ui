@@ -1,14 +1,12 @@
 import React, {useEffect} from "react";
-import {Button, Center, Container, Loader, Paper, Space, Stack, Text, TextInput, Title} from "@mantine/core";
-import {useSocket} from "@trz/contexts/socket-context";
-import {useUser} from "@trz/contexts/user-context";
+import {Button, Center, Container, Paper, Space, Stack, Text, TextInput, Title} from "@mantine/core";
+import {useUser } from "@trz/contexts/user-context";
 import {useDebouncedValue} from "@mantine/hooks";
-import {useNavigate} from "react-router-dom";
-import {DEFAULT_AUTHED_ROUTE} from "@trz/contexts/TRZ-context";
 import {USERNAME_DEBOUNCE} from "@trz/util/textUtils";
-import {NoteType, notify} from "@trz/util/notifications";
+import { checkUsernameTaken } from "@trz/util/userUtils";
 
 export const SetUpAccount = () => {
+    const usr = useUser();
     const [username, setUsername] = React.useState("");
     const [usernameDebounce] = useDebouncedValue(username, USERNAME_DEBOUNCE);
     const [usernameStatus, setUsernameStatus] = React.useState("");
@@ -17,9 +15,6 @@ export const SetUpAccount = () => {
     const [errorUsername, setErrorUsername] = React.useState("");
     const [errorFirstName, setErrorFirstName] = React.useState("");
     const [errorLastName, setErrorLastName] = React.useState("");
-    const sockCtx = useSocket();
-    const usr = useUser();
-    const navigate = useNavigate();
 
     useEffect(() => {
         setUsernameStatus("");
@@ -27,7 +22,7 @@ export const SetUpAccount = () => {
             return;
         }
         checkUsername();
-        sockCtx.checkUserNameTaken(username).then((taken)=>{
+        checkUsernameTaken(username).then((taken)=>{
             if(taken === undefined){
                 setUsernameStatus("Error checking username");
                 return;
@@ -38,20 +33,21 @@ export const SetUpAccount = () => {
                 setUsernameStatus("Username available");
             }
         });
-    }, [usernameDebounce, sockCtx.connected]);
+    }, [usernameDebounce]);
 
     useEffect(() => {
-        function checkConnection(){
-            if(!sockCtx.connected){
-                return (
-                    <Center w="100%" h="100%"><Loader type="bars"/></Center>
-                )
-            }
+        if(usernameDebounce !== "" || !usr.userData){
+            return;
         }
-        checkConnection();
+        checkUsernameTaken(usr.userData.username).then((taken)=>{
+            if(!taken){
+                setUsernameStatus("Username available");
+                setUsername(usr.userData?.username ?? "");
+            }
+        });
     }, []);
 
-    const onSubmit = () => {
+    const onSubmit = async () => {
         setErrorUsername("");
         setErrorFirstName("");
         setErrorLastName("");
@@ -67,21 +63,8 @@ export const SetUpAccount = () => {
             }
             return;
         }
-        if(usr.userData === null){
-            console.log("User not found");
-            notify(NoteType.USER_CREATION_ERROR);
-            return;
-        }
-        sockCtx.setupUser(usr.userData.id, username, firstName, lastName).then((res)=>{
-            if(res){
-                console.log("User created");
-                usr.updateUser(res);
-                navigate(DEFAULT_AUTHED_ROUTE);
-            }else {
-                console.log("Error creating user");
-                notify(NoteType.USER_CREATION_ERROR);
-            }
-        });
+
+        await usr.setUpAccount(username, firstName, lastName)
     }
 
     const checkUsername = (e?) => {
