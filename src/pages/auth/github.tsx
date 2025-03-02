@@ -17,7 +17,7 @@ export const GithubAuth = () => {
     useEffect(() => {
         let strictIgnore = false;
         const fetchData = async (code: any) => {
-            await new Promise((resolve)=>setTimeout(resolve, 50));
+            await new Promise((resolve)=>setTimeout(resolve, 100));
             if(strictIgnore){
                 return;
             }

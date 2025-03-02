@@ -29,9 +29,7 @@ const UserProvider: React.FC<any> = ({ children }) => {
 
     const githubLogin = async (code: string | undefined): Promise<void> => {
         // check if user is already logged in - passthrough
-        console.log(githubAuthToken, userData);
         if(githubAuthToken && userData?.id){
-            console.log("skip")
             return;
         }
         
@@ -39,20 +37,17 @@ const UserProvider: React.FC<any> = ({ children }) => {
         const {authToken, user} = await tryLoginWithGithub(code);
         if(!authToken || !user) {
             setLoginRouteDestination(window.location.pathname);
-            console.log("saved to ", window.location.pathname);
             navigate(DEFAULT_NO_AUTH_ROUTE);
             notify(NoteType.GITHUB_AUTH_ERROR);
             return;
         }
 
         setGithubAuthToken(authToken);
-        console.log("user", user);
         setUser(user);
 
         if(!user.firstName?.length || !user.lastName?.length){
             //Account not set up yet
             setLoginRouteDestination(window.location.pathname);
-            console.log("saved to 2", window.location.pathname);
             navigate(FINISH_ACCOUNT_CREATION_ROUTE);
             return;
         }
@@ -60,8 +55,9 @@ const UserProvider: React.FC<any> = ({ children }) => {
         // Account is set up and logged in
         const route = readSessionStorageValue<string | null>({key: "loginRouteDestination"});
         setLoginRouteDestination(null);
-        console.log("dir to route 1",route);
-        navigate(route || DEFAULT_AUTHED_ROUTE);
+        if(route !== null || code){
+            navigate(route || DEFAULT_AUTHED_ROUTE);
+        }
     }
 
 
@@ -82,7 +78,6 @@ const UserProvider: React.FC<any> = ({ children }) => {
         setUser({ ...userData, username, firstName, lastName })
         const route = readSessionStorageValue<string | null>({key: "loginRouteDestination"});
         setLoginRouteDestination(null);
-        console.log("dir to route 2",route);
         navigate(route || DEFAULT_AUTHED_ROUTE);
     }
 

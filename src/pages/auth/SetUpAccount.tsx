@@ -4,6 +4,7 @@ import {useUser } from "@trz/contexts/user-context";
 import {useDebouncedValue} from "@mantine/hooks";
 import {USERNAME_DEBOUNCE} from "@trz/util/textUtils";
 import { checkUsernameTaken } from "@trz/util/userUtils";
+import { NoteType, notify } from "@trz/util/notifications";
 
 export const SetUpAccount = () => {
     const usr = useUser();
@@ -64,7 +65,11 @@ export const SetUpAccount = () => {
             return;
         }
 
-        await usr.setUpAccount(username, firstName, lastName)
+        try {
+            await usr.setUpAccount(username, firstName, lastName)
+        } catch (e) {
+            notify(NoteType.USER_CREATION_ERROR, e);
+        }
     }
 
     const checkUsername = (e?) => {
