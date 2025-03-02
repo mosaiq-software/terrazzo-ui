@@ -24,7 +24,12 @@ const OrganizationPage = (): React.JSX.Element => {
     const myPermissionLevel = Role.ADMIN;
 
 	useEffect(() => {
+        let strictIgnore = false;
 		const fetchOrgData = async () => {
+            await new Promise((resolve)=>setTimeout(resolve, 0));
+            if(strictIgnore){
+                return;
+            }
 			if (!orgId) {
 				return;
 			}
@@ -39,22 +44,14 @@ const OrganizationPage = (): React.JSX.Element => {
 			}
 		};
 		fetchOrgData();
+        return ()=>{
+            strictIgnore = true;
+        }
 	}, [orgId, sockCtx.connected]);
 
     if(!orgData || !orgId){
         return <NotFound itemType="Organization"/>
     }
-
-    // const testUsers:UserHeader[] = Array.from({ length: 5 }).map(() => (
-    //     {
-    //         id:crypto.randomUUID(),
-    //         githubUserId:"",
-    //         firstName:"Matt",
-    //         lastName:"Hagger",
-    //         username:"Camo651",
-    //         profilePicture:"https://avatars.githubusercontent.com/u/47070087?v=4"
-    //     }
-    // ))
 
     const tabs = {
         "Projects": (
@@ -337,11 +334,18 @@ const OrganizationPage = (): React.JSX.Element => {
                             {orgData.description && <Text c='#6C6C6C'>{orgData.description}</Text>}
                         </Flex>
                     </Group>
-                    <Tabs value={getTab()} pt='30' onChange={onChangeTab}>
+                    <Tabs value={getTab()} pt='30' onChange={onChangeTab} color='#F2187E' variant="default">
                         <Tabs.List>
                             {
                                 Object.keys(tabs).map((t)=>{
-                                    return (<Tabs.Tab value={t} color='#F2187E' key={t}><Text c='white' fw='bold'>{t}</Text></Tabs.Tab>)
+                                    return (
+                                    <Tabs.Tab 
+                                        value={t}
+                                        
+                                        key={t}
+                                    >
+                                        <Text c='white' fw='bold'>{t}</Text>
+                                    </Tabs.Tab>)
                                 })
                             }
                             <Flex ml='auto' align='center'>

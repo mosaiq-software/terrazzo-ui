@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {Box, Group, ScrollArea, Title, Flex, Divider, Select, Button, Text, Loader, Center, Paper} from "@mantine/core";
+import {Box, Group, ScrollArea, Title, Flex, Divider, Select, Button, Text, Loader, Center, Paper, Code, Kbd} from "@mantine/core";
 import { BoardListCard} from "@trz/components/BoardListCards";
 import { OrganizationHeader, ProjectHeader, UserDash, UserId} from "@mosaiq/terrazzo-common/types";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +15,12 @@ const HomePage = (): React.JSX.Element => {
 	const navigate = useNavigate();
 
 	useEffect(() => {
+        let strictIgnore = false;
 		const fetchOrgData = async () => {
+            await new Promise((resolve)=>setTimeout(resolve, 0));
+            if(strictIgnore){
+                return;
+            }
             try{
                 if(!usr.userData?.id){
                     notify(NoteType.NOT_LOGGED_IN);
@@ -29,6 +34,9 @@ const HomePage = (): React.JSX.Element => {
 			}
 		};
 		fetchOrgData();
+        return ()=>{
+            strictIgnore = true;
+        }
 	}, [sockCtx.connected, usr.userData]);
 
     return (
@@ -119,6 +127,9 @@ const HomePage = (): React.JSX.Element => {
                                     </Paper>
                                 )
                             })
+                        }
+                        {
+                            dash && <Text c="#fff">Create your own Organization or send your username <Kbd>{usr.userData?.username}</Kbd> to someone to get invited to one!</Text>
                         }
                         {
                             (!dash) && 

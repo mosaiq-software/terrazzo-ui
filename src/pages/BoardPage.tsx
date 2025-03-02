@@ -54,11 +54,15 @@ const BoardPage = (): React.JSX.Element => {
 	);
 
 	useEffectStrict(() => {
+        let strictIgnore = false;
 		const fetchBoardData = async () => {
+			await new Promise((resolve)=>setTimeout(resolve, 0));
+			if(strictIgnore){
+				return;
+			}
 			if (!params.boardId) {
 				return;
 			}
-			await new Promise((resolve)=>setTimeout(resolve, 0));
 			await sockCtx.getBoardData(params.boardId as BoardId)
 				.catch((err) => {
 					notify(NoteType.BOARD_DATA_ERROR, err);
@@ -67,6 +71,9 @@ const BoardPage = (): React.JSX.Element => {
 				});
 		};
 		fetchBoardData();
+		return ()=>{
+			strictIgnore = true;
+		}
 	}, [params.boardId, sockCtx.connected]);
 
 	const allListIds = useMemo(()=>{
