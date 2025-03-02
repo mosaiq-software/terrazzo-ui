@@ -33,7 +33,6 @@ import { createPortal } from "react-dom";
 import {boardDropAnimation, horizontalCollisionDetection, renderContainerDragOverlay, renderSortableItemDragOverlay} from "@trz/util/dragAndDropUtils";
 import CardDetails from "@trz/components/CardDetails";
 import { NotFound } from "@trz/components/NotFound";
-import {useEffectStrict} from "@trz/util/useEffectStrict";
 
 const BoardPage = (): React.JSX.Element => {
 	const [activeObject, setActiveObject] = useState<List | Card | null>(null);
@@ -53,7 +52,7 @@ const BoardPage = (): React.JSX.Element => {
 		})
 	);
 
-	useEffectStrict(() => {
+	useEffect(() => {
         let strictIgnore = false;
 		const fetchBoardData = async () => {
 			await new Promise((resolve)=>setTimeout(resolve, 0));
