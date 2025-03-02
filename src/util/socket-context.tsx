@@ -243,19 +243,16 @@ const SocketProvider: React.FC<any> = ({ children }) => {
 
         sock.on(ServerSE.UPDATE_CARD_FIELD, (payload: ServerSEPayload[ServerSE.UPDATE_CARD_FIELD]) => {
             setBoardData(prev => {
-                if(!prev) {return prev;}
+                if (!prev) return prev;
                 return {
                     ...prev,
-                    lists: prev.lists.map(list => {
-                        list.cards.map(card=> {
-                            if(card.id === payload.id) {
-                                return updateBaseFromPartial<CardHeader>(card, payload)
-                            }
-                            return card;
-                        })
-                        return list;
-                    })
-                }
+                    lists: prev.lists.map(list => ({
+                        ...list,
+                        cards: list.cards.map(card =>
+                            card.id === payload.id ? updateBaseFromPartial<CardHeader>(card, payload) : card
+                        )
+                    }))
+                };
             });
         });
 
@@ -370,6 +367,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     // EVENT EMITTERS
 
     const setRoom = async (room: RoomId) => {
+        console.log("Setting room to: ", room);
         setRoomState(room);
         const response = await emit<ClientSE.SET_ROOM>(ClientSE.SET_ROOM, room);
         if(response) {
