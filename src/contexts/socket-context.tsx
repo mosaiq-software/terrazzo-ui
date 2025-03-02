@@ -10,6 +10,7 @@ import {
     RoomId,
     ServerSE,
     ServerSEPayload,
+    SocketHandshakeAuth,
     SocketId,
     UserData
 } from '@mosaiq/terrazzo-common/socketTypes';
@@ -51,6 +52,7 @@ import {
 import {executeTextBlockEvent} from '@mosaiq/terrazzo-common/utils/textUtils';
 import {arrayMove, updateBaseFromPartial} from '@mosaiq/terrazzo-common/utils/arrayUtils';
 import { EntityType, Role } from '@mosaiq/terrazzo-common/constants';
+import { useUser } from './user-context';
 
 type SocketContextType = {
     sid?: SocketId;
@@ -85,9 +87,6 @@ type SocketContextType = {
     updateBoardField: (id: BoardId, partial: Partial<Board>) => Promise<void>;
     updateListField: (id: ListId, partial: Partial<List>) => Promise<void>;
     updateCardField: (id: CardId, partial: Partial<Card>) => Promise<void>;
-    getUserViaGithub: (userId: string) => Promise<User | undefined>;
-    setupUser: (id:string, username: string, firstName: string, lastName: string) => Promise<User | undefined>;
-    checkUserNameTaken: (username: string) => Promise<boolean | undefined>;
     sendInvite: (toUsername: string, entityId: EntityId, entityType: EntityType, role: Role) => Promise<Invite | undefined>;
     replyInvite: (inviteId: InviteId, accept: boolean) => Promise<void>;
     kickMemberFromEntity: (membershipRecordId: MembershipRecordId) => Promise<void>;
@@ -99,6 +98,7 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
 const SocketProvider: React.FC<any> = ({ children }) => {
     const trz = useTRZ();
+    const usr = useUser();
     const idle = useIdle(IDLE_TIMEOUT_MS);
     const [socket, setSocketState] = useState<Socket | null>(null);
     const [room, setRoomState] = useState<RoomId>(null);
@@ -116,14 +116,16 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         if (!process.env.SOCKET_URL) {
 			throw new Error("SOCKET_URL environment variable is not set");
 		}
-        if(!trz.githubAuthToken) {
+        if(!usr.userData?.id || !usr.githubAuthToken) {
             return;
         }
 
         // CREATE SOCKET CONNECTION
-        const sock = io(process.env.SOCKET_URL, {
-            auth: { token: trz.githubAuthToken }
-        });
+        const auth:SocketHandshakeAuth = {
+            userId: usr.userData.id,
+            githubToken: usr.githubAuthToken,
+        };
+        const sock = io(process.env.SOCKET_URL, {auth});
 
         setSocketState(sock);
 
@@ -341,7 +343,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             setConnected(false);
             sock.disconnect();
         }
-    }, [trz.githubAuthToken]);
+    }, [usr.userData?.id, usr.githubAuthToken]);
 
     /**
         Emit events to the backend
@@ -650,18 +652,6 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }, TEXT_EVENT_EMIT_THROTTLE_MS);
 
-    const getUserViaGithub = async (userId: string): Promise<User | undefined> => {
-        return await emit<ClientSE.GET_USER>(ClientSE.GET_USER, userId);
-    }
-
-    const setupUser = async (id: string, username: string, firstName: string, lastName:string): Promise<User | undefined> => {
-        return await emit<ClientSE.SETUP_USER>(ClientSE.SETUP_USER, {id, username, firstName, lastName});
-    }
-
-    const checkUserNameTaken = async (username: string): Promise<boolean | undefined> => {
-        return await emit<ClientSE.CHECK_USERNAME_TAKEN>(ClientSE.CHECK_USERNAME_TAKEN, username);
-    }
-
     return (
         <SocketContext.Provider value={{
             sid: socket?.id,
@@ -700,9 +690,6 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             sendInvite,
             replyInvite,
             kickMemberFromEntity,
-            getUserViaGithub,
-            setupUser,
-            checkUserNameTaken
         }}>
             {children}
         </SocketContext.Provider>
