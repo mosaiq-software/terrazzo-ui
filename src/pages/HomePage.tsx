@@ -47,21 +47,22 @@ const HomePage = (): React.JSX.Element => {
             <Center>
                 <Box mih='100vh' py='2rem' maw="1200px" miw="90%">
                     <Flex justify='space-between' py='25'>
-                        <Title c='white' order={2} display={"block"}>Your Organizations</Title>
+                        <Title c='white' order={2} display={"block"}>Welcome {usr.userData?.firstName ?? ""}</Title>
                     </Flex>
                     <Divider color='#5B5857' mb='15'/>
                     <Box style={{
                         width: "100%",
                         display: "flex",
-                        justifyContent: "center"
+                        justifyContent: "center",
+                        flexDirection: "column"
                     }}>
+                        <Title c='white' order={4}>Organizations</Title>
                         <Box style={{
                             display: "grid",
                             gridTemplateColumns: "repeat(auto-fill, 360px)",
                             maxWidth: "100%"
-                        }}>
-                        {
-                            dash && dash.organizations.map((org) => {
+                        }}>{
+                            dash && dash.organizations.filter((e)=>!e.archived).map((org) => {
                                 return (
                                     <BoardListCard
                                         key={org.id}
@@ -75,9 +76,14 @@ const HomePage = (): React.JSX.Element => {
                                     />
                                 )
                             })
-                        }
-                        {
-                            dash && dash.projects.map((project) => {
+                        }</Box>
+                        <Title c='white' order={4}>Projects</Title>
+                        <Box style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fill, 360px)",
+                            maxWidth: "100%"
+                        }}>{
+                            dash && dash.projects.filter((e)=>!e.archived).map((project) => {
                                 return (
                                     <BoardListCard
                                         key={project.id}
@@ -91,8 +97,55 @@ const HomePage = (): React.JSX.Element => {
                                     />
                                 )
                             })
-                        }
-                        {
+                        }</Box>
+                        <Title c='white' order={4}>Archived Organizations</Title>
+                        <Box style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fill, 360px)",
+                            maxWidth: "100%"
+                        }}>{
+                            dash && dash.organizations.filter((e)=>e.archived).map((org) => {
+                                return (
+                                    <BoardListCard
+                                        key={org.id}
+                                        title={org.name}
+                                        bgColor="#4b598c"
+                                        bgImage={org.logoUrl}
+                                        color="white"
+                                        onClick={()=>{
+                                            navigate("/org/"+org.id);
+                                        }}
+                                    />
+                                )
+                            })
+                        }</Box>
+                        <Title c='white' order={4}>Archived Projects</Title>
+                        <Box style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fill, 360px)",
+                            maxWidth: "100%"
+                        }}>{
+                            dash && dash.projects.filter((e)=>e.archived).map((project) => {
+                                return (
+                                    <BoardListCard
+                                        key={project.id}
+                                        title={project.name}
+                                        bgColor="#4b598c"
+                                        bgImage={project.logoUrl}
+                                        color="white"
+                                        onClick={()=>{
+                                            navigate("/project/"+project.id);
+                                        }}
+                                    />
+                                )
+                            })
+                        }</Box>
+                        <Title c='white' order={4}>Invites</Title>
+                        <Box style={{
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fill, 360px)",
+                            maxWidth: "100%"
+                        }}>{
                             dash && dash.invites.map((invite) => {
                                 return (
                                     <Paper
@@ -102,14 +155,13 @@ const HomePage = (): React.JSX.Element => {
                                     </Paper>
                                 )
                             })
-                        }
+                        }</Box>
                         {
                             (!dash) && 
                             <Center w="100%" h="100%">
                                 <Loader type="bars"/>
                             </Center>
                         }
-                        </Box>
                     </Box>
                     {
                             dash &&
@@ -140,7 +192,7 @@ const HomePage = (): React.JSX.Element => {
                                             mx="4"
                                             px="4"
                                         >
-                                            <Kbd>{usr.userData?.username}</Kbd>
+                                            <Kbd>{clipboard.copied ? "Copied!" : usr.userData?.username}</Kbd>
                                         </Button>
                                     </Tooltip>
                                     to someone to get invited to one!

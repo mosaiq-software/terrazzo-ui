@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Avatar, Group, Flex, Title, Text, Tabs, ScrollArea, Center, Loader, Stack, TextInput, Textarea, ButtonGroup, Button} from "@mantine/core";
+import { Box, Avatar, Group, Flex, Title, Text, Tabs, ScrollArea, Center, Loader, Stack, TextInput, Textarea, ButtonGroup, Button, Divider, Space} from "@mantine/core";
 import {BoardListCard} from "@trz/components/BoardListCards";
 import {AvatarRow} from "@trz/components/AvatarRow";
 import {Organization, OrganizationHeader, OrganizationId, User, UserHeader, UserId} from "@mosaiq/terrazzo-common/types";
@@ -12,6 +12,7 @@ import {MembershipRow} from "@trz/components/MembershipRow";
 import { EntityType, Role } from "@mosaiq/terrazzo-common/constants";
 import {AddUser} from "@trz/components/AddUser";
 import {PendingInviteRow} from "@trz/components/PendingInviteRow";
+import { DEFAULT_AUTHED_ROUTE } from "@trz/contexts/user-context";
 
 const OrganizationPage = (): React.JSX.Element => {
     const [orgData, setOrgData] = useState<Organization | undefined>();
@@ -21,7 +22,7 @@ const OrganizationPage = (): React.JSX.Element => {
 	const navigate = useNavigate();
     const orgId = params.orgId as OrganizationId | undefined;
     const tabId = params.tabId;
-    const myPermissionLevel = Role.ADMIN;
+    const myPermissionLevel = Role.OWNER;
 
 	useEffect(() => {
         let strictIgnore = false;
@@ -297,7 +298,6 @@ const OrganizationPage = (): React.JSX.Element => {
                                     }
                                     try {
                                         sockCtx.updateOrgField(orgId, editedSettings);
-                                        console.log("A'")
                                         setOrgData({...orgData, ...editedSettings})
                                         notify(NoteType.CHANGES_SAVED);
                                     } catch (e) {
@@ -309,6 +309,31 @@ const OrganizationPage = (): React.JSX.Element => {
                                 Save
                             </Button>
                         </Group>
+                        <Divider/>
+                        <Space/>
+                        <Button 
+                            variant="light"
+                            color="red"
+                            w="min-content"
+                            disabled={myPermissionLevel < Role.OWNER}
+                            onClick={async ()=>{
+                                if(myPermissionLevel < Role.OWNER){
+                                    notify(NoteType.UNAUTHORIZED);
+                                    return;
+                                }
+                                try {
+                                    sockCtx.updateOrgField(orgId, {archived: true});
+                                    setOrgData({...orgData, archived: true})
+                                    notify(NoteType.CHANGES_SAVED);
+                                    navigate(DEFAULT_AUTHED_ROUTE);
+                                } catch (e) {
+                                    notify(NoteType.ORG_DATA_ERROR, e);
+                                }
+
+                            }}
+                        >
+                            Archive Organization
+                        </Button>
                     </Stack>
                 </Box>
             </Box>
@@ -356,7 +381,32 @@ const OrganizationPage = (): React.JSX.Element => {
                     </Tabs>
                 </Box>
                 {
-                    tabs[getTab()]
+                    !orgData.archived && tabs[getTab()]
+                }
+                {
+                    orgData.archived && 
+                    <Center><Stack>
+                        <Title c="#fff" ta="center" order={3}>This Organization is archived</Title>
+                        <Button
+                            variant="default"
+                            disabled={myPermissionLevel < Role.OWNER}
+                            onClick={async ()=>{
+                                if(myPermissionLevel < Role.OWNER){
+                                    notify(NoteType.UNAUTHORIZED);
+                                    return;
+                                }
+                                try {
+                                    sockCtx.updateOrgField(orgId, {archived: false});
+                                    setOrgData({...orgData, archived: false})
+                                    notify(NoteType.CHANGES_SAVED);
+                                } catch (e) {
+                                    notify(NoteType.ORG_DATA_ERROR, e);
+                                }
+                            }}
+                        >
+                            Unarchive Organization
+                        </Button>
+                    </Stack></Center>
                 }
             </Stack>
         </ScrollArea>
