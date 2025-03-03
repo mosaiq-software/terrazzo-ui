@@ -38,6 +38,11 @@ const HomePage = (): React.JSX.Element => {
         }
 	}, [sockCtx.connected, usr.userData?.id]);
 
+    const orgs = sockCtx?.userDash?.organizations.filter((e)=>!e.archived);
+    const orgsArch = sockCtx?.userDash?.organizations.filter((e)=>e.archived);
+    const projects = sockCtx?.userDash?.standaloneProjects.filter((e)=>!e.archived);
+    const projectsArch = sockCtx?.userDash?.standaloneProjects.filter((e)=>e.archived);
+
     return (
         <ScrollArea bg='#15161A'>
             <Center>
@@ -58,7 +63,7 @@ const HomePage = (): React.JSX.Element => {
                             gridTemplateColumns: "repeat(auto-fill, 360px)",
                             maxWidth: "100%"
                         }}>{
-                            sockCtx.userDash && sockCtx.userDash.organizations.filter((e)=>!e.archived).map((org) => {
+                            orgs && orgs.map((org) => {
                                 return (
                                     <BoardListCard
                                         key={org.id}
@@ -79,7 +84,7 @@ const HomePage = (): React.JSX.Element => {
                             gridTemplateColumns: "repeat(auto-fill, 360px)",
                             maxWidth: "100%"
                         }}>{
-                            sockCtx.userDash && sockCtx.userDash.standaloneProjects.filter((e)=>!e.archived).map((project) => {
+                            projects && projects.map((project) => {
                                 return (
                                     <BoardListCard
                                         key={project.id}
@@ -100,7 +105,7 @@ const HomePage = (): React.JSX.Element => {
                             gridTemplateColumns: "repeat(auto-fill, 360px)",
                             maxWidth: "100%"
                         }}>{
-                            sockCtx.userDash && sockCtx.userDash.organizations.filter((e)=>e.archived).map((org) => {
+                            orgsArch && orgsArch.map((org) => {
                                 return (
                                     <BoardListCard
                                         key={org.id}
@@ -121,7 +126,7 @@ const HomePage = (): React.JSX.Element => {
                             gridTemplateColumns: "repeat(auto-fill, 360px)",
                             maxWidth: "100%"
                         }}>{
-                            sockCtx.userDash && sockCtx.userDash.standaloneProjects.filter((e)=>e.archived).map((project) => {
+                            projectsArch && projectsArch.map((project) => {
                                 return (
                                     <BoardListCard
                                         key={project.id}
@@ -174,7 +179,7 @@ const HomePage = (): React.JSX.Element => {
                                             })
                                         }}
                                         mx="4"
-                                        px="4"
+                                        px="8"
                                     >
                                         Create your own Organization
                                     </Button>
