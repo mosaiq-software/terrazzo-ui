@@ -33,12 +33,14 @@ import { createPortal } from "react-dom";
 import {boardDropAnimation, horizontalCollisionDetection, renderContainerDragOverlay, renderSortableItemDragOverlay} from "@trz/util/dragAndDropUtils";
 import CardDetails from "@trz/components/CardDetails";
 import { NotFound } from "@trz/components/NotFound";
+import { useTRZ } from "@trz/contexts/TRZ-context";
 
 const BoardPage = (): React.JSX.Element => {
 	const [activeObject, setActiveObject] = useState<List | Card | null>(null);
 	const lastOverId = useRef<string | null>(null);
 	const params = useParams();
 	const sockCtx = useSocket();
+	const trz = useTRZ();
 	const navigate = useNavigate();
 
 	const sensors = useSensors(
@@ -214,7 +216,7 @@ const BoardPage = (): React.JSX.Element => {
 
 	return (
 		<Container 
-			h="100%" 
+			h={`calc(100vh - ${trz.navbarHeight}px)`} 
 			fluid 
 			maw="100%" 
 			p="lg" 

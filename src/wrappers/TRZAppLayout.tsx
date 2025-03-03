@@ -8,11 +8,13 @@ import { useUser } from "@trz/contexts/user-context";
 import { UserDash } from "@mosaiq/terrazzo-common/types";
 import { notify, NoteType } from "@trz/util/notifications";
 import { LocalStorageKey } from "@mosaiq/terrazzo-common/constants";
+import { useTRZ } from "@trz/contexts/TRZ-context";
 
 interface TRZAppLayoutProps {
     children: any;
 }
 const TRZAppLayout = (props: TRZAppLayoutProps) => {
+    const trz = useTRZ();
     const sockCtx = useSocket();
     const usr = useUser();
     const navigate = useNavigate();
@@ -43,6 +45,11 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
         }
     }, [sockCtx.connected, usr.userData?.id]);
 
+    useHotkeys([
+        ['[', ()=>{setSidebarCollapsed(!sidebarCollapsed)}],
+        ['/', ()=>{}]
+    ]);
+
     return (
         <AppShell
             withBorder={false}
@@ -57,7 +64,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                     display: "flex",
                     justifyContent: "flex-end",
                     width: "100vw",
-                    height: "50px",
+                    height: `${trz.navbarHeight}px`,
                     padding: "10px",
                     background : "#0c0c10"
                 }}
@@ -71,7 +78,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                             <Group align={"center"}>
                                 <MdOutlineSearch />
                                 <Text size={"md"} style={{ paddingRight: "2rem" }}>Search all</Text>
-                                <Text size={"xs"}>Ctrl + K</Text>
+                                <Text size={"xs"}><Kbd>/</Kbd></Text>
                             </Group>
                         </Input>
                     </Box>
@@ -205,10 +212,6 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
             <AppShell.Main
                 mt={"50px"}
             >
-                {/* <TRZModalSearch
-                    opened={modalOpened}
-                    onClose={closeModal}
-                /> */}
                 {props.children}
             </AppShell.Main>
         </AppShell>

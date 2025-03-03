@@ -14,12 +14,14 @@ import {AddUser} from "@trz/components/AddUser";
 import {PendingInviteRow} from "@trz/components/PendingInviteRow";
 import { DEFAULT_AUTHED_ROUTE } from "@trz/contexts/user-context";
 import { MdOutlineMailOutline, MdOutlinePerson, MdOutlineVerifiedUser } from "react-icons/md";
+import { useTRZ } from "@trz/contexts/TRZ-context";
 
 const OrganizationPage = (): React.JSX.Element => {
     const [orgData, setOrgData] = useState<Organization | undefined>();
     const [editedSettings, setEditedSettings] = useState<Partial<OrganizationHeader>>({});
     const params = useParams();
 	const sockCtx = useSocket();
+    const trz = useTRZ();
 	const navigate = useNavigate();
     const orgId = params.orgId as OrganizationId | undefined;
     const tabId = params.tabId;
@@ -355,7 +357,7 @@ const OrganizationPage = (): React.JSX.Element => {
     }
 
     return (
-        <ScrollArea h='100vh'>
+        <ScrollArea h={`calc(100vh - ${trz.navbarHeight}px)`}>
             <Stack bg='#15161A' mih='100vh' pb='10vh' align="center">
                 <Box py='25' w='80%'>
                     <Group gap='xl' pl='50'>
