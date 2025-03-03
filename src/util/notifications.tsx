@@ -1,4 +1,6 @@
+import { Box, Button, Group, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import React from 'react';
 
 const AUTO_CLOSE_TIMEOUT = 5000;
 export enum NoteColor {
@@ -12,6 +14,8 @@ interface Note {
     message?: string;
     color?: NoteColor;
     persist?: boolean;
+    action1?: string;
+    action2?: string;
 }
 export const NoteType = {
     CONNECTION_ERROR: {
@@ -119,7 +123,7 @@ export const NoteType = {
     },
     INVITE_SENT_SUCCESS: {
         title: "Invitation sent!",
-        color: NoteColor.SUCCESS
+        color: NoteColor.SUCCESS,
     },
     INVITE_RECEIVED: {
         title: "New Invitation!",
@@ -133,6 +137,10 @@ export const NoteType = {
     },
     NOT_LOGGED_IN: {
         title: "You must be logged into to do that!"
+    },
+    INVITE_REVOKED: {
+        title: "Invite to $ revoked",
+        color: NoteColor.INFO
     }
 
 }
@@ -142,7 +150,7 @@ export const NoteType = {
  * @param note The NoteType to send
  * @param data Any data to be replaced into the text (Will replace each $ in the text in order of vars)
  */
-export const notify = (note: Note, data?:any) => {
+export const notify = (note: Note, data?:any, actions?:{primary?:()=>void, secondary?:()=>void}) => {
     if(!note.color || note.color === NoteColor.ERROR){
         console.error(note.title, note.message, data);
     }
@@ -157,9 +165,28 @@ export const notify = (note: Note, data?:any) => {
         console.error(e);
         note = NoteType.GENERIC_ERROR;
     }
+    const messageBody = (
+        <Box>
+            <Text c={note.color}>{note.message ?? ''}</Text>
+            <Group gap={3}>
+            {
+                note.action1 && actions?.primary &&
+                <Button size={"compact-sm"} variant="filled" onClick={actions.primary}>
+                    {note.action1}
+                </Button>
+            }
+            {
+                note.action2 && actions?.secondary &&
+                <Button size={"compact-sm"} variant="outline" onClick={actions.secondary}>
+                    {note.action2}
+                </Button>
+            }
+            </Group>
+        </Box>
+    );
     notifications.show({
         title: note.title,
-        message: note.message || "",
+        message: messageBody,
         color: note.color || NoteColor.ERROR,
         autoClose: note.persist ? false : AUTO_CLOSE_TIMEOUT,
     });
