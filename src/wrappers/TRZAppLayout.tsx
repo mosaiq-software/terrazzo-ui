@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Outlet, NavLink, useNavigate } from "react-router-dom"
+import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom"
 import { useDisclosure, useHotkeys, useLocalStorage, useWindowScroll } from "@mantine/hooks";
 import { AppShell, Burger, Flex, Group, Tooltip, ActionIcon, Kbd, Divider, Input, Text, Box, Stack, Tree, TreeNodeData, Title, Avatar, Button, Image } from "@mantine/core";
 import { MdHome, MdHomeFilled, MdOutlineAccountCircle, MdOutlineSearch, MdViewKanban } from 'react-icons/md';
@@ -16,6 +16,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
     const sockCtx = useSocket();
     const usr = useUser();
     const navigate = useNavigate();
+    const location = useLocation();
     const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorage<boolean>({ key: LocalStorageKey.SIDEBAR_COLLAPSED, defaultValue: false });
 
     useEffect(() => {
@@ -124,7 +125,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                     </Group>
                     <Divider />
                     <Button
-                        variant="subtle"
+                        variant={location.pathname===`/dashboard` ? 'light' : 'subtle'}
                         onClick={()=>{
                             navigate(`/dashboard`);
                         }}
@@ -146,7 +147,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                                         <Button
                                             w="100%"
                                             display={"flex"}
-                                            variant="subtle"
+                                            variant={location.pathname===`/org/${org.id}` ? 'light' : 'subtle'}
                                             px={0}
                                             style={{
                                                 justifyContent: sidebarCollapsed ? "center" : "flex-start"
@@ -168,7 +169,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                                                     <Button
                                                         w="100%"
                                                         display={"flex"}
-                                                        variant="subtle"
+                                                        variant={location.pathname===`/project/${project.id}` ? 'light' : 'subtle'}
                                                         onClick={()=>{
                                                             navigate(`/project/${project.id}`);
                                                         }}
