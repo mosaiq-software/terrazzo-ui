@@ -298,6 +298,7 @@ const OrganizationPage = (): React.JSX.Element => {
                                     }
                                     try {
                                         sockCtx.updateOrgField(orgId, editedSettings);
+                                        sockCtx.syncUserDash();
                                         setOrgData({...orgData, ...editedSettings})
                                         notify(NoteType.CHANGES_SAVED);
                                     } catch (e) {

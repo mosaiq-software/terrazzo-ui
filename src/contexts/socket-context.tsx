@@ -91,6 +91,8 @@ type SocketContextType = {
     replyInvite: (inviteId: InviteId, accept: boolean) => Promise<void>;
     kickMemberFromEntity: (membershipRecordId: MembershipRecordId) => Promise<void>;
     updateMembershipRecordField: (id: MembershipRecordId, partial: Partial<MembershipRecord>) => Promise<void>;
+    userDash: UserDash | undefined;
+    syncUserDash: () => void;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -107,6 +109,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const [boardData, setBoardData] = useState<Board | undefined>();
     const [collaborativeTextObject, setCollaborativeTextObject] = useState<TextObject>({text: '', caret: undefined, relative: undefined, queue:[]});
     const [draggingObject, setDraggingObject] = useState<{list?: ListId, card?: CardId}>({});
+    const [userDash, setUserDash] = useState<UserDash | undefined>();
 
     useEffect(() => {
         setIdle(idle);
@@ -170,7 +173,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
 
         // CUSTOM EVENTS - defined by us
 
-        sock.on(ServerSE.READY, (payload: ServerSEPayload[ServerSE.READY]) => {
+        sock.on(ServerSE.READY, async (payload: ServerSEPayload[ServerSE.READY]) => {
             setConnected(true);
         });
 
@@ -412,7 +415,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             if(!response) throw new Error("No data found for user "+userId);
             return response;
         } catch (e:any){
-            notify(NoteType.BOARD_DATA_ERROR, e);
+            notify(NoteType.DASH_ERROR, e);
             return undefined;
         }
     }
@@ -552,7 +555,6 @@ const SocketProvider: React.FC<any> = ({ children }) => {
 
 
     // HELPERS
-
     const moveListToPos = (listId: ListId, position: number) => setBoardData((prevBoard)=>{
         if(!prevBoard)return prevBoard;
         const index = prevBoard.lists.findIndex((l)=>l.id === listId);
@@ -652,6 +654,18 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }, TEXT_EVENT_EMIT_THROTTLE_MS);
 
+    const syncUserDash = useThrottledCallback(async () => {
+        try {
+            if(!usr.userData?.id){
+                return;
+            }
+            const dash = await getUsersDash(usr.userData.id);
+            setUserDash(dash);
+        } catch (e) {
+            notify(NoteType.DASH_ERROR, e);
+        }
+    }, 100);
+
     return (
         <SocketContext.Provider value={{
             sid: socket?.id,
@@ -690,6 +704,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             sendInvite,
             replyInvite,
             kickMemberFromEntity,
+            userDash,
+            syncUserDash,
         }}>
             {children}
         </SocketContext.Provider>

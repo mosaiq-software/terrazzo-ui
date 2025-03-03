@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
-import {Box, ScrollArea, Title, Flex, Divider, Text, Loader, Center, Paper, Kbd, UnstyledButton, Button, Tooltip, Affix} from "@mantine/core";
+import React, { useEffect } from "react";
+import {Box, ScrollArea, Title, Flex, Divider, Text, Loader, Center, Paper, Kbd, Button, Tooltip, Affix} from "@mantine/core";
 import { BoardListCard} from "@trz/components/BoardListCards";
-import { UserDash} from "@mosaiq/terrazzo-common/types";
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "@trz/contexts/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
@@ -9,15 +8,13 @@ import { useUser } from "@trz/contexts/user-context";
 import { useClipboard } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 
-
 const HomePage = (): React.JSX.Element => {
-    const [dash, setDash] = useState<UserDash | undefined>();
-	const sockCtx = useSocket();
     const usr = useUser();
+    const sockCtx = useSocket();
 	const navigate = useNavigate();
     const clipboard = useClipboard();
 
-	useEffect(() => {
+    useEffect(() => {
         let strictIgnore = false;
 		const fetchOrgData = async () => {
             await new Promise((resolve)=>setTimeout(resolve, 0));
@@ -29,8 +26,7 @@ const HomePage = (): React.JSX.Element => {
                     notify(NoteType.NOT_LOGGED_IN);
                     return;
                 }
-                const data = await sockCtx.getUsersDash(usr.userData.id);
-                setDash(data);
+                sockCtx.syncUserDash();
             } catch(err) {
                 notify(NoteType.DASH_ERROR, err);
                 return;
@@ -40,10 +36,10 @@ const HomePage = (): React.JSX.Element => {
         return ()=>{
             strictIgnore = true;
         }
-	}, [sockCtx.connected, usr.userData]);
+	}, [sockCtx.connected, usr.userData?.id]);
 
     return (
-        <ScrollArea bg='#15161A' h='100vh'  w='100vw'>
+        <ScrollArea bg='#15161A'>
             <Center>
                 <Box mih='100vh' py='2rem' maw="1200px" miw="90%">
                     <Flex justify='space-between' py='25'>
@@ -62,7 +58,7 @@ const HomePage = (): React.JSX.Element => {
                             gridTemplateColumns: "repeat(auto-fill, 360px)",
                             maxWidth: "100%"
                         }}>{
-                            dash && dash.organizations.filter((e)=>!e.archived).map((org) => {
+                            sockCtx.userDash && sockCtx.userDash.organizations.filter((e)=>!e.archived).map((org) => {
                                 return (
                                     <BoardListCard
                                         key={org.id}
@@ -83,7 +79,7 @@ const HomePage = (): React.JSX.Element => {
                             gridTemplateColumns: "repeat(auto-fill, 360px)",
                             maxWidth: "100%"
                         }}>{
-                            dash && dash.projects.filter((e)=>!e.archived).map((project) => {
+                            sockCtx.userDash && sockCtx.userDash.standaloneProjects.filter((e)=>!e.archived).map((project) => {
                                 return (
                                     <BoardListCard
                                         key={project.id}
@@ -104,7 +100,7 @@ const HomePage = (): React.JSX.Element => {
                             gridTemplateColumns: "repeat(auto-fill, 360px)",
                             maxWidth: "100%"
                         }}>{
-                            dash && dash.organizations.filter((e)=>e.archived).map((org) => {
+                            sockCtx.userDash && sockCtx.userDash.organizations.filter((e)=>e.archived).map((org) => {
                                 return (
                                     <BoardListCard
                                         key={org.id}
@@ -125,7 +121,7 @@ const HomePage = (): React.JSX.Element => {
                             gridTemplateColumns: "repeat(auto-fill, 360px)",
                             maxWidth: "100%"
                         }}>{
-                            dash && dash.projects.filter((e)=>e.archived).map((project) => {
+                            sockCtx.userDash && sockCtx.userDash.standaloneProjects.filter((e)=>e.archived).map((project) => {
                                 return (
                                     <BoardListCard
                                         key={project.id}
@@ -146,7 +142,7 @@ const HomePage = (): React.JSX.Element => {
                             gridTemplateColumns: "repeat(auto-fill, 360px)",
                             maxWidth: "100%"
                         }}>{
-                            dash && dash.invites.map((invite) => {
+                            sockCtx.userDash && sockCtx.userDash.invites.map((invite) => {
                                 return (
                                     <Paper
                                         key={invite.id}
@@ -157,14 +153,14 @@ const HomePage = (): React.JSX.Element => {
                             })
                         }</Box>
                         {
-                            (!dash) && 
+                            (!sockCtx.userDash) && 
                             <Center w="100%" h="100%">
                                 <Loader type="bars"/>
                             </Center>
                         }
                     </Box>
                     {
-                            dash &&
+                            sockCtx.userDash &&
                             <Affix position={{bottom:20}} w="100vw">
                             <Center display="block" w="100%">
                                 <Text c="#fff" ta="center">

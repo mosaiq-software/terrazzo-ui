@@ -32,6 +32,7 @@ const CreateOrganization = (props: ContextModalProps<{ modalBody: string }>): Re
                 return;
             }
             const ordId = await sockCtx.createOrganization(orgName, userId);
+            sockCtx.syncUserDash();
             navigate(`/org/${ordId}`);
         } catch (e) {
             notify(NoteType.ORG_CREATION_ERROR, e);
@@ -64,7 +65,7 @@ const CreateOrganization = (props: ContextModalProps<{ modalBody: string }>): Re
 
             <Button fullWidth mt="md"
                     onClick={onSubmit}>
-                Create Board
+                Create Organization
             </Button>
         </Container>
     )

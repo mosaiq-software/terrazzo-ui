@@ -40,6 +40,7 @@ const CreateBoard = (props: ContextModalProps<{ modalBody: string, projectId: Pr
         }
         try {
             const board = await sockCtx.createBoard(boardName, boardAbbreviation, props.innerProps.projectId);
+            sockCtx.syncUserDash();
             navigate(`/board/${board}`);
         } catch (e) {
             notify(NoteType.BOARD_CREATION_ERROR, e);
