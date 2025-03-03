@@ -13,6 +13,7 @@ interface MembershipRowProps {
     onRemoveMember: () => void;
 }
 export const MembershipRow = (props: MembershipRowProps) => {
+    console.log(props.record)
     return (
         <Grid py="sm" style={{
             borderBottom:"1px solid #ffffff10",
@@ -28,19 +29,32 @@ export const MembershipRow = (props: MembershipRowProps) => {
             </Grid.Col>
             <Grid.Col span={2}>
                 {
+                    props.record.userRole < Role.OWNER &&
                     <Select
                         placeholder="Role"
                         data={[
                             RoleNames[Role.READ],
                             RoleNames[Role.WRITE],
-                            RoleNames[Role.ADMIN]
+                            RoleNames[Role.ADMIN],
                         ]}
-                        value={RoleNames[props.record.role]}
+                        value={RoleNames[props.record.userRole]}
                         allowDeselect={false}
-                        disabled={props.editorPermLevel < Role.ADMIN || props.record.role === Role.OWNER}
+                        disabled={props.editorPermLevel < Role.ADMIN || props.record.userRole === Role.OWNER}
                         onChange={(e)=>{
                             props.onEditRole(props.record.id, RoleNames.indexOf(e ?? RoleNames[Role.READ]));
                         }}
+                    />
+                }
+                {
+                    props.record.userRole === Role.OWNER &&
+                    <Select
+                        placeholder="Role"
+                        data={[
+                            RoleNames[Role.OWNER],
+                        ]}
+                        value={RoleNames[Role.OWNER]}
+                        allowDeselect={false}
+                        disabled={true}
                     />
                 }
             </Grid.Col>

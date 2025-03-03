@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import {Button, Group, Menu, Select, TextInput} from "@mantine/core"
 import { NoteType, notify } from "@trz/util/notifications";
 import { Role, RoleNames } from "@mosaiq/terrazzo-common/constants";
+import { useHotkeys } from "@mantine/hooks";
 interface AddUserProps {
     disabled: boolean;
     onSubmit: (username: string, role:Role) => Promise<boolean>;
@@ -11,6 +12,41 @@ export const AddUser = (props: AddUserProps) => {
     const [username, setUsername] = useState<string>("");
     const [role, setRole] = useState<number>(Role.READ);
     const [error, setError] = useState<string>("");
+
+    const onSubmit = async (e)=>{
+        if(props.disabled){
+            return;
+        }
+        if(username.trim().length === 0){
+            setUsername("");
+            setError("No username provided")
+            return;
+        }
+        setUsername("");
+        setRole(Role.READ);
+        setError("");
+        const success = await props.onSubmit(username, role);
+        if(success){
+            notify(NoteType.INVITE_SENT_SUCCESS);
+        } else {
+            setError("User not found!")
+        }
+    };
+
+    const onCancel = ()=>{
+        setOpen(false);
+        setUsername("");
+        setRole(Role.READ);
+        setError("");
+    };
+
+    useHotkeys([
+        ['Enter', onSubmit],
+        ['Escape', onCancel]
+    ]);
+
+    
+
     return (
         <Menu
             opened={open}
@@ -42,10 +78,12 @@ export const AddUser = (props: AddUserProps) => {
                     placeholder=""
                     value={username}
                     error={error}
+                    autoFocus
                     onChange={(e)=>{
                         setUsername(e.target.value)
                         setError("");
                     }}
+                    onSubmit={onSubmit}
                 />
                 <Select
                     label="Role"
@@ -65,34 +103,11 @@ export const AddUser = (props: AddUserProps) => {
                 <Group>
                     <Button
                         variant="outline"
-                        onClick={()=>{
-                            setOpen(false);
-                            setUsername("");
-                            setRole(Role.READ);
-                            setError("");
-                        }}
+                        onClick={onCancel}
                     >Cancel</Button>
                     <Button
                         variant="filled"
-                        onClick={async (e)=>{
-                            if(props.disabled){
-                                return;
-                            }
-                            if(username.trim().length === 0){
-                                setUsername("");
-                                setError("No username provided")
-                                return;
-                            }
-                            setUsername("");
-                            setRole(Role.READ);
-                            setError("");
-                            const success = await props.onSubmit(username, role);
-                            if(success){
-                                notify(NoteType.INVITE_SENT_SUCCESS);
-                            } else {
-                                setError("User not found!")
-                            }
-                        }}
+                        onClick={onSubmit}
                     >Send Invite</Button>
                 </Group>
 

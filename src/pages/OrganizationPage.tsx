@@ -13,6 +13,7 @@ import { EntityType, Role } from "@mosaiq/terrazzo-common/constants";
 import {AddUser} from "@trz/components/AddUser";
 import {PendingInviteRow} from "@trz/components/PendingInviteRow";
 import { DEFAULT_AUTHED_ROUTE } from "@trz/contexts/user-context";
+import { MdOutlineMailOutline, MdOutlinePerson, MdOutlineVerifiedUser } from "react-icons/md";
 
 const OrganizationPage = (): React.JSX.Element => {
     const [orgData, setOrgData] = useState<Organization | undefined>();
@@ -65,32 +66,6 @@ const OrganizationPage = (): React.JSX.Element => {
                 justifyContent: 'flex-start',
             }}>
                 <Title c='white' pb='20' order={2} maw='200'>Projects</Title>
-                {/* 
-                //TODO implement project sorting
-                <Group maw='40%'>
-                    <Select data={['Sort by: Alphabetical A-Z', 'Date', 'Creator']}
-                            defaultValue='Sort by: Alphabetical A-Z'
-                            size='xs'
-                            styles={{
-                                input: {
-                                    backgroundColor: '#27292E',
-                                    color: 'white',
-                                    borderColor: '#1d2022',
-                                },
-                                dropdown: {
-                                    backgroundColor: '#27292E',
-                                    color: 'white',
-                                },
-                                option: {
-                                    backgroundColor: '#27292E',
-                                    color: 'white',
-                                }
-                            }}
-                    />
-                    <Divider orientation='vertical' color='#868e96'/>
-                    <Button size='compact-sm' color='#27292E' fw='500'>Grid</Button>
-                    <Button size='compact-sm' color='#27292E' fw='500'>List</Button>
-                </Group> */}
                 <Box style={{
                     width: "100%",
                     display: "flex",
@@ -168,59 +143,88 @@ const OrganizationPage = (): React.JSX.Element => {
                         }}
                     />
                 </Group>
-                <Stack style={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "center",
-                }}>
-                    {
-                        orgData.members.map((m)=>(
-                            <MembershipRow
-                                key={m.user.id}
-                                user={m.user}
-                                record={m.record}
-                                editorPermLevel={myPermissionLevel}
-                                onEditRole={(recordId, role)=>{
-                                    if(myPermissionLevel >= Role.ADMIN){
-                                        sockCtx.updateMembershipRecordField(recordId, {role: role});
-                                    } else {
-                                        notify(NoteType.UNAUTHORIZED);
-                                    }
-                                }}
-                                onRemoveMember={()=>{
-                                    if(myPermissionLevel >= Role.ADMIN){
-                                        sockCtx.kickMemberFromEntity(m.record.id);
-                                    } else {
-                                        notify(NoteType.UNAUTHORIZED);
-                                    }
-                                }}
-                            />
-                        ))
-                    }
-                </Stack>
-                <Title order={4} c="#fff">Pending Invites</Title>
-                <Stack style={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "center",
-                }}>
-                    {
-                        orgData.invites.map((invite)=>(
-                            <PendingInviteRow
-                                key={invite.id}
-                                invite={invite}
-                                editorPermLevel={myPermissionLevel}
-                                onRevokeInvite={()=>{
-                                    if(myPermissionLevel >= Role.ADMIN){
-                                        sockCtx.replyInvite(invite.id, false);
-                                    } else {
-                                        notify(NoteType.UNAUTHORIZED);
-                                    }
-                                }}
-                            />
-                        ))
-                    }
-                </Stack>
+                <Tabs orientation="vertical" defaultValue="members"
+                    style={{
+                        width: "100%",
+                    }}
+                >
+                    <Tabs.List style={{
+                        width:"10rem",
+                        color:"white",
+                        gap: "lg"
+                    }}>
+                        <Tabs.Tab value="members" leftSection={<MdOutlinePerson size={18} />}>Members ({orgData.members.length})</Tabs.Tab>
+                        <Tabs.Tab value="invites" leftSection={<MdOutlineMailOutline size={18} />}>Invites ({orgData.invites.length})</Tabs.Tab>
+                    </Tabs.List>
+                    <Tabs.Panel value="members">
+                        <Stack
+                            px={"md"}
+                            style={{
+                                width: "100%",
+                                display: "flex",
+                                justifyContent: "center",
+                            }}
+                        >
+                            <Title order={4} c="#fff">Members</Title>
+                            {
+                                orgData.members.map((m)=>(
+                                    <MembershipRow
+                                        key={m.user.id}
+                                        user={m.user}
+                                        record={m.record}
+                                        editorPermLevel={myPermissionLevel}
+                                        onEditRole={(recordId, role)=>{
+                                            if(myPermissionLevel >= Role.ADMIN){
+                                                sockCtx.updateMembershipRecordField(recordId, {userRole: role});
+                                            } else {
+                                                notify(NoteType.UNAUTHORIZED);
+                                            }
+                                        }}
+                                        onRemoveMember={()=>{
+                                            if(myPermissionLevel >= Role.ADMIN){
+                                                sockCtx.kickMemberFromEntity(m.record.id);
+                                            } else {
+                                                notify(NoteType.UNAUTHORIZED);
+                                            }
+                                        }}
+                                    />
+                                ))
+                            }
+                        </Stack>
+                    </Tabs.Panel>
+                    <Tabs.Panel value="invites">
+                        <Stack
+                            px={"md"}
+                            style={{
+                                width: "100%",
+                                display: "flex",
+                                justifyContent: "center",
+                            }}
+                        >
+                            <Title order={4} c="#fff">Pending Invites</Title>
+                            {
+                                orgData.invites.map((invite)=>(
+                                    <PendingInviteRow
+                                        key={invite.id}
+                                        invite={invite}
+                                        editorPermLevel={myPermissionLevel}
+                                        onRevokeInvite={()=>{
+                                            if(myPermissionLevel >= Role.ADMIN){
+                                                sockCtx.replyInvite(invite.id, false);
+                                                setOrgData({...orgData, invites:orgData.invites.filter(i=>i.id!==invite.id)});
+                                                notify(NoteType.INVITE_REVOKED, [invite.toUser.username])
+                                            } else {
+                                                notify(NoteType.UNAUTHORIZED);
+                                            }
+                                        }}
+                                    />
+                                ))
+                            }
+                        </Stack>
+                    </Tabs.Panel>
+                </Tabs>
+                
+                
                 
             </Box>
         ),

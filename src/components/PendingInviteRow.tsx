@@ -10,22 +10,17 @@ interface PendingInviteRowProps {
     onRevokeInvite: ()=>void
 }
 export const PendingInviteRow = (props: PendingInviteRowProps) => {
-    // const user = sockCtx.getUser..
+    const date = new Date(0);
+    date.setUTCMilliseconds(props.invite.createdAt);
     return (
         <Grid py="sm" style={{
             borderBottom:"1px solid #ffffff10",
         }}>
             <Grid.Col span={1}>
-                {/* <Avatar src={props.user.profilePicture} /> */}
+                <Avatar src={props.invite.toUser.profilePicture} />
             </Grid.Col>
-            <Grid.Col span={4}>
-                {/* <Title order={5} c="#fff">{props.invite.fromUser} {props.user.lastName}</Title> */}
-            </Grid.Col>
-            <Grid.Col span={4}>
-                {/* <Title order={6} c="#ddd">@{props.user.username}</Title> */}
-            </Grid.Col>
-            <Grid.Col span={2}>
-                <Title order={6} c="#ddd">@{RoleNames[Role.ADMIN]}</Title>
+            <Grid.Col span={7}>
+                <Title order={5} c="#fff">{props.invite.fromUser.firstName} {props.invite.fromUser.lastName} invited {props.invite.toUser.firstName} {props.invite.toUser.lastName} as a {RoleNames[props.invite.userRole]} at {date.toLocaleString()}</Title>
             </Grid.Col>
             <Grid.Col span={1}>
                 { props.editorPermLevel >= Role.ADMIN &&
