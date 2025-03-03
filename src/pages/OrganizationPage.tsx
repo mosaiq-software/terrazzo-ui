@@ -355,7 +355,13 @@ const OrganizationPage = (): React.JSX.Element => {
             <Stack bg='#15161A' mih='100vh' pb='10vh' align="center">
                 <Box py='25' w='80%'>
                     <Group gap='xl' pl='50'>
-                        <Avatar size='75' radius='lg' src={orgData.logoUrl}/>
+                        <Avatar
+                            src={orgData.logoUrl ?? undefined}
+                            name={orgData.name}
+                            color={'initials'}
+                            size={"75"}
+                            radius={'lg'}
+                        />
                         <Flex direction='column'>
                             <Title c='white'>{orgData.name}</Title>
                             {orgData.description && <Text c='#6C6C6C'>{orgData.description}</Text>}

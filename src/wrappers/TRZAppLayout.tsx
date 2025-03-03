@@ -156,7 +156,14 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                                                 navigate(`/org/${org.id}`);
                                             }}
                                         >
-                                            <Avatar src={org.logoUrl} display={"inline-block"} size={"sm"} mr={"5px"}/>
+                                            <Avatar
+                                                src={org.logoUrl ?? undefined}
+                                                name={org.name}
+                                                color={'initials'}
+                                                display={"inline-block"}
+                                                size={"sm"}
+                                                mr={"5px"}
+                                            />
                                             {!sidebarCollapsed && <Title order={5} c="#fff">{org.name}</Title>}
                                         </Button>
                                     </Group>
@@ -174,7 +181,14 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                                                             navigate(`/project/${project.id}`);
                                                         }}
                                                     >
-                                                        <Avatar src={project.logoUrl} display={"inline-block"} size={"sm"} mr={"sm"}/>
+                                                        <Avatar
+                                                            src={project.logoUrl ?? undefined}
+                                                            name={project.name}
+                                                            color={'initials'}
+                                                            display={"inline-block"}
+                                                            size={"sm"}
+                                                            mr={"5px"}
+                                                        />
                                                         <Title order={6} c="#fff">{project.name}</Title>
                                                     </Button>
                                                 </Group>
