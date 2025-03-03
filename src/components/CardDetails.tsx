@@ -1,5 +1,5 @@
 import React, {useEffect} from "react";
-import { Select, Group, Grid, Stack, Button, Menu, Modal, Text, Pill} from "@mantine/core";
+import {Select, Group, Grid, Stack, Button, Modal, Text, Pill, Box} from "@mantine/core";
 import { CollaborativeTextArea } from "@trz/components/CollaborativeTextArea";
 import { AvatarRow } from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
@@ -70,26 +70,62 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 					overflowY: "scroll"
 				}}
 			>
-				<Modal.Header>
+				<Modal.Header p="0">
 					<Modal.Title
 						w={"100%"}
 					>
-					<EditableTextbox 
-							value={title}
-							onChange={onTitleChange}
-							type="title"
-							placeholder="Card name.."
-							titleProps={{
-								order:3,
-								textWrap: "nowrap"
-							}}
-							inputProps={{
-								w:"100%"
+						<Group justify="space-between">
+							<Stack
+								w="100%"
+								gap="xs"
+							>
+								{
+									card.archived &&
+									<Box
+										bg="yellow"
+										p="sm"
+									>
+										<Group
+											justify="space-between"
+										>
+											<Text fz="xl">This card is archived.</Text>
+										</Group>
+									</Box>
+								}
+								<Stack
+									gap="xs"
+									align="flex-start"
+									justify="flex-start"
+									p="sm"
+								>
+									<EditableTextbox
+										value={title}
+										onChange={onTitleChange}
+										type="title"
+										placeholder="Card name.."
+										titleProps={{
+											order:3,
+											textWrap: "nowrap"
+										}}
+										inputProps={{
+											w:"100%"
+										}}
+									/>
+									<Text fz="sm">{boardCode} - {card.cardNumber}</Text>
+								</Stack>
+							</Stack>
+						</Group>
+						<Modal.CloseButton
+							variant="transparent"
+							style={{
+								position: "absolute",
+								top: "0.75rem",
+								right: "0.75rem",
+								hover: "green",
 							}}
 						/>
-						<Text fz="sm">{boardCode} - {card.cardNumber}</Text>
+
 					</Modal.Title>
-					<Modal.CloseButton />
 				</Modal.Header>
 				<Modal.Body
 					p={20}
@@ -127,17 +163,28 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 							<CollaborativeTextArea textBlockId={card.descriptionTextBlockId} maxLineLength={66} />
 						</Stack>
 						<Stack justify='flex-start' align='stretch' pt="md">
-							<Menu>
-								<Menu.Target>
-									<Button bg='gray.8'>Menu 1</Button>
-								</Menu.Target>
-								<Menu.Dropdown>
-									<Menu.Label>Placeholder 1</Menu.Label>
-									<Menu.Item>Placeholder 1 Item</Menu.Item>
-									<Menu.Label>Placeholder 2</Menu.Label>
-									<Menu.Item>Placeholder 2 Item</Menu.Item>
-								</Menu.Dropdown>
-							</Menu>
+							{
+								!card.archived &&
+								<Button bg='gray.8'
+										onClick={() => {
+											if(card){
+												sockCtx.updateCardField(card.id, {archived: true});
+											}
+											onCloseModal();
+										}}
+								>Archive card</Button>
+							}
+							{
+								card.archived &&
+								<Button bg='gray.8'
+										onClick={() => {
+											if(card){
+												sockCtx.updateCardField(card.id, {archived: true});
+											}
+											onCloseModal();
+										}}
+								>Delete card</Button>
+							}
 						</Stack>
 					</Group>
 				</Modal.Body>

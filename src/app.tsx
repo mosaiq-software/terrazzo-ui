@@ -2,7 +2,7 @@
 import React from "react";
 import "@mantine/core/styles.css";
 import '@mantine/notifications/styles.css';
-import { createTheme, MantineProvider } from "@mantine/core";
+import { createTheme, MantineProvider} from "@mantine/core";
 import { TRZProvider } from "@trz/util/TRZ-context";
 import { SocketProvider } from "@trz/util/socket-context";
 import { Notifications } from '@mantine/notifications';
