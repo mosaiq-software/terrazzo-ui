@@ -20,12 +20,13 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 	const trzCtx = useTRZ();
 	const sockCtx = useSocket();
 	const boardCode = sockCtx.boardData?.boardCode;
-	const card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
+	let card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
 	const [title, setTitle] = React.useState<string>(card?.name || "Card Title");
 
 	useEffect(() => {
+		card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
 		setTitle(card?.name || "Card Title");
-	}, [card]);
+	}, [card, sockCtx.boardData]);
 
 	const isOpen = !!trzCtx.openedCardModal;
 
