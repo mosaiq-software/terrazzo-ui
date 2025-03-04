@@ -658,7 +658,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             updateCardField,
             getUserViaGithub,
             setupUser,
-            checkUserNameTaken
+            checkUserNameTaken,
         }}>
             {children}
         </SocketContext.Provider>

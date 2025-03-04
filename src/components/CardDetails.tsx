@@ -7,6 +7,7 @@ import {useSocket} from "@trz/util/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
 import { useTRZ } from "@trz/util/TRZ-context";
 import { getCard } from "@trz/util/boardUtils";
+import {FaArchive} from "react-icons/fa";
 
 interface CardDetailsProps {
 }
@@ -40,6 +41,28 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 			notify(NoteType.CARD_UPDATE_ERROR, e);
 			return;
 		}
+	}
+
+	async function onArchiveCard(archive: boolean) {
+		if(!card){
+			notify(NoteType.CARD_UPDATE_ERROR);
+			return;
+		}
+		console.log("Archiving card");
+		if(archive){
+			await sockCtx.updateCardField(card.id, {archived: archive, order: -1});
+		}else {
+			let newOrder = 0;
+			sockCtx.boardData?.lists.forEach(l=>{
+				l.cards.forEach(c=>{
+					if(c.id === card?.id){
+						newOrder = l.cards.length;
+					}
+				})
+			});
+			await sockCtx.updateCardField(card.id, {archived: archive, order: newOrder});
+		}
+		onCloseModal();
 	}
 
 	if(!sockCtx.boardData || !trzCtx.openedCardModal){
@@ -166,24 +189,16 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 							{
 								!card.archived &&
 								<Button bg='gray.8'
-										onClick={() => {
-											if(card){
-												sockCtx.updateCardField(card.id, {archived: true});
-											}
-											onCloseModal();
-										}}
+										leftSection={<FaArchive />}
+										onClick={onArchiveCard.bind(null, true)}
 								>Archive card</Button>
 							}
 							{
 								card.archived &&
 								<Button bg='gray.8'
-										onClick={() => {
-											if(card){
-												sockCtx.updateCardField(card.id, {archived: true});
-											}
-											onCloseModal();
-										}}
-								>Delete card</Button>
+										leftSection={<FaArchive />}
+										onClick={onArchiveCard.bind(null, false)}
+								>Unarchived card</Button>
 							}
 						</Stack>
 					</Group>
