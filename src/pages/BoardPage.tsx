@@ -261,10 +261,9 @@ const BoardPage = (): React.JSX.Element => {
 										items={list.cards}
 										strategy={verticalListSortingStrategy}
 									>{
-										list.cards.filter((card: CardHeader) => !card.archived)
+										list.cards
+											.filter((card: CardHeader) => !card.archived)
 											.map((card: CardHeader, cardIndex: number) => {
-												console.log("card", card);
-												console.log("index", cardIndex);
 											return (
 												<SortableCard
 													key={card.id + "i"+cardIndex}

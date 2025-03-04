@@ -59,7 +59,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
     }
 
     async function onArchive() {
-        await sockCtx.updateListField(props.listType.id, {archived: true})
+        await sockCtx.updateListField(props.listType.id, {archived: true, order: -1});
     }
 
     useEffect(() => {

@@ -52,17 +52,9 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 		if(archive){
 			await sockCtx.updateCardField(card.id, {archived: archive, order: -1});
 		}else {
-			let newOrder = 0;
-			sockCtx.boardData?.lists.forEach(l=>{
-				l.cards.forEach(c=>{
-					if(c.id === card?.id){
-						newOrder = l.cards.length;
-					}
-				})
-			});
-			await sockCtx.updateCardField(card.id, {archived: archive, order: newOrder});
+			await sockCtx.updateCardField(card.id, {archived: archive, order: 0});
 		}
-		onCloseModal();
+		onCloseModal();//this wont run ever due to sockCtx.boardData being updated
 	}
 
 	if(!sockCtx.boardData || !trzCtx.openedCardModal){
