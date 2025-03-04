@@ -1,14 +1,15 @@
 import React, {useEffect} from "react";
-import { Select, Group, Grid, Stack, Button, Menu, Modal, Text, Pill} from "@mantine/core";
-import { CollaborativeTextArea } from "@trz/components/CollaborativeTextArea";
-import { Card } from "@mosaiq/terrazzo-common/types";
-import { AvatarRow } from '@trz/components/AvatarRow';
+import {Box, Button, Grid, Group, Menu, Modal, Pill, Stack, Text} from "@mantine/core";
+import {CollaborativeTextArea} from "@trz/components/CollaborativeTextArea";
+import {Card} from "@mosaiq/terrazzo-common/types";
+import {AvatarRow} from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
 import {useSocket} from "@trz/util/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
-import { useTRZ } from "@trz/util/TRZ-context";
-import { getCard } from "@trz/util/boardUtils";
-import {PriorityButtons} from "@trz/components/PriorityButtons";
+import {useTRZ} from "@trz/util/TRZ-context";
+import {getCard} from "@trz/util/boardUtils";
+import {PriorityButtons, priorityColors} from "@trz/components/PriorityButtons";
+import {Priority} from "@mosaiq/terrazzo-common/constants";
 
 interface CardDetailsProps {
 	boardCode: string;
@@ -22,10 +23,20 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 	const boardCode = sockCtx.boardData?.boardCode;
 	const card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
 	const [title, setTitle] = React.useState<string>(card?.name || "Card Title");
+	const [priorityNumber, setPriorityNumber] = React.useState<Priority | undefined>(card?.priority);
+	const [priorityColor, setPriorityColor] = React.useState<string>("");
 
 	useEffect(() => {
 		setTitle(card?.name || "Card Title");
+		if(card?.priority){
+			setPriorityNumber(card?.priority);
+		}
+		onPriorityChange(card?.priority || Priority.LOW);
 	}, [card]);
+
+	useEffect(() =>{
+		console.log("the number " + priorityNumber)
+	}, [priorityNumber ])
 
 	const isOpen = !!trzCtx.openedCardModal;
 
@@ -45,6 +56,10 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 			notify(NoteType.CARD_UPDATE_ERROR, e);
 			return;
 		}
+	}
+
+	const onPriorityChange = (value:Priority) => {
+		setPriorityColor(priorityColors[value - 1]);
 	}
 
 	if(!sockCtx.boardData || !trzCtx.openedCardModal){
@@ -120,7 +135,12 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 								<Grid.Col span={4}>
 									<Stack align='left'>
 										{/*<Select label='Priority' placeholder='Low' data={["Low", "Medium", "High"]}*/}
-										Priority
+										<Text fz="sm">Priority</Text>
+										{ priorityNumber != null &&
+											<Box bg={priorityColor} w='50'>
+												<Text c='white'>{priorityNumber}</Text>
+											</Box>
+										}
 									</Stack>
 								</Grid.Col>
 								<Grid.Col span={4}>
