@@ -21,12 +21,13 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 	const trzCtx = useTRZ();
 	const sockCtx = useSocket();
 	const boardCode = sockCtx.boardData?.boardCode;
-	const card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
+	let card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
 	const [title, setTitle] = React.useState<string>(card?.name || "Card Title");
 	const [priorityNumber, setPriorityNumber] = React.useState<Priority | undefined>(card?.priority);
 	const [priorityColor, setPriorityColor] = React.useState<string>("");
 
 	useEffect(() => {
+		card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
 		setTitle(card?.name || "Card Title");
 		if(card?.priority){
 			setPriorityNumber(card?.priority);
