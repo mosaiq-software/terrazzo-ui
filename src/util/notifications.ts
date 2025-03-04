@@ -1,4 +1,5 @@
 import { notifications } from '@mantine/notifications';
+import { title } from 'process';
 
 const AUTO_CLOSE_TIMEOUT = 5000;
 enum NoteColor {
@@ -101,6 +102,9 @@ export const NoteType = {
     },
     USER_CREATION_ERROR: {
         title: "Error creating the user"
+    },
+    CHANGES_SAVED: {
+        title: "Changes have been saved"
     }
 
 }

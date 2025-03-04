@@ -1,15 +1,15 @@
-import React, {useEffect, useMemo, useRef, useState} from "react";
-import {Container} from "@mantine/core";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Container, Button } from "@mantine/core";
 import CollaborativeMouseTracker from "@trz/wrappers/CollaborativeMouseTracker";
-import {useNavigate, useParams} from "react-router-dom";
-import {useSocket} from "@trz/util/socket-context";
+import { useNavigate, useParams } from "react-router-dom";
+import { useSocket } from "@trz/util/socket-context";
 import CreateList from "@trz/components/CreateList";
-import {BoardId, Card, CardHeader, List, ListId, UID} from "@mosaiq/terrazzo-common/types";
-import {NoteType, notify} from "@trz/util/notifications";
+import { BoardId, Card, CardHeader, List, ListId, UID } from "@mosaiq/terrazzo-common/types";
+import { NoteType, notify } from "@trz/util/notifications";
 import SortableList from "@trz/components/DragAndDrop/SortableList";
-import {getCard, getCardsList, getList} from "@trz/util/boardUtils";
+import { getCard, getCardsList, getList } from "@trz/util/boardUtils";
 import {
-	DndContext, 
+	DndContext,
 	closestCenter,
 	KeyboardSensor,
 	PointerSensor,
@@ -30,7 +30,7 @@ import {
 import { DragAbortEvent, DragCancelEvent, DragOverEvent } from "@dnd-kit/core/dist/types";
 import SortableCard from "@trz/components/DragAndDrop/SortableCard";
 import { createPortal } from "react-dom";
-import {boardDropAnimation, horizontalCollisionDetection, renderContainerDragOverlay, renderSortableItemDragOverlay} from "@trz/util/dragAndDropUtils";
+import { boardDropAnimation, horizontalCollisionDetection, renderContainerDragOverlay, renderSortableItemDragOverlay } from "@trz/util/dragAndDropUtils";
 import CardDetails from "@trz/components/CardDetails";
 import { NotFound } from "@trz/components/NotFound";
 
@@ -67,53 +67,53 @@ const BoardPage = (): React.JSX.Element => {
 		fetchBoardData();
 	}, [params.boardId, sockCtx.connected]);
 
-	const allListIds = useMemo(()=>{
-		return sockCtx.boardData?.lists.map(l=>l.id) ?? [];
+	const allListIds = useMemo(() => {
+		return sockCtx.boardData?.lists.map(l => l.id) ?? [];
 	}, [sockCtx.boardData?.lists])
 
 	const isSortingList = !!(activeObject && allListIds.includes(activeObject.id.toString() as ListId))
 
 	function handleDragStart(event: DragStartEvent) {
 		const activeId = event.active.id.toString() as UID;
-		if(allListIds.includes(activeId)) {
+		if (allListIds.includes(activeId)) {
 			// is dragging list
 			setActiveObject(getList(activeId, sockCtx.boardData?.lists));
-			sockCtx.setDraggingObject({list: activeId});
+			sockCtx.setDraggingObject({ list: activeId });
 		} else {
 			// is dragging card
-			 setActiveObject(getCard(activeId, sockCtx.boardData?.lists));
-			sockCtx.setDraggingObject({card: activeId});
+			setActiveObject(getCard(activeId, sockCtx.boardData?.lists));
+			sockCtx.setDraggingObject({ card: activeId });
 		}
 	}
 
 	function handleDragOver(event: DragOverEvent) {
-		const {active, over} = event;
+		const { active, over } = event;
 		const activeId = active.id.toString() as UID;
 		const overId = over?.id.toString() as UID;
-		if(activeId === overId){
+		if (activeId === overId) {
 			return;
 		}
-		if(allListIds.includes(activeId)){
+		if (allListIds.includes(activeId)) {
 			// is dragging list
 			return;
 		}
-		if(overId){
+		if (overId) {
 			// is dragging card
-			if(allListIds.includes(overId)) {
+			if (allListIds.includes(overId)) {
 				// is over a list
 				const list = getList(overId, sockCtx.boardData?.lists);
 				const cardsList = getCardsList(activeId, sockCtx.boardData?.lists);
-				if(list?.id !== cardsList?.id) {
+				if (list?.id !== cardsList?.id) {
 					sockCtx.moveCardToListAndPos(activeId, overId);
 				}
 			} else {
 				// is over a card
 				const newList = getCardsList(overId, sockCtx.boardData?.lists);
-				if(!newList){
+				if (!newList) {
 					console.error("No list found", overId);
 					return;
 				}
-				const injectPos = newList.cards.findIndex(c=>c.id === overId);
+				const injectPos = newList.cards.findIndex(c => c.id === overId);
 				const newIndex = injectPos >= 0 ? injectPos : newList.cards.length + 1;
 				sockCtx.moveCardToListAndPos(activeId, newList.id, newIndex);
 			}
@@ -121,7 +121,7 @@ const BoardPage = (): React.JSX.Element => {
 	}
 
 	function handleDragEnd(event: DragEndEvent) {
-		const {active, over} = event;
+		const { active, over } = event;
 		const activeId = active.id.toString() as UID;
 		const overId = over?.id.toString() as UID;
 		sockCtx.setDraggingObject({});
@@ -130,29 +130,29 @@ const BoardPage = (): React.JSX.Element => {
 			return;
 		}
 		// is dropping list
-		if(allListIds.includes(activeId)){
-			const newIndex = sockCtx.boardData.lists.findIndex((v)=>v.id === overId);
-			if(newIndex > -1){
+		if (allListIds.includes(activeId)) {
+			const newIndex = sockCtx.boardData.lists.findIndex((v) => v.id === overId);
+			if (newIndex > -1) {
 				sockCtx.moveList(activeId, newIndex);
 			}
 			return;
 		}
 		// is dropping card over a list
-		if(allListIds.includes(overId)) {
+		if (allListIds.includes(overId)) {
 			const list = getList(overId, sockCtx.boardData?.lists);
 			const cardsList = getCardsList(activeId, sockCtx.boardData?.lists);
-			if(list?.id !== cardsList?.id) {
+			if (list?.id !== cardsList?.id) {
 				sockCtx.moveCard(activeId, overId);
 			}
 			return;
 		}
 		// is dropping a card over another card
 		const newList = getCardsList(overId, sockCtx.boardData?.lists);
-		if(!newList){
+		if (!newList) {
 			console.error("No list found", overId);
 			return;
 		}
-		const injectPos = newList.cards.findIndex(c=>c.id === overId);
+		const injectPos = newList.cards.findIndex(c => c.id === overId);
 		const newIndex = injectPos >= 0 ? injectPos : newList.cards.length + 1;
 		sockCtx.moveCard(activeId, newList.id, newIndex);
 	}
@@ -164,32 +164,34 @@ const BoardPage = (): React.JSX.Element => {
 	}
 
 	function handleDragCancel(event: DragCancelEvent) {
-		const {active, over} = event;
+		const { active, over } = event;
 		setActiveObject(null);
 		sockCtx.setDraggingObject({});
 	}
 
 	const collisionDetectionStrategy: CollisionDetection = (args) => {
-		const onlyListArgs = {...args, droppableContainers: args.droppableContainers.filter((container) => allListIds.includes(container.id.toString() as UID))};
+		const onlyListArgs = { ...args, droppableContainers: args.droppableContainers.filter((container) => allListIds.includes(container.id.toString() as UID)) };
 		let intersectingId = horizontalCollisionDetection(onlyListArgs) as UID;
-		if(args.active.data.current?.type === "list"){
-			if(!intersectingId) {
+		if (args.active.data.current?.type === "list") {
+			if (!intersectingId) {
 				return lastOverId.current ? [{ id: lastOverId.current }] : [];
 			}
 			return [{ id: intersectingId }];
 		}
-		if(args.active.data.current?.type === "card"){
-			if(!intersectingId) {
+		if (args.active.data.current?.type === "card") {
+			if (!intersectingId) {
 				return lastOverId.current ? [{ id: lastOverId.current }] : [];
 			}
 
 			const list = getList(intersectingId, sockCtx.boardData?.lists);
 			if (list) {
 				if (list.cards.length > 0) {
-					const onlyContainerArgs = {...args,
+					const onlyContainerArgs = {
+						...args,
 						droppableContainers: args.droppableContainers.filter((droppable) =>
-							droppable.id !== list.id && !!list.cards.find(l=>l.id === droppable.id)
-					)};
+							droppable.id !== list.id && !!list.cards.find(l => l.id === droppable.id)
+						)
+					};
 					intersectingId = closestCenter(onlyContainerArgs)[0]?.id.toString() as UID;
 				}
 				lastOverId.current = intersectingId;
@@ -200,21 +202,40 @@ const BoardPage = (): React.JSX.Element => {
 		return [];
 	};
 
-	if (!params.boardId || ! sockCtx.boardData) {
-		return <NotFound itemType="Board"/>
+	if (!params.boardId || !sockCtx.boardData) {
+		return <NotFound itemType="Board" />
+	}
+
+	async function onArchiveBoardClick() {	
+		try {
+			if (params.boardId as BoardId) {
+				await sockCtx.updateBoardField(params.boardId as BoardId, { archived: true });
+				notify(NoteType.CHANGES_SAVED);
+			}
+		} catch (e) {
+			notify(NoteType.BOARD_DATA_ERROR, e);
+		}
 	}
 
 	return (
-		<Container 
-			h="100%" 
-			fluid 
-			maw="100%" 
-			p="lg" 
+		<Container
+			h="100%"
+			fluid
+			maw="100%"
+			p="lg"
 			bg="#1d2022"
 			style={{
 				overflowX: "scroll"
 			}}
 		>
+			<Button
+				variant="light"
+				color="read"
+				w="min-content"
+				onClick={onArchiveBoardClick}>
+				Archive Board
+			</Button>
+
 			<CollaborativeMouseTracker
 				boardId={params.boardId as BoardId}
 				style={{
@@ -241,49 +262,49 @@ const BoardPage = (): React.JSX.Element => {
 						},
 					}}
 				>
-					<SortableContext 
+					<SortableContext
 						items={sockCtx.boardData?.lists ?? []}
 						strategy={horizontalListSortingStrategy}
 					>{
-						sockCtx.boardData?.lists?.map((list: List, listIndex: number) => {
-							return (
-								<SortableList
-									key={list.id + " : " + list.cards.map(c=>c.id).join(" ")}
-									listType={list}
-									index={listIndex}
-								>
-									<SortableContext 
-										items={list.cards}
-										strategy={verticalListSortingStrategy}
-									>{
-										list.cards.map((card: CardHeader, cardIndex: number) => {
-											return (
-												<SortableCard
-													key={card.id + "i"+cardIndex}
-													cardHeader={card}
-													disabled={isSortingList}
-													boardCode={sockCtx.boardData?.boardCode ?? "#"}
-												/>
-											);
-										})
-									}</SortableContext>
-								</SortableList>
-							);
-						})
-					}</SortableContext>
+							sockCtx.boardData?.lists?.map((list: List, listIndex: number) => {
+								return (
+									<SortableList
+										key={list.id + " : " + list.cards.map(c => c.id).join(" ")}
+										listType={list}
+										index={listIndex}
+									>
+										<SortableContext
+											items={list.cards}
+											strategy={verticalListSortingStrategy}
+										>{
+												list.cards.map((card: CardHeader, cardIndex: number) => {
+													return (
+														<SortableCard
+															key={card.id + "i" + cardIndex}
+															cardHeader={card}
+															disabled={isSortingList}
+															boardCode={sockCtx.boardData?.boardCode ?? "#"}
+														/>
+													);
+												})
+											}</SortableContext>
+									</SortableList>
+								);
+							})
+						}</SortableContext>
 					{createPortal(
 						<DragOverlay dropAnimation={boardDropAnimation}>
-						{activeObject
-							? allListIds.includes(activeObject.id.toString() as UID)
-							? renderContainerDragOverlay(activeObject as List, sockCtx.boardData?.boardCode ?? "#")
-							: renderSortableItemDragOverlay(activeObject as Card, sockCtx.boardData?.boardCode ?? "#")
-							: null}
+							{activeObject
+								? allListIds.includes(activeObject.id.toString() as UID)
+									? renderContainerDragOverlay(activeObject as List, sockCtx.boardData?.boardCode ?? "#")
+									: renderSortableItemDragOverlay(activeObject as Card, sockCtx.boardData?.boardCode ?? "#")
+								: null}
 						</DragOverlay>,
 						document.body
 					)}
 				</DndContext>
-				<CreateList/>
-				<CardDetails/>
+				<CreateList />
+				<CardDetails />
 			</CollaborativeMouseTracker>
 		</Container>
 	);
