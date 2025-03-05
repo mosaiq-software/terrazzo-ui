@@ -14,8 +14,8 @@ interface Note {
     message?: string;
     color?: NoteColor;
     persist?: boolean;
-    action1?: string;
-    action2?: string;
+    primary?: string;
+    secondary?: string;
 }
 export const NoteType = {
     CONNECTION_ERROR: {
@@ -129,7 +129,9 @@ export const NoteType = {
         title: "New Invitation!",
         message: "$ has invited you to join $.",
         persist: true,
-        color: NoteColor.INFO
+        color: NoteColor.INFO,
+        primary: "Accept",
+        secondary: "Decline"
     },
     GENERIC_ERROR: {
         title: "An error occurred!",
@@ -141,6 +143,10 @@ export const NoteType = {
     INVITE_REVOKED: {
         title: "Invite to $ revoked",
         color: NoteColor.INFO
+    },
+    JOINED_ENTITY: {
+        title: "Welcome to $",
+        color: NoteColor.SUCCESS
     }
 
 }
@@ -165,26 +171,40 @@ export const notify = (note: Note, data?:any, actions?:{primary?:()=>void, secon
         console.error(e);
         note = NoteType.GENERIC_ERROR;
     }
+    const noteId = crypto.randomUUID();
     const messageBody = (
         <Box>
             <Text c={note.color}>{note.message ?? ''}</Text>
             <Group gap={3}>
             {
-                note.action1 && actions?.primary &&
-                <Button size={"compact-sm"} variant="filled" onClick={actions.primary}>
-                    {note.action1}
+                note.primary && actions?.primary &&
+                <Button size={"compact-sm"} variant="filled" 
+                    onClick={()=>{
+                        if(actions.primary)
+                            actions.primary();
+                        notifications.hide(noteId)
+                    }}
+                >
+                    {note.primary}
                 </Button>
             }
             {
-                note.action2 && actions?.secondary &&
-                <Button size={"compact-sm"} variant="outline" onClick={actions.secondary}>
-                    {note.action2}
+                note.secondary && actions?.secondary &&
+                <Button size={"compact-sm"} variant="outline" 
+                    onClick={()=>{
+                        if(actions.secondary)
+                            actions.secondary();
+                        notifications.hide(noteId)
+                    }}
+                >
+                    {note.secondary}
                 </Button>
             }
             </Group>
         </Box>
     );
     notifications.show({
+        id: noteId,
         title: note.title,
         message: messageBody,
         color: note.color || NoteColor.ERROR,
