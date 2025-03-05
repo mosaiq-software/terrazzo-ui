@@ -54,9 +54,7 @@ const PriorityButton = (props: PriorityButtonProps): React.JSX.Element => {
     }
 
     return (
-        <>
             <Menu.Item bg={props.Color} ta='center' c='white' onClick={onClick}>{props.buttonText}</Menu.Item>
-        </>
     )
 }
 

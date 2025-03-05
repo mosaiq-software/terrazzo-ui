@@ -4,7 +4,6 @@ import {CardHeader} from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from "@trz/components/AvatarRow";
 import { useTRZ } from "@trz/util/TRZ-context";
 import {priorityColors} from "@trz/components/PriorityButtons";
-import {Priority} from "@mosaiq/terrazzo-common/constants";
 
 interface CardElementProps {
 	cardHeader: CardHeader;
@@ -20,7 +19,6 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 	useEffect(() => {
 		setTitle(props.cardHeader.name);
 		setPriorityNumber(props.cardHeader.priority);
-		onPriorityChange(priorityNumber || Priority.LOW);
 
 	}, [props.cardHeader.name, props.cardHeader.priority]);
 
@@ -34,10 +32,6 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 			return;
 		}
 		trzCtx.setOpenedCardModal(props.cardHeader.id);
-	}
-
-	const onPriorityChange = (value:Priority) => {
-		priorityColors[value - 1];
 	}
 
 	return (
