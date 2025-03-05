@@ -46,7 +46,6 @@ const PriorityButton = (props: PriorityButtonProps): React.JSX.Element => {
                 priority = null;
                 break
         }
-        console.log(priority);
         if(card == null){
             notify(NoteType.CARD_UPDATE_ERROR);
             return;

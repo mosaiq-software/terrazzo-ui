@@ -16,7 +16,7 @@ const CardDetails = (): React.JSX.Element | null => {
 	const boardCode = sockCtx.boardData?.boardCode;
 	let card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
 	const [title, setTitle] = React.useState<string>(card?.name || "Card Title");
-	const [priorityNumber, setPriorityNumber] = React.useState<Priority | undefined>(card?.priority);
+	const [priorityNumber, setPriorityNumber] = React.useState<Priority | null>(card?.priority || null);
 	const [priorityColor, setPriorityColor] = React.useState<string>("");
 
 	useEffect(() => {
@@ -25,12 +25,11 @@ const CardDetails = (): React.JSX.Element | null => {
 		if(card?.priority){
 			setPriorityNumber(card?.priority);
 		}
+		else{
+			setPriorityNumber(null);
+		}
 		onPriorityChange(card?.priority || Priority.LOW);
 	}, [card]);
-
-	useEffect(() =>{
-		console.log("the number " + priorityNumber)
-	}, [priorityNumber ])
 
 	const isOpen = !!trzCtx.openedCardModal;
 
@@ -128,11 +127,10 @@ const CardDetails = (): React.JSX.Element | null => {
 										
 								<Grid.Col span={4}>
 									<Stack align='left'>
-										{/*<Select label='Priority' placeholder='Low' data={["Low", "Medium", "High"]}*/}
 										<Text fz="sm">Priority</Text>
 										{ priorityNumber != null &&
-											<Box bg={priorityColor} w='50'>
-												<Text c='white'>{priorityNumber}</Text>
+											<Box bg={priorityColor} w='35' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
+												<Text c='white' ta='center'>{priorityNumber}</Text>
 											</Box>
 										}
 									</Stack>
