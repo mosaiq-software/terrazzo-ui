@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Box, Avatar, Group, Flex, Title, Text, Tabs, Select, Divider, Button, ScrollArea, Center, Loader, Stack} from "@mantine/core";
 import {BoardListCard} from "@trz/components/BoardListCards";
 import {AvatarRow} from "@trz/components/AvatarRow";
-import {Organization, OrganizationId} from "@mosaiq/terrazzo-common/types";
+import {Organization, OrganizationId, UserHeader} from "@mosaiq/terrazzo-common/types";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSocket } from "@trz/util/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
@@ -33,9 +33,13 @@ const OrganizationPage = (): React.JSX.Element => {
 	}, [params.orgId, sockCtx.connected]);
 
 
-    const testUsers = Array.from({ length: 5 }).map(() => ({
-        name: "John Doe",
-        url: "https://avatars.githubusercontent.com/u/47070087?v=4"
+    const testUsers:UserHeader[] = Array.from({ length: 5 }).map(() => ({
+        id: `h-h-h-h-h`,
+        username: "johndoe",
+        firstName: "John",
+        lastName: "Doe",
+        profilePicture: "https://avatars.githubusercontent.com/u/47070087?v=4",
+        githubUserId: "",
     }))
 
     if(!orgData){

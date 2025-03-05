@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Box, Avatar, Group, Flex, Title, Text, Tabs, Select, Divider, Button, ScrollArea, Center, Loader, Stack} from "@mantine/core";
 import {BoardListCard} from "@trz/components/BoardListCards";
 import {AvatarRow} from "@trz/components/AvatarRow";
-import {Project, ProjectId} from "@mosaiq/terrazzo-common/types";
+import {Project, ProjectId, UserHeader, UserId} from "@mosaiq/terrazzo-common/types";
 import { modals } from "@mantine/modals";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSocket } from "@trz/util/socket-context";
@@ -32,9 +32,13 @@ const ProjectPage = (): React.JSX.Element => {
 		fetchOrgData();
 	}, [params.projectId, sockCtx.connected]);
 
-    const testUsers = Array.from({ length: 5 }).map(() => ({
-        name: "John Doe",
-        url: "https://avatars.githubusercontent.com/u/47070087?v=4"
+    const testUsers:UserHeader[] = Array.from({ length: 5 }).map(() => ({
+        id: `h-h-h-h-h`,
+        username: "johndoe",
+        firstName: "John",
+        lastName: "Doe",
+        profilePicture: "https://avatars.githubusercontent.com/u/47070087?v=4",
+        githubUserId: "",
     }))
 
     if(!project){
