@@ -32,7 +32,7 @@ import SortableCard from "@trz/components/DragAndDrop/SortableCard";
 import { createPortal } from "react-dom";
 import {boardDropAnimation, horizontalCollisionDetection, renderContainerDragOverlay, renderSortableItemDragOverlay} from "@trz/util/dragAndDropUtils";
 import CardDetails from "@trz/components/CardDetails";
-import { NotFound } from "@trz/components/NotFound";
+import { NotFound, PageErrors } from "@trz/components/NotFound";
 import { useTRZ } from "@trz/contexts/TRZ-context";
 
 const BoardPage = (): React.JSX.Element => {
@@ -211,7 +211,7 @@ const BoardPage = (): React.JSX.Element => {
 	};
 
 	if (!params.boardId || ! sockCtx.boardData) {
-		return <NotFound itemType="Board"/>
+		return <NotFound itemType="Board" error={PageErrors.NOT_FOUND}/>
 	}
 
 	return (

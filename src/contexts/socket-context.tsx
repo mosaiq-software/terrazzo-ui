@@ -90,7 +90,7 @@ type SocketContextType = {
     updateCardField: (id: CardId, partial: Partial<Card>) => Promise<void>;
     sendInvite: (toUsername: string, entityId: EntityId, entityType: EntityType, role: Role) => Promise<Invite | undefined>;
     replyInvite: (inviteId: InviteId, accept: boolean) => Promise<void>;
-    kickMemberFromEntity: (membershipRecordId: MembershipRecordId) => Promise<void>;
+    revokeMembershipRecord: (membershipRecordId: MembershipRecordId) => Promise<void>;
     updateMembershipRecordField: (id: MembershipRecordId, partial: Partial<MembershipRecord>) => Promise<void>;
     userDash: UserDash | undefined;
     syncUserDash: () => void;
@@ -344,12 +344,21 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         sock.on(ServerSE.RECEIVE_INVITE, (payload: ServerSEPayload[ServerSE.RECEIVE_INVITE]) => {
             notify(NoteType.INVITE_RECEIVED, [fullName(payload.fromUser), payload.entity.name],{
                 primary: async ()=>{
-                    acceptInvitation(payload);
+                    try {
+                        acceptInvitation(payload);
+                    } catch (e) {
+                        notify(NoteType.GENERIC_ERROR, e);
+                    }
                 },
                 secondary: ()=>{
-                    replyInvite(payload.id, false);
+                    try {
+                        replyInvite(payload.id, false);
+                    } catch (e) {
+                        notify(NoteType.GENERIC_ERROR, e);
+                    }
                 }
             });
+            syncUserDash();
         });
         
 
@@ -563,11 +572,10 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     }
 
     const replyInvite = async (inviteId: InviteId, accept:boolean) => {
-        console.log(inviteId, accept)
         await emit<ClientSE.RESPOND_INVITE>(ClientSE.RESPOND_INVITE, {inviteId, response:accept});
     }
 
-    const kickMemberFromEntity = async (membershipRecordId: MembershipRecordId) => {
+    const revokeMembershipRecord = async (membershipRecordId: MembershipRecordId) => {
         await emit<ClientSE.KICK_MEMBER>(ClientSE.KICK_MEMBER, membershipRecordId);
     }
 
@@ -689,7 +697,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const acceptInvitation = async (invite: Invite) => {
         replyInvite(invite.id, true);
         notify(NoteType.JOINED_ENTITY, [invite.entity.name]);
-        await new Promise((resolve)=>setTimeout(resolve, 500));
+        await new Promise((resolve)=>setTimeout(resolve, 1000));
+        syncUserDash();
         if(invite.entityType === EntityType.ORG){
             navigate("/org/"+invite.entity.id)
         } else if (invite.entityType === EntityType.PROJECT) {
@@ -734,7 +743,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             updateMembershipRecordField,
             sendInvite,
             replyInvite,
-            kickMemberFromEntity,
+            revokeMembershipRecord,
             userDash,
             syncUserDash,
             acceptInvitation,

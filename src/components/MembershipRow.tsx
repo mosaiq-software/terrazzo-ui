@@ -8,12 +8,11 @@ import { NoteColor } from "@trz/util/notifications";
 interface MembershipRowProps {
     user: UserHeader;
     record: MembershipRecord;
-    editorPermLevel: Role;
+    editorsRecord: MembershipRecord;
     onEditRole: (record: MembershipRecordId, role:Role) => void;
     onRemoveMember: () => void;
 }
 export const MembershipRow = (props: MembershipRowProps) => {
-    console.log(props.record)
     return (
         <Grid py="sm" style={{
             borderBottom:"1px solid #ffffff10",
@@ -39,7 +38,7 @@ export const MembershipRow = (props: MembershipRowProps) => {
                         ]}
                         value={RoleNames[props.record.userRole]}
                         allowDeselect={false}
-                        disabled={props.editorPermLevel < Role.ADMIN || props.record.userRole === Role.OWNER}
+                        disabled={props.editorsRecord.userRole < Role.ADMIN || props.record.userRole === Role.OWNER || props.editorsRecord.id === props.record.id}
                         onChange={(e)=>{
                             props.onEditRole(props.record.id, RoleNames.indexOf(e ?? RoleNames[Role.READ]));
                         }}
@@ -59,9 +58,9 @@ export const MembershipRow = (props: MembershipRowProps) => {
                 }
             </Grid.Col>
             <Grid.Col span={1}>
-                { props.editorPermLevel >= Role.ADMIN &&
+                { props.editorsRecord.userRole >= Role.ADMIN &&
                     <Tooltip
-                        label={props.record.userRole >= Role.OWNER ? "Can't Remove Owner" : "Remove Member"}
+                        label={props.record.userRole >= Role.OWNER ? "Can't Remove Owner" : props.editorsRecord.id === props.record.id ? "Can't Remove Yourself" : "Remove Member"}
                         bg={NoteColor.ERROR}
                     >
                         <Button

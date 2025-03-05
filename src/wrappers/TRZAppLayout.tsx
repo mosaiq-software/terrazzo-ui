@@ -126,7 +126,6 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                                                         onClick={()=>{
                                                             try{
                                                                 sockCtx.acceptInvitation(i);
-                                                                sockCtx.syncUserDash();
                                                             } catch (e) {
                                                                 notify(NoteType.GENERIC_ERROR, e)
                                                             }

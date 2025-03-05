@@ -7,13 +7,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useSocket } from "@trz/contexts/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
 import {modals} from "@mantine/modals";
-import {NotFound} from "@trz/components/NotFound";
+import {NotFound, PageErrors} from "@trz/components/NotFound";
 import {MembershipRow} from "@trz/components/MembershipRow";
 import { EntityType, Role } from "@mosaiq/terrazzo-common/constants";
 import {AddUser} from "@trz/components/AddUser";
 import {PendingInviteRow} from "@trz/components/PendingInviteRow";
 import { DEFAULT_AUTHED_ROUTE } from "@trz/contexts/user-context";
-import { MdOutlineMailOutline, MdOutlinePerson, MdOutlineVerifiedUser } from "react-icons/md";
+import { MdOutlineMailOutline, MdOutlinePerson } from "react-icons/md";
 import { useTRZ } from "@trz/contexts/TRZ-context";
 
 const OrganizationPage = (): React.JSX.Element => {
@@ -25,7 +25,7 @@ const OrganizationPage = (): React.JSX.Element => {
 	const navigate = useNavigate();
     const orgId = params.orgId as OrganizationId | undefined;
     const tabId = params.tabId;
-    const myPermissionLevel = Role.OWNER;
+    const myMembershipRecord = sockCtx.userDash?.organizations.find(o=>o.id===orgId)?.myMembershipRecord;
 
 	useEffect(() => {
         let strictIgnore = false;
@@ -63,7 +63,10 @@ const OrganizationPage = (): React.JSX.Element => {
     }))
 
     if(!orgData || !orgId){
-        return <NotFound itemType="Organization"/>
+        return <NotFound itemType="Organization" error={PageErrors.NOT_FOUND}/>
+    }
+    if(!myMembershipRecord){
+        return <NotFound itemType="Organization" error={PageErrors.FORBIDDEN}/>
     }
 
     const tabs = {
@@ -136,7 +139,7 @@ const OrganizationPage = (): React.JSX.Element => {
                 <Group w="100%" justify="space-between">
                     <Title c='white' pb='20' order={2} maw='200'>Members</Title>
                     <AddUser
-                        disabled={myPermissionLevel < Role.ADMIN}
+                        disabled={myMembershipRecord.userRole < Role.ADMIN}
                         onSubmit={async (username:string, role:Role)=>{
                             try {
                                 if(orgData.isPersonalOrg){
@@ -187,9 +190,9 @@ const OrganizationPage = (): React.JSX.Element => {
                                         key={member.user.id}
                                         user={member.user}
                                         record={member.record}
-                                        editorPermLevel={myPermissionLevel}
+                                        editorsRecord={myMembershipRecord}
                                         onEditRole={(recordId, role)=>{
-                                            if(myPermissionLevel >= Role.ADMIN && member.record.userRole < Role.OWNER){
+                                            if(myMembershipRecord.userRole >= Role.ADMIN && member.record.userRole < Role.OWNER){
                                                 sockCtx.updateMembershipRecordField(recordId, {userRole: role});
                                                 setOrgData({
                                                     ...orgData,
@@ -211,8 +214,8 @@ const OrganizationPage = (): React.JSX.Element => {
                                             }
                                         }}
                                         onRemoveMember={()=>{
-                                            if(myPermissionLevel >= Role.ADMIN && member.record.userRole < Role.OWNER){
-                                                sockCtx.kickMemberFromEntity(member.record.id);
+                                            if(myMembershipRecord.userRole >= Role.ADMIN && member.record.userRole < Role.OWNER){
+                                                sockCtx.revokeMembershipRecord(member.record.id);
                                                 setOrgData({
                                                     ...orgData,
                                                     members: orgData.members.filter((m)=>{
@@ -243,9 +246,9 @@ const OrganizationPage = (): React.JSX.Element => {
                                     <PendingInviteRow
                                         key={invite.id}
                                         invite={invite}
-                                        editorPermLevel={myPermissionLevel}
+                                        editorPermLevel={myMembershipRecord.userRole}
                                         onRevokeInvite={()=>{
-                                            if(myPermissionLevel >= Role.ADMIN){
+                                            if(myMembershipRecord.userRole >= Role.ADMIN){
                                                 sockCtx.replyInvite(invite.id, false);
                                                 setOrgData({...orgData, invites:orgData.invites.filter(i=>i.id!==invite.id)});
                                                 notify(NoteType.INVITE_REVOKED, [invite.toUser.username])
@@ -292,7 +295,7 @@ const OrganizationPage = (): React.JSX.Element => {
                             onChange={(e)=>{
                                 setEditedSettings({...editedSettings, name: e.target.value});
                             }}
-                            disabled={myPermissionLevel < Role.ADMIN}
+                            disabled={myMembershipRecord.userRole < Role.ADMIN}
                         />
                         <Textarea
                             labelProps={{
@@ -304,7 +307,7 @@ const OrganizationPage = (): React.JSX.Element => {
                             onChange={(e)=>{
                                 setEditedSettings({...editedSettings, description: e.target.value});
                             }}
-                            disabled={myPermissionLevel < Role.ADMIN}
+                            disabled={myMembershipRecord.userRole < Role.ADMIN}
                         />
                         <TextInput
                             labelProps={{
@@ -316,12 +319,12 @@ const OrganizationPage = (): React.JSX.Element => {
                             onChange={(e)=>{
                                 setEditedSettings({...editedSettings, logoUrl: e.target.value});
                             }}
-                            disabled={myPermissionLevel < Role.ADMIN}
+                            disabled={myMembershipRecord.userRole < Role.ADMIN}
                         />
                         <Group>
                             <Button 
                                 variant="outline"
-                                disabled={myPermissionLevel < Role.ADMIN}
+                                disabled={myMembershipRecord.userRole < Role.ADMIN}
                                 onClick={()=>{
                                     setEditedSettings(orgData ?? {});
                                 }}
@@ -330,9 +333,9 @@ const OrganizationPage = (): React.JSX.Element => {
                             </Button>
                             <Button 
                                 variant="filled"
-                                disabled={myPermissionLevel < Role.ADMIN}
+                                disabled={myMembershipRecord.userRole < Role.ADMIN}
                                 onClick={async ()=>{
-                                    if(myPermissionLevel < Role.ADMIN){
+                                    if(myMembershipRecord.userRole < Role.ADMIN){
                                         notify(NoteType.UNAUTHORIZED);
                                         return;
                                     }
@@ -352,30 +355,55 @@ const OrganizationPage = (): React.JSX.Element => {
                         </Group>
                         <Divider/>
                         <Space/>
-                        <Button 
-                            variant="light"
-                            color="red"
-                            w="min-content"
-                            disabled={myPermissionLevel < Role.OWNER}
-                            onClick={async ()=>{
-                                if(myPermissionLevel < Role.OWNER){
-                                    notify(NoteType.UNAUTHORIZED);
-                                    return;
-                                }
-                                try {
-                                    sockCtx.updateOrgField(orgId, {archived: true});
-                                    setOrgData({...orgData, archived: true})
-                                    sockCtx.syncUserDash();
-                                    notify(NoteType.CHANGES_SAVED);
-                                    navigate(DEFAULT_AUTHED_ROUTE);
-                                } catch (e) {
-                                    notify(NoteType.ORG_DATA_ERROR, e);
-                                }
+                        <Group gap="sm">
+                            <Button 
+                                variant="light"
+                                color="red"
+                                w="min-content"
+                                disabled={myMembershipRecord.userRole >= Role.OWNER}
+                                onClick={async ()=>{
+                                    if(myMembershipRecord.userRole >= Role.OWNER){
+                                        notify(NoteType.UNAUTHORIZED);
+                                        return;
+                                    }
+                                    try {
+                                        sockCtx.revokeMembershipRecord(myMembershipRecord.id);
+                                        sockCtx.syncUserDash();
+                                        notify(NoteType.LEFT_ENTITY, [orgData.name]);
+                                        navigate(DEFAULT_AUTHED_ROUTE);
+                                    } catch (e) {
+                                        notify(NoteType.ORG_DATA_ERROR, e);
+                                    }
 
-                            }}
-                        >
-                            Archive Organization
-                        </Button>
+                                }}
+                            >
+                                Leave Organization
+                            </Button>
+                            <Button 
+                                variant="light"
+                                color="red"
+                                w="min-content"
+                                disabled={myMembershipRecord.userRole < Role.OWNER}
+                                onClick={async ()=>{
+                                    if(myMembershipRecord.userRole < Role.OWNER){
+                                        notify(NoteType.UNAUTHORIZED);
+                                        return;
+                                    }
+                                    try {
+                                        sockCtx.updateOrgField(orgId, {archived: true});
+                                        setOrgData({...orgData, archived: true})
+                                        sockCtx.syncUserDash();
+                                        notify(NoteType.CHANGES_SAVED);
+                                        navigate(DEFAULT_AUTHED_ROUTE);
+                                    } catch (e) {
+                                        notify(NoteType.ORG_DATA_ERROR, e);
+                                    }
+
+                                }}
+                            >
+                                Archive Organization
+                            </Button>
+                        </Group>
                     </Stack>
                 </Box>
             </Box>
@@ -437,9 +465,9 @@ const OrganizationPage = (): React.JSX.Element => {
                         <Title c="#fff" ta="center" order={3}>This Organization is archived</Title>
                         <Button
                             variant="default"
-                            disabled={myPermissionLevel < Role.OWNER}
+                            disabled={myMembershipRecord.userRole < Role.OWNER}
                             onClick={async ()=>{
-                                if(myPermissionLevel < Role.OWNER){
+                                if(myMembershipRecord.userRole < Role.OWNER){
                                     notify(NoteType.UNAUTHORIZED);
                                     return;
                                 }

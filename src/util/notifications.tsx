@@ -3,6 +3,7 @@ import { notifications } from '@mantine/notifications';
 import React from 'react';
 
 const AUTO_CLOSE_TIMEOUT = 5000;
+const LONG_NOTIFICATION_TIMEOUT = 10000;
 export enum NoteColor {
     ERROR = 'red',
     INFO = 'blue',
@@ -14,6 +15,7 @@ interface Note {
     message?: string;
     color?: NoteColor;
     persist?: boolean;
+    timeout?: number;
     primary?: string;
     secondary?: string;
 }
@@ -128,7 +130,7 @@ export const NoteType = {
     INVITE_RECEIVED: {
         title: "New Invitation!",
         message: "$ has invited you to join $.",
-        persist: true,
+        timeout: LONG_NOTIFICATION_TIMEOUT,
         color: NoteColor.INFO,
         primary: "Accept",
         secondary: "Decline"
@@ -147,6 +149,10 @@ export const NoteType = {
     JOINED_ENTITY: {
         title: "Welcome to $",
         color: NoteColor.SUCCESS
+    },
+    LEFT_ENTITY: {
+        title: "You left $",
+        color: NoteColor.INFO
     },
     ADD_TO_PERSONAL_ORG_ERROR: {
         title: "Personal Organization",
