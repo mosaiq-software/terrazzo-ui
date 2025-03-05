@@ -7,10 +7,11 @@ import {useSocket} from "@trz/util/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
 import { useTRZ } from "@trz/util/TRZ-context";
 import { getCard } from "@trz/util/boardUtils";
-import {FaArchive} from "react-icons/fa";
-import {MdLabel} from "react-icons/md";
+import {FaArchive, FaUserPlus} from "react-icons/fa";
+import {MdLabel, MdOutlinePriorityHigh} from "react-icons/md";
 import {PriorityButtons, priorityColors} from "@trz/components/PriorityButtons";
 import {Priority} from "@mosaiq/terrazzo-common/constants";
+import {FaUserGroup} from "react-icons/fa6";
 
 const CardDetails = (): React.JSX.Element | null => {
 	const trzCtx = useTRZ();
@@ -78,6 +79,14 @@ const CardDetails = (): React.JSX.Element | null => {
 
 	async function onChangeLabels() {
 		//TODO: Implement Change label
+	}
+
+	async function onJoinCard(){
+		//TODO: Implement user joining card
+	}
+
+	async function onAssignCard(){
+		//TODO: Implement to show all card members and add members to card
 	}
 
 	if(!sockCtx.boardData || !trzCtx.openedCardModal){
@@ -194,22 +203,28 @@ const CardDetails = (): React.JSX.Element | null => {
 							>
 								{card.assignees != undefined && card.assignees.length > 0 &&
 									<Grid.Col span={4}>
-										<Stack align='left'>
-											<Text fz="sm">Members</Text>
+										<Text fz="sm">Members</Text>
+										<Stack
+											align='left'
+											pt="xs"
+										>
 											<AvatarRow users={card.assignees} maxUsers={3}/>
 										</Stack>
 									</Grid.Col>
 								}
-								<Grid.Col span={4}>
-									<Stack align='left'>
+								{ priorityNumber != null &&
+									<Grid.Col span={4}>
 										<Text fz="sm">Priority</Text>
-										{ priorityNumber != null &&
+										<Stack
+											align='left'
+											pt="xs"
+										>
 											<Box bg={priorityColor} w='35' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
 												<Text c='white' ta='center'>{priorityNumber}</Text>
 											</Box>
-										}
-									</Stack>
-								</Grid.Col>
+										</Stack>
+									</Grid.Col>
+								}
 								<Grid.Col span={4}>
 									<Text fz="sm">Labels</Text>
 									<Pill.Group
@@ -228,9 +243,29 @@ const CardDetails = (): React.JSX.Element | null => {
 							/>
 						</Stack>
 						<Stack justify='flex-start' align='stretch' pt="md" >
-                            <Menu position='bottom-start'>
+							<Button bg={buttonColor}
+									leftSection={<FaUserPlus />}
+									justify={"flex-start"}
+									onClick={onJoinCard}
+							>Join Card</Button>
+							<Button bg={buttonColor}
+									leftSection={<FaUserGroup />}
+									justify={"flex-start"}
+									onClick={onAssignCard}
+							>Members</Button>
+                            <Menu
+								position='right-start'
+								withArrow
+								arrowPosition="center"
+								withOverlay={true}
+								closeOnClickOutside={true}
+							>
                                 <Menu.Target>
-                                    <Button bg='gray.8'>Card Priority</Button>
+                                    <Button
+										bg={buttonColor}
+										leftSection={<MdOutlinePriorityHigh />}
+										justify={"flex-start"}
+									>Card Priority</Button>
                                 </Menu.Target>
                                 <Menu.Dropdown ta='center'>
                                     <Menu.Label>Card Priority</Menu.Label>
