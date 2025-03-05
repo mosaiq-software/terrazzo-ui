@@ -55,7 +55,6 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 			notify(NoteType.CARD_UPDATE_ERROR);
 			return;
 		}
-		console.log("Archiving card");
 		if(archive){
 			await sockCtx.updateCardField(card.id, {archived: archive, order: -1});
 		}else {
@@ -221,7 +220,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 								<Button bg={buttonColor}
 										leftSection={<FaArchive />}
 										justify={"flex-start"}
-										onClick={onArchiveCard.bind(null, true)}
+										onClick={() => onArchiveCard(true)}
 								>Archive card</Button>
 							}
 							{
@@ -229,7 +228,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 								<Button bg={buttonColor}
 										leftSection={<FaArchive />}
 										justify={"flex-start"}
-										onClick={onArchiveCard.bind(null, false)}
+										onClick={() => onArchiveCard(false)}
 								>Unarchived card</Button>
 							}
 						</Stack>

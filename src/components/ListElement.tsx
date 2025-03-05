@@ -144,7 +144,9 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                             <HiDotsVertical />
                         </Button>
                     </Menu.Target>
-                    <Menu.Dropdown>
+                    <Menu.Dropdown
+                        {...captureDraggableEvents(captureEvent, forAllClickEvents((e)=>{captureEvent(e)}))}
+                    >
                         <Menu.Label>Settings</Menu.Label>
                         <Menu.Item
                             onClick={onArchive}
