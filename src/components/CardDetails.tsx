@@ -1,7 +1,6 @@
 import React, {useEffect} from "react";
 import {Box, Button, Grid, Group, Menu, Modal, Pill, Stack, Text} from "@mantine/core";
 import {CollaborativeTextArea} from "@trz/components/CollaborativeTextArea";
-import {Card} from "@mosaiq/terrazzo-common/types";
 import {AvatarRow} from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
 import {useSocket} from "@trz/util/socket-context";
@@ -11,13 +10,7 @@ import {getCard} from "@trz/util/boardUtils";
 import {PriorityButtons, priorityColors} from "@trz/components/PriorityButtons";
 import {Priority} from "@mosaiq/terrazzo-common/constants";
 
-interface CardDetailsProps {
-	boardCode: string;
-	card: Card;
-	toggle: () => void;
-	open: boolean;
-}
-const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
+const CardDetails = (): React.JSX.Element | null => {
 	const trzCtx = useTRZ();
 	const sockCtx = useSocket();
 	const boardCode = sockCtx.boardData?.boardCode;
