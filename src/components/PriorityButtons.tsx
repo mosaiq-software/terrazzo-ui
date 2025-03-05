@@ -1,9 +1,8 @@
 import React from "react";
 import { Menu } from "@mantine/core";
 import {Priority} from "@mosaiq/terrazzo-common/constants";
-import {useSocket} from "@trz/util/socket-context";
-import {getCard} from "@trz/util/boardUtils";
-import {useTRZ} from "@trz/util/TRZ-context";
+import {useSocket} from "@trz/contexts/socket-context";
+import {useTRZ} from "@trz/contexts/TRZ-context";
 import {NoteType, notify} from "@trz/util/notifications";
 
 interface PriorityButtonProps {
