@@ -11,6 +11,7 @@ interface BoardListCardProps {
     onClick: ()=>void;
     centered?: boolean;
 }
+export const BOARD_CARD_WIDTH = 250;
 export const BoardListCard = (props:BoardListCardProps): React.JSX.Element => {
     const { hovered, ref } = useHover();
     const imageColor = useImageColor(props.bgImage, "DarkMuted")
@@ -19,8 +20,8 @@ export const BoardListCard = (props:BoardListCardProps): React.JSX.Element => {
         <Paper
             ref={ref}
             bg={imageColor ?? props.bgColor}
-            w='350'
-            h='150'
+            w={BOARD_CARD_WIDTH}
+            h={0.44*BOARD_CARD_WIDTH}
             radius='md'
             m='10'
             shadow={hovered ? "lg" : "sm"}

@@ -123,7 +123,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 									</Pill.Group>
 								</Grid.Col>
 							</Grid>
-							<CollaborativeTextArea textBlockId={card.descriptionTextBlockId} maxLineLength={66} />
+							<CollaborativeTextArea textBlockId={card.descriptionTextBlockId} maxLineLength={66}/>
 						</Stack>
 						<Stack justify='flex-start' align='stretch' pt="md">
 							<Menu>

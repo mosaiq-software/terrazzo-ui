@@ -49,10 +49,11 @@ import {
     TEXT_EVENT_EMIT_THROTTLE_MS,
     TextObject
 } from '@trz/util/textUtils';
-import {executeTextBlockEvent} from '@mosaiq/terrazzo-common/utils/textUtils';
+import {executeTextBlockEvent, fullName} from '@mosaiq/terrazzo-common/utils/textUtils';
 import {arrayMove, updateBaseFromPartial} from '@mosaiq/terrazzo-common/utils/arrayUtils';
 import { EntityType, Role } from '@mosaiq/terrazzo-common/constants';
 import { useUser } from './user-context';
+import { useNavigate } from 'react-router-dom';
 
 type SocketContextType = {
     sid?: SocketId;
@@ -93,6 +94,7 @@ type SocketContextType = {
     updateMembershipRecordField: (id: MembershipRecordId, partial: Partial<MembershipRecord>) => Promise<void>;
     userDash: UserDash | undefined;
     syncUserDash: () => void;
+    acceptInvitation: (invite: Invite) => Promise<void>;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -101,6 +103,7 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 const SocketProvider: React.FC<any> = ({ children }) => {
     const trz = useTRZ();
     const usr = useUser();
+    const navigate = useNavigate();
     const idle = useIdle(IDLE_TIMEOUT_MS);
     const [socket, setSocketState] = useState<Socket | null>(null);
     const [room, setRoomState] = useState<RoomId>(null);
@@ -338,7 +341,14 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
 
         sock.on(ServerSE.RECEIVE_INVITE, (payload: ServerSEPayload[ServerSE.RECEIVE_INVITE]) => {
-            notify(NoteType.INVITE_RECEIVED, );
+            notify(NoteType.INVITE_RECEIVED, [fullName(payload.fromUser), payload.entity.name],{
+                primary: async ()=>{
+                    acceptInvitation(payload);
+                },
+                secondary: ()=>{
+                    replyInvite(payload.id, false);
+                }
+            });
         });
         
 
@@ -355,16 +365,19 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     */
     function emit<T extends ClientSE>(event: T, payload: ClientSEPayload[T]): Promise<ClientSEReplies[T] | undefined> {
         return new Promise((resolve: (response: ClientSEReplies[T])=>void, reject: (error?: string)=>void) => {
-            if(!socket){
-                return undefined;
-            }
-            socket.emit(event, payload, (response: ClientSEReplies[T], error?: string) => {
-                if(error) {
-                    reject(error);
-                } else {
-                    resolve(response);
+            setSocketState((currSock=>{
+                if(!currSock){
+                    return null;
                 }
-            });
+                currSock.emit(event, payload, (response: ClientSEReplies[T], error?: string) => {
+                    if(error) {
+                        reject(error);
+                    } else {
+                        resolve(response);
+                    }
+                });
+                return currSock;
+            }));
         });
     }
 
@@ -375,16 +388,20 @@ const SocketProvider: React.FC<any> = ({ children }) => {
      */
     function volatileEmit<T extends ClientSE>(event: ClientSE, payload: ClientSEPayload[T]): Promise<ClientSEReplies[T] | undefined> {
         return new Promise((resolve: (response: ClientSEReplies[T])=>void, reject: (error?: string)=>void) => {
-            if (!socket || !room || !connected || roomUsers.length === 0) {
-                return undefined;
-            }
-            socket.volatile.emit(event, payload, (response: ClientSEReplies[T], error?: string) => {
-                if(error) {
-                    reject(error);
-                } else {
-                    resolve(response);
+            setSocketState((currSock=>{
+                if (!currSock || !room || !connected || roomUsers.length === 0) {
+                    return null;
                 }
-            });
+                currSock.volatile.emit(event, payload, (response: ClientSEReplies[T], error?: string) => {
+                    if(error) {
+                        reject(error);
+                    } else {
+                        resolve(response);
+                    }
+                });
+                return currSock;
+            }));
+            
         });
     }
 
@@ -545,6 +562,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     }
 
     const replyInvite = async (inviteId: InviteId, accept:boolean) => {
+        console.log(inviteId, accept)
         await emit<ClientSE.RESPOND_INVITE>(ClientSE.RESPOND_INVITE, {inviteId, response:accept});
     }
 
@@ -666,6 +684,18 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         }
     }, 100);
 
+
+    const acceptInvitation = async (invite: Invite) => {
+        replyInvite(invite.id, true);
+        notify(NoteType.JOINED_ENTITY, [invite.entity.name]);
+        await new Promise((resolve)=>setTimeout(resolve, 500));
+        if(invite.entityType === EntityType.ORG){
+            navigate("/org/"+invite.entity.id)
+        } else if (invite.entityType === EntityType.PROJECT) {
+            navigate("/project/"+invite.entity.id)
+        }
+    }
+
     return (
         <SocketContext.Provider value={{
             sid: socket?.id,
@@ -706,6 +736,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             kickMemberFromEntity,
             userDash,
             syncUserDash,
+            acceptInvitation,
         }}>
             {children}
         </SocketContext.Provider>

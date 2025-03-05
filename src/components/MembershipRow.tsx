@@ -61,10 +61,11 @@ export const MembershipRow = (props: MembershipRowProps) => {
             <Grid.Col span={1}>
                 { props.editorPermLevel >= Role.ADMIN &&
                     <Tooltip
-                        label="Remove Member"
+                        label={props.record.userRole >= Role.OWNER ? "Can't Remove Owner" : "Remove Member"}
                         bg={NoteColor.ERROR}
                     >
                         <Button
+                            disabled={props.record.userRole >= Role.OWNER}
                             variant="subtle"
                             c={NoteColor.ERROR}
                             onClick={()=>{

@@ -147,6 +147,10 @@ export const NoteType = {
     JOINED_ENTITY: {
         title: "Welcome to $",
         color: NoteColor.SUCCESS
+    },
+    ADD_TO_PERSONAL_ORG_ERROR: {
+        title: "Personal Organization",
+        message: "You can't invite users to your personal organization"
     }
 
 }

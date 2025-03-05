@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Box, Avatar, Group, Flex, Title, Text, Tabs, ScrollArea, Center, Loader, Stack, TextInput, Textarea, ButtonGroup, Button, Divider, Space} from "@mantine/core";
-import {BoardListCard} from "@trz/components/BoardListCards";
+import {BOARD_CARD_WIDTH, BoardListCard} from "@trz/components/BoardListCards";
 import {AvatarRow} from "@trz/components/AvatarRow";
 import {Organization, OrganizationHeader, OrganizationId, User, UserHeader, UserId} from "@mosaiq/terrazzo-common/types";
 import { useNavigate, useParams } from "react-router-dom";
@@ -75,7 +75,7 @@ const OrganizationPage = (): React.JSX.Element => {
                 }}>
                     <Box style={{
                         display: "grid",
-                        gridTemplateColumns: "repeat(auto-fill, 360px)",
+                        gridTemplateColumns: `repeat(auto-fill, ${BOARD_CARD_WIDTH + 10}px)`,
                         maxWidth: "100%"
                     }}>
                         {
@@ -130,6 +130,10 @@ const OrganizationPage = (): React.JSX.Element => {
                         disabled={myPermissionLevel < Role.ADMIN}
                         onSubmit={async (username:string, role:Role)=>{
                             try {
+                                if(orgData.isPersonalOrg){
+                                    notify(NoteType.ADD_TO_PERSONAL_ORG_ERROR);
+                                    return false;
+                                }
                                 const invite = await sockCtx.sendInvite(username, orgId, EntityType.ORG, role);
                                 if(invite && orgData){
                                     setOrgData({
@@ -169,22 +173,43 @@ const OrganizationPage = (): React.JSX.Element => {
                         >
                             <Title order={4} c="#fff">Members</Title>
                             {
-                                orgData.members.map((m)=>(
+                                orgData.members.map((member)=>(
                                     <MembershipRow
-                                        key={m.user.id}
-                                        user={m.user}
-                                        record={m.record}
+                                        key={member.user.id}
+                                        user={member.user}
+                                        record={member.record}
                                         editorPermLevel={myPermissionLevel}
                                         onEditRole={(recordId, role)=>{
-                                            if(myPermissionLevel >= Role.ADMIN){
+                                            if(myPermissionLevel >= Role.ADMIN && member.record.userRole < Role.OWNER){
                                                 sockCtx.updateMembershipRecordField(recordId, {userRole: role});
+                                                setOrgData({
+                                                    ...orgData,
+                                                    members: orgData.members.map((m)=>{
+                                                        if(m.record.id === recordId){
+                                                            return {
+                                                                ...m,
+                                                                record: {
+                                                                    ...m.record,
+                                                                    userRole: role
+                                                                }
+                                                            };
+                                                        }
+                                                        return m;
+                                                    })
+                                                });
                                             } else {
                                                 notify(NoteType.UNAUTHORIZED);
                                             }
                                         }}
                                         onRemoveMember={()=>{
-                                            if(myPermissionLevel >= Role.ADMIN){
-                                                sockCtx.kickMemberFromEntity(m.record.id);
+                                            if(myPermissionLevel >= Role.ADMIN && member.record.userRole < Role.OWNER){
+                                                sockCtx.kickMemberFromEntity(member.record.id);
+                                                setOrgData({
+                                                    ...orgData,
+                                                    members: orgData.members.filter((m)=>{
+                                                        return m.record.id !== member.record.id
+                                                    })
+                                                });
                                             } else {
                                                 notify(NoteType.UNAUTHORIZED);
                                             }
@@ -331,6 +356,7 @@ const OrganizationPage = (): React.JSX.Element => {
                                 try {
                                     sockCtx.updateOrgField(orgId, {archived: true});
                                     setOrgData({...orgData, archived: true})
+                                    sockCtx.syncUserDash();
                                     notify(NoteType.CHANGES_SAVED);
                                     navigate(DEFAULT_AUTHED_ROUTE);
                                 } catch (e) {
@@ -411,6 +437,7 @@ const OrganizationPage = (): React.JSX.Element => {
                                 try {
                                     sockCtx.updateOrgField(orgId, {archived: false});
                                     setOrgData({...orgData, archived: false})
+                                    sockCtx.syncUserDash();
                                     notify(NoteType.CHANGES_SAVED);
                                 } catch (e) {
                                     notify(NoteType.ORG_DATA_ERROR, e);

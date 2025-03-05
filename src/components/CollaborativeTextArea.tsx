@@ -165,7 +165,7 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
                 onBlur={onBlur}
                 onChange={()=>{}}
                 style={{
-                    fontFamily: "monospace",
+                    fontFamily: "serif",
                     fontSize: props.fontSize ?? 16,
                     resize: "none",
                     position: "absolute",

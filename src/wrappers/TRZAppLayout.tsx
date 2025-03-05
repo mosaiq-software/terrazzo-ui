@@ -1,12 +1,12 @@
 import React, { useEffect} from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom"
 import { useHotkeys, useLocalStorage} from "@mantine/hooks";
-import { AppShell, Burger, Group, Tooltip, Kbd, Divider, Input, Text, Box, Stack, Title, Avatar, Button, Image, UnstyledButton, Menu } from "@mantine/core";
-import { MdHomeFilled, MdOutlineSearch} from 'react-icons/md';
+import { AppShell, Burger, Group, Tooltip, Kbd, Divider, Input, Text, Box, Stack, Title, Avatar, Button, Image, UnstyledButton, Menu, Popover, Indicator, Notification, ScrollAreaAutosize } from "@mantine/core";
+import { MdHomeFilled, MdNotificationsNone, MdOutlineSearch} from 'react-icons/md';
 import { useSocket } from "@trz/contexts/socket-context";
 import { useUser } from "@trz/contexts/user-context";
 import { notify, NoteType } from "@trz/util/notifications";
-import { LocalStorageKey } from "@mosaiq/terrazzo-common/constants";
+import { EntityType, LocalStorageKey, RoleNames } from "@mosaiq/terrazzo-common/constants";
 import { useTRZ } from "@trz/contexts/TRZ-context";
 import { fullName } from "@mosaiq/terrazzo-common/utils/textUtils";
 
@@ -66,15 +66,92 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                     width: "100vw",
                     height: `${trz.navbarHeight}px`,
                     padding: "10px",
+                    paddingRight: "2rem",
                     background : "#0c0c10"
                 }}
             >
                 <Group>
+                    <Popover
+                        withArrow
+                        arrowPosition="center"
+                    >
+                        <Popover.Target>
+                            <UnstyledButton variant="subtle" w="fit-content">
+                                <Indicator disabled={!(sockCtx.userDash?.invites.length)}>
+                                    <MdNotificationsNone size={"1.25rem"} color="white"/>
+                                </Indicator>
+                            </UnstyledButton>
+                        </Popover.Target>
+                        <Popover.Dropdown>
+                            <ScrollAreaAutosize mah="60vh">
+                            <Stack w="30rem">
+                                {
+                                    sockCtx.userDash?.invites.map(i=>{
+                                        return (
+                                            <Notification 
+                                                key={i.id}
+                                                withCloseButton={false}
+                                                title={
+                                                    <Group>
+                                                        <Avatar
+                                                            src={i.entity.logoUrl ?? undefined}
+                                                            name={i.entity.name}
+                                                            color={'initials'}
+                                                            display={"inline-block"}
+                                                            size={"sm"}
+                                                            mr={"5px"}
+                                                        />
+                                                        <Text>Invite to {i.entity.name}</Text>
+                                                    </Group>
+                                                }
+                                            >
+                                                <Text py="sm">{fullName(i.fromUser)} ({i.fromUser.username}) has invited you to join the {i.entity.name} {i.entityType===EntityType.ORG?"Organization":"Project"} as a {RoleNames[i.userRole]}</Text>
+                                                <Group>
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={()=>{
+                                                            
+                                                            try{
+                                                                sockCtx.replyInvite(i.id, false);
+                                                                sockCtx.syncUserDash();
+                                                            } catch (e) {
+                                                                notify(NoteType.GENERIC_ERROR, e)
+                                                            }
+                                                        }}
+                                                    >Decline</Button>
+                                                    <Button
+                                                        variant="filled"
+                                                        size="sm"
+                                                        onClick={()=>{
+                                                            try{
+                                                                sockCtx.acceptInvitation(i);
+                                                                sockCtx.syncUserDash();
+                                                            } catch (e) {
+                                                                notify(NoteType.GENERIC_ERROR, e)
+                                                            }
+                                                        }}
+                                                    >Accept</Button>
+                                                </Group>
+                                            </Notification>
+                                        )
+                                    })
+                                }
+                                {
+                                    (!sockCtx.userDash?.invites.length) &&
+                                    <Title ta="center" order={5}>No notifications to show!</Title>
+                                }
+                            </Stack>
+                            </ScrollAreaAutosize>
+                        </Popover.Dropdown>
+                    </Popover>
                     <Box>
                         <Input
                             pointer
                             component={"button"}
-                            onClick={()=>{}}>
+                            onClick={()=>{}}
+                            size="xs"
+                        >
                             <Group align={"center"}>
                                 <MdOutlineSearch size={"1rem"}/>
                                 <Text size={"1rem"} style={{ paddingRight: "2rem" }}>Search all</Text>
@@ -83,7 +160,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                         </Input>
                     </Box>
                     <Menu
-                        transitionProps={{ transition: 'rotate-right', duration: 150 }}
+                        transitionProps={{ transition: 'fade-down', duration: 150 }}
                          position="bottom-end"
                          offset={2}
                          withArrow
@@ -95,7 +172,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                                     console.log("User profile...")
                                 }}
                                 >
-                                    <Avatar size={"2rem"} src={usr.userData?.profilePicture} color="initials" name={fullName(usr.userData)} />
+                                    <Avatar size={"1.75rem"} src={usr.userData?.profilePicture} color="initials" name={fullName(usr.userData)} />
                             </UnstyledButton>
                         </Menu.Target>
                         <Menu.Dropdown>
