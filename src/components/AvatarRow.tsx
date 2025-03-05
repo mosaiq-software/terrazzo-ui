@@ -13,8 +13,8 @@ export const AvatarRow = (props: AvatarRowProps) => {
             {
                 // only take the first n users
                 props.users.slice(0, props.maxUsers).map((user, index) =>
-                    <Tooltip key={index} label={user.firstName +" "+user.lastName} position="bottom" withArrow radius="lg">
-                        <Avatar src={user.profilePicture} size="sm" />
+                    <Tooltip key={index} label={user.firstName + " " + user.lastName + "(" + user.username + ")"} position="bottom" withArrow radius="lg">
+                        <Avatar src={user.profilePicture} size="sm" name={user.firstName + " " + user.lastName} color="initials"/>
                     </Tooltip>
                 )
             }
@@ -24,7 +24,7 @@ export const AvatarRow = (props: AvatarRowProps) => {
                     <Tooltip position="bottom" withArrow radius="lg"
                         label={
                             props.users.slice(props.maxUsers).map((user, index) =>
-                                <Text key={index}>{user.firstName} {user.lastName}</Text>
+                                <Text key={index}>{user.firstName + " " + user.lastName + "(" + user.username + ")"}</Text>
                             )
                         }
                     >

@@ -1,28 +1,47 @@
 import React, {useEffect} from "react";
-import { Select, Group, Grid, Stack, Button, Menu, Modal, Text, Pill} from "@mantine/core";
-import { CollaborativeTextArea } from "@trz/components/CollaborativeTextArea";
-import { AvatarRow } from '@trz/components/AvatarRow';
+import {Box, Button, Grid, Group, Menu, Modal, Pill, Stack, Text} from "@mantine/core";
+import {CollaborativeTextArea} from "@trz/components/CollaborativeTextArea";
+import {AvatarRow} from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
 import {useSocket} from "@trz/contexts/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
 import { useTRZ } from "@trz/contexts/TRZ-context";
 import { getCard } from "@trz/util/boardUtils";
+import {FaArchive, FaUserPlus} from "react-icons/fa";
+import {MdLabel, MdOutlinePriorityHigh} from "react-icons/md";
+import {PriorityButtons, priorityColors} from "@trz/components/PriorityButtons";
+import {Priority} from "@mosaiq/terrazzo-common/constants";
+import {FaUserGroup} from "react-icons/fa6";
 
-interface CardDetailsProps {
-}
-const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
+const CardDetails = (): React.JSX.Element | null => {
 	const trzCtx = useTRZ();
 	const sockCtx = useSocket();
 	const boardCode = sockCtx.boardData?.boardCode;
-	const card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
+	let card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
 	const [title, setTitle] = React.useState<string>(card?.name || "Card Title");
+	const [priorityNumber, setPriorityNumber] = React.useState<Priority | null>(card?.priority || null);
+	const [priorityColor, setPriorityColor] = React.useState<string>("");
+
+	const bgColor = "#323a40";
+	const bgDarkColor = "#22272b";
+	const textColor = "#ffffff";
+	const buttonColor = "#3b454c";
+	const closeColor = "#9fadbc";
 
 	useEffect(() => {
+		card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
 		setTitle(card?.name || "Card Title");
+		if(card?.priority){
+			setPriorityNumber(card?.priority);
+		}
+		else{
+			setPriorityNumber(null);
+		}
+		onPriorityChange(card?.priority || Priority.LOW);
 	}, [card]);
 
 	const isOpen = !!trzCtx.openedCardModal;
-	
+
 	const onCloseModal = () => {
 		trzCtx.setOpenedCardModal(null);
 	}
@@ -39,6 +58,35 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 			notify(NoteType.CARD_UPDATE_ERROR, e);
 			return;
 		}
+	}
+
+	const onPriorityChange = (value:Priority) => {
+		setPriorityColor(priorityColors[value - 1]);
+	}
+
+	async function onArchiveCard(archive: boolean) {
+		if(!card){
+			notify(NoteType.CARD_UPDATE_ERROR);
+			return;
+		}
+		if(archive){
+			await sockCtx.updateCardField(card.id, {archived: archive, order: -1});
+		}else {
+			await sockCtx.updateCardField(card.id, {archived: archive, order: 0});
+		}
+		onCloseModal();//this wont run ever due to sockCtx.boardData being updated
+	}
+
+	async function onChangeLabels() {
+		//TODO: Implement Change label
+	}
+
+	async function onJoinCard(){
+		//TODO: Implement user joining card
+	}
+
+	async function onAssignCard(){
+		//TODO: Implement to show all card members and add members to card
 	}
 
 	if(!sockCtx.boardData || !trzCtx.openedCardModal){
@@ -64,31 +112,79 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 			/>
 			<Modal.Content
 				h={"90vh"}
+				bg={bgColor}
+				c={textColor}
 				style={{
 					overflowX: "hidden",
 					overflowY: "scroll"
 				}}
 			>
-				<Modal.Header>
+				<Modal.Header
+					p="0"
+					bg={bgColor}
+				>
 					<Modal.Title
 						w={"100%"}
 					>
-					<EditableTextbox 
-							value={title}
-							onChange={onTitleChange}
-							type="title"
-							placeholder="Card name.."
-							titleProps={{
-								order:3,
-								textWrap: "nowrap"
-							}}
-							inputProps={{
-								w:"100%"
+						<Group justify="space-between">
+							<Stack
+								w="100%"
+								gap="xs"
+							>
+								{
+									card.archived &&
+									<Box
+										bg="yellow"
+										p="sm"
+									>
+										<Group
+											justify="space-between"
+										>
+											<Text fz="xl">This card is archived.</Text>
+										</Group>
+									</Box>
+								}
+								<Stack
+									gap="xs"
+									align="flex-start"
+									justify="flex-start"
+									pt="lg"
+									pl="lg"
+									pr="lg"
+								>
+									<EditableTextbox
+										value={title}
+										onChange={onTitleChange}
+										type="title"
+										placeholder="Card name.."
+										titleProps={{
+											order:3,
+											textWrap: "nowrap",
+										}}
+										inputProps={{
+											w:"100%",
+											bg: bgDarkColor,
+										}}
+										style={{
+											width: "95%",
+										}}
+									/>
+									<Text fz="sm">{boardCode} - {card.cardNumber}</Text>
+								</Stack>
+							</Stack>
+						</Group>
+						<Modal.CloseButton
+							variant="transparent"
+							c={closeColor}
+							style={{
+								position: "absolute",
+								top: "0.75rem",
+								right: "0.75rem",
+								hover: "green",
 							}}
 						/>
-						<Text fz="sm">{boardCode} - {card.cardNumber}</Text>
+
 					</Modal.Title>
-					<Modal.CloseButton />
 				</Modal.Header>
 				<Modal.Body
 					p={20}
@@ -101,42 +197,102 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 					>
 						<Stack style={{
 						}}>
-							<Grid style={{
-								padding: "1rem",
-							}}>
-								<Grid.Col span={4}>
-									<Stack align='left'>
+							<Grid
+								pb="lg"
+								pr="lg"
+							>
+								{card.assignees != undefined && card.assignees.length > 0 &&
+									<Grid.Col span={4}>
 										<Text fz="sm">Members</Text>
-										<AvatarRow users={[]} maxUsers={3}/>
-									</Stack>
-								</Grid.Col>
-										
+										<Stack
+											align='left'
+											pt="xs"
+										>
+											<AvatarRow users={card.assignees} maxUsers={3}/>
+										</Stack>
+									</Grid.Col>
+								}
+								{ priorityNumber != null &&
+									<Grid.Col span={4}>
+										<Text fz="sm">Priority</Text>
+										<Stack
+											align='left'
+											pt="xs"
+										>
+											<Box bg={priorityColor} w='35' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
+												<Text c='white' ta='center'>{priorityNumber}</Text>
+											</Box>
+										</Stack>
+									</Grid.Col>
+								}
 								<Grid.Col span={4}>
-									<Stack align='left'>
-										<Select label='Priority' placeholder='Low' data={["Low", "Medium", "High"]} />
-									</Stack>
-								</Grid.Col>
-								<Grid.Col span={4}>
-									<Pill.Group>
-										<Pill size="xs" bg='blue'>To Do</Pill>
-										<Pill size="xs" bg='red'>In Progress</Pill>
+									<Text fz="sm">Labels</Text>
+									<Pill.Group
+										pt="xs"
+									>
+										<Pill size="md" bg='#87cefa' c={textColor}>To Do</Pill>
+										<Pill size="md" bg='#ff474c' c={textColor}>In Progress</Pill>
 									</Pill.Group>
 								</Grid.Col>
 							</Grid>
-							<CollaborativeTextArea textBlockId={card.descriptionTextBlockId} maxLineLength={66}/>
+							<CollaborativeTextArea
+								textBlockId={card.descriptionTextBlockId}
+								maxLineLength={66}
+								textColor={textColor}
+								backgroundColor={bgDarkColor}
+							/>
 						</Stack>
-						<Stack justify='flex-start' align='stretch' pt="md">
-							<Menu>
-								<Menu.Target>
-									<Button bg='gray.8'>Menu 1</Button>
-								</Menu.Target>
-								<Menu.Dropdown>
-									<Menu.Label>Placeholder 1</Menu.Label>
-									<Menu.Item>Placeholder 1 Item</Menu.Item>
-									<Menu.Label>Placeholder 2</Menu.Label>
-									<Menu.Item>Placeholder 2 Item</Menu.Item>
-								</Menu.Dropdown>
-							</Menu>
+						<Stack justify='flex-start' align='stretch' pt="md" >
+							<Button bg={buttonColor}
+									leftSection={<FaUserPlus />}
+									justify={"flex-start"}
+									onClick={onJoinCard}
+							>Join Card</Button>
+							<Button bg={buttonColor}
+									leftSection={<FaUserGroup />}
+									justify={"flex-start"}
+									onClick={onAssignCard}
+							>Members</Button>
+                            <Menu
+								position='right-start'
+								withArrow
+								arrowPosition="center"
+								withOverlay={true}
+								closeOnClickOutside={true}
+							>
+                                <Menu.Target>
+                                    <Button
+										bg={buttonColor}
+										leftSection={<MdOutlinePriorityHigh />}
+										justify={"flex-start"}
+									>Card Priority</Button>
+                                </Menu.Target>
+                                <Menu.Dropdown ta='center'>
+                                    <Menu.Label>Card Priority</Menu.Label>
+                                    <PriorityButtons/>
+                                </Menu.Dropdown>
+                            </Menu>
+                            <Button bg={buttonColor}
+									leftSection={<MdLabel />}
+									justify={"flex-start"}
+									onClick={onChangeLabels}
+							>Labels</Button>
+							{
+								!card.archived &&
+								<Button bg={buttonColor}
+										leftSection={<FaArchive />}
+										justify={"flex-start"}
+										onClick={() => onArchiveCard(true)}
+								>Archive card</Button>
+							}
+							{
+								card.archived &&
+								<Button bg={buttonColor}
+										leftSection={<FaArchive />}
+										justify={"flex-start"}
+										onClick={() => onArchiveCard(false)}
+								>Unarchived card</Button>
+							}
 						</Stack>
 					</Group>
 				</Modal.Body>

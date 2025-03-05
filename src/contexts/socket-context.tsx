@@ -265,19 +265,20 @@ const SocketProvider: React.FC<any> = ({ children }) => {
 
         sock.on(ServerSE.UPDATE_CARD_FIELD, (payload: ServerSEPayload[ServerSE.UPDATE_CARD_FIELD]) => {
             setBoardData(prev => {
-                if(!prev) {return prev;}
+                if (!prev) return prev;
                 return {
                     ...prev,
-                    lists: prev.lists.map(list => {
-                        list.cards.map(card=> {
-                            if(card.id === payload.id) {
-                                return updateBaseFromPartial<CardHeader>(card, payload)
-                            }
-                            return card;
-                        })
-                        return list;
-                    })
-                }
+                    lists: prev.lists.map(list => ({
+                        ...list,
+                        cards: list.cards
+                            .map(card => {
+                                if (card.id === payload.id) {
+                                    return updateBaseFromPartial<CardHeader>(card, payload);
+                                }
+                                return card;
+                            }).filter((card: CardHeader) => !card.archived) // Remove null values (filtered out cards)
+                    }))
+                };
             });
         });
 

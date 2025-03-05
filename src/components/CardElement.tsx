@@ -1,9 +1,9 @@
 import React, {useEffect} from "react";
-import { Group, Paper, Pill, Text, Title } from "@mantine/core";
+import {Box, Group, Paper, Pill, Text, Title} from "@mantine/core";
 import {CardHeader} from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from "@trz/components/AvatarRow";
 import { useTRZ } from "@trz/contexts/TRZ-context";
-
+import {priorityColors} from "@trz/components/PriorityButtons";
 
 interface CardElementProps {
 	cardHeader: CardHeader;
@@ -14,10 +14,14 @@ interface CardElementProps {
 const CardElement = (props: CardElementProps): React.JSX.Element => {
 	const trzCtx = useTRZ();
 	const [title, setTitle] = React.useState(props.cardHeader.name || "Card Title");
+	const [priorityNumber, setPriorityNumber] = React.useState<number | null>(props.cardHeader.priority);
+	const textColor = "#ffffff";
 
 	useEffect(() => {
 		setTitle(props.cardHeader.name);
-	}, [props.cardHeader.name]);
+		setPriorityNumber(props.cardHeader.priority);
+
+	}, [props.cardHeader.name, props.cardHeader.priority]);
 
 	const testUsers = Array.from({ length: 1 }).map((_, index) => ({
 		name: "John Doe",
@@ -57,8 +61,8 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 			onClick={onOpenCardModal}
 		>
 			<Pill.Group>
-				<Pill size="xs" bg='blue'>To Do</Pill>
-				<Pill size="xs" bg='red'>In Progress</Pill>
+				<Pill size="xs" bg='#87cefa' c={textColor}>To Do</Pill>
+				<Pill size="xs" bg='#ff474c' c={textColor}>In Progress</Pill>
 			</Pill.Group>
 			<Title 
 				order={5} 
@@ -70,10 +74,18 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 				}}
 			>{title}</Title>
 			<Text size='xs' c="#878787">{props.boardCode} - {props.cardHeader.cardNumber}</Text>
-			<Group>
+			<Group justify='space-between' style={{flexDirection: "row-reverse"}}>
 				{/* icons for info abt the card */}
+                {props.cardHeader.assignees != undefined && props.cardHeader.assignees.length > 0 &&
+                    <AvatarRow users={props.cardHeader.assignees} maxUsers={3}/>
+                }
+                {priorityNumber &&
+                    <Box w='20' bg={priorityColors[priorityNumber - 1]}  style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
+                        <Text c="white" ta='center'>{priorityNumber}</Text>
+                    </Box>
+                }
 			</Group>
-			<AvatarRow users={testUsers} maxUsers={3}/>
+
 		</Paper>
 	);
 };

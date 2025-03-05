@@ -53,6 +53,15 @@ const OrganizationPage = (): React.JSX.Element => {
         }
 	}, [orgId, sockCtx.connected]);
 
+    const testUsers:UserHeader[] = Array.from({ length: 5 }).map(() => ({
+        id: `h-h-h-h-h`,
+        username: "johndoe",
+        firstName: "John",
+        lastName: "Doe",
+        profilePicture: "https://avatars.githubusercontent.com/u/47070087?v=4",
+        githubUserId: "",
+    }))
+
     if(!orgData || !orgId){
         return <NotFound itemType="Organization"/>
     }

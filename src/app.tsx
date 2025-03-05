@@ -2,7 +2,7 @@
 import React from "react";
 import "@mantine/core/styles.css";
 import '@mantine/notifications/styles.css';
-import { createTheme, MantineProvider } from "@mantine/core";
+import {Button, createTheme, MantineProvider} from "@mantine/core";
 import { TRZProvider } from "@trz/contexts/TRZ-context";
 import { SocketProvider } from "@trz/contexts/socket-context";
 import { Notifications } from '@mantine/notifications';
@@ -24,7 +24,7 @@ const modals = {
 
 const App = () => {
 	return (
-		<MantineProvider theme={theme}>
+		<MantineProvider theme={theme} defaultColorScheme="dark">
             <BrowserRouter>
                 <Notifications/>
                 <TRZProvider>

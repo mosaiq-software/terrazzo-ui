@@ -12,6 +12,8 @@ interface CollaborativeTextAreaProps {
     textBlockId: TextBlockId;
     fontSize?: number;
     showOwnCursorAsCustom?: boolean; // should the cursor be a custom one (T) or the default browser one (F/u).
+    textColor: string;
+    backgroundColor: string;
 }
 
 export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
@@ -165,13 +167,15 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
                 onBlur={onBlur}
                 onChange={()=>{}}
                 style={{
-                    fontFamily: "serif",
                     fontSize: props.fontSize ?? 16,
                     resize: "none",
                     position: "absolute",
                     width: (props.maxLineLength)+"ch",
-                    color: props.showOwnCursorAsCustom ? "transparent" : 'unset',
-                    textShadow: props.showOwnCursorAsCustom ? "0px 0px 0px black" : 'none',
+                    color: props.showOwnCursorAsCustom ? "transparent" : props.textColor,
+                    textShadow: props.showOwnCursorAsCustom ? "0px 0px 0px " + props.textColor : 'none',
+                    backgroundColor: props.backgroundColor,
+                    border: "2px solid #ccc",
+                    borderRadius: "5px",
                 }}
                 wrap={"soft"}
             />
