@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import {Box, ScrollArea, Title, Flex, Divider, Text, Loader, Center, Paper, Kbd, Button, Tooltip, Affix} from "@mantine/core";
+import {Box, ScrollArea, Title, Flex, Divider, Text, Loader, Center, Paper, Kbd, Button, Tooltip} from "@mantine/core";
 import { BoardListCard} from "@trz/components/BoardListCards";
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "@trz/contexts/socket-context";
@@ -176,7 +176,6 @@ const HomePage = (): React.JSX.Element => {
                 </Box>
                 {
                         sockCtx.userDash &&
-                        <Affix position={{bottom:20}} w="100vw">
                         <Center display="block" w="100%">
                             <Text c="#fff" ta="center">
                                 <Button
@@ -209,7 +208,6 @@ const HomePage = (): React.JSX.Element => {
                                 to someone to get invited to one!
                             </Text>
                         </Center>
-                        </Affix>
                     }
             </Box>
         </ScrollArea>
