@@ -1,14 +1,14 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom"
-import { useDisclosure, useHotkeys, useLocalStorage, useWindowScroll } from "@mantine/hooks";
-import { AppShell, Burger, Flex, Group, Tooltip, ActionIcon, Kbd, Divider, Input, Text, Box, Stack, Tree, TreeNodeData, Title, Avatar, Button, Image } from "@mantine/core";
-import { MdHome, MdHomeFilled, MdOutlineAccountCircle, MdOutlineSearch, MdViewKanban } from 'react-icons/md';
+import React, { useEffect} from "react";
+import { NavLink, useNavigate, useLocation } from "react-router-dom"
+import { useHotkeys, useLocalStorage} from "@mantine/hooks";
+import { AppShell, Burger, Group, Tooltip, Kbd, Divider, Input, Text, Box, Stack, Title, Avatar, Button, Image, UnstyledButton, Menu } from "@mantine/core";
+import { MdHomeFilled, MdOutlineSearch} from 'react-icons/md';
 import { useSocket } from "@trz/contexts/socket-context";
 import { useUser } from "@trz/contexts/user-context";
-import { UserDash } from "@mosaiq/terrazzo-common/types";
 import { notify, NoteType } from "@trz/util/notifications";
 import { LocalStorageKey } from "@mosaiq/terrazzo-common/constants";
 import { useTRZ } from "@trz/contexts/TRZ-context";
+import { fullName } from "@mosaiq/terrazzo-common/utils/textUtils";
 
 interface TRZAppLayoutProps {
     children: any;
@@ -76,28 +76,37 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                             component={"button"}
                             onClick={()=>{}}>
                             <Group align={"center"}>
-                                <MdOutlineSearch />
-                                <Text size={"md"} style={{ paddingRight: "2rem" }}>Search all</Text>
-                                <Text size={"xs"}><Kbd>/</Kbd></Text>
+                                <MdOutlineSearch size={"1rem"}/>
+                                <Text size={"1rem"} style={{ paddingRight: "2rem" }}>Search all</Text>
+                                <Text size={"1rem"}><Kbd>/</Kbd></Text>
                             </Group>
                         </Input>
                     </Box>
-                    <Box>
-                        <Tooltip
-                            offset={{ mainAxis: 5 }}
-                            label={
-                                <Text size={"sm"}>Account</Text>
-                            }>
-                            <ActionIcon
-                                size={"input-sm"}
-                                variant={"default"}
-                                aria-label={"Login to Account Button"}>
-                                <NavLink to={"/login"}>
-                                    <MdOutlineAccountCircle size={"1.5rem"} />
-                                </NavLink>
-                            </ActionIcon>
-                        </Tooltip>
-                    </Box>
+                    <Menu
+                        transitionProps={{ transition: 'rotate-right', duration: 150 }}
+                         position="bottom-end"
+                         offset={2}
+                         withArrow
+                         arrowPosition="center"
+                    >
+                        <Menu.Target>
+                            <UnstyledButton
+                                onClick={()=>{
+                                    console.log("User profile...")
+                                }}
+                                >
+                                    <Avatar size={"2rem"} src={usr.userData?.profilePicture} color="initials" name={fullName(usr.userData)} />
+                            </UnstyledButton>
+                        </Menu.Target>
+                        <Menu.Dropdown>
+                            <Menu.Item 
+                                color="red"
+                                onClick={()=>{
+                                    usr.logoutAll();
+                                }}
+                            >Logout</Menu.Item>
+                        </Menu.Dropdown>
+                    </Menu>
                 </Group>
             </AppShell.Header>
 
