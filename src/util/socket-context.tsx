@@ -248,9 +248,13 @@ const SocketProvider: React.FC<any> = ({ children }) => {
                     ...prev,
                     lists: prev.lists.map(list => ({
                         ...list,
-                        cards: list.cards.map(card =>
-                            card.id === payload.id ? updateBaseFromPartial<CardHeader>(card, payload) : card
-                        )
+                        cards: list.cards
+                            .map(card => {
+                                if (card.id === payload.id) {
+                                    return updateBaseFromPartial<CardHeader>(card, payload);
+                                }
+                                return card;
+                            }).filter((card: CardHeader) => !card.archived) // Remove null values (filtered out cards)
                     }))
                 };
             });
@@ -658,7 +662,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             updateCardField,
             getUserViaGithub,
             setupUser,
-            checkUserNameTaken
+            checkUserNameTaken,
         }}>
             {children}
         </SocketContext.Provider>

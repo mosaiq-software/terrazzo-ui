@@ -245,7 +245,12 @@ const BoardPage = (): React.JSX.Element => {
 						items={sockCtx.boardData?.lists ?? []}
 						strategy={horizontalListSortingStrategy}
 					>{
-						sockCtx.boardData?.lists?.map((list: List, listIndex: number) => {
+						sockCtx.boardData?.lists
+							?.filter((list: List) => !list.archived)
+							.map((list: List, listIndex: number) => {
+							if(list.archived){
+								return null;
+							}
 							return (
 								<SortableList
 									key={list.id + " : " + list.cards.map(c=>c.id).join(" ")}
@@ -256,7 +261,9 @@ const BoardPage = (): React.JSX.Element => {
 										items={list.cards}
 										strategy={verticalListSortingStrategy}
 									>{
-										list.cards.map((card: CardHeader, cardIndex: number) => {
+										list.cards
+											.filter((card: CardHeader) => !card.archived)
+											.map((card: CardHeader, cardIndex: number) => {
 											return (
 												<SortableCard
 													key={card.id + "i"+cardIndex}

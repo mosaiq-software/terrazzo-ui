@@ -22,7 +22,6 @@ export const priorityColors: string[] = [
 const PriorityButton = (props: PriorityButtonProps): React.JSX.Element => {
     const sockCtx = useSocket();
     const trzCtx = useTRZ();
-    const card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
 
     async function onClick(){
         let priority;
@@ -46,11 +45,17 @@ const PriorityButton = (props: PriorityButtonProps): React.JSX.Element => {
                 priority = null;
                 break
         }
-        if(card == null){
+
+        if(!trzCtx.openedCardModal){
             notify(NoteType.CARD_UPDATE_ERROR);
             return;
         }
-        await sockCtx.updateCardField(card.id, {priority: priority});
+        try{
+            await sockCtx.updateCardField(trzCtx.openedCardModal, {priority: priority});
+        }catch (e){
+            notify(NoteType.CARD_UPDATE_ERROR);
+            return;
+        }
     }
 
     return (
