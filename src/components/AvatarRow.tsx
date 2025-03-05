@@ -1,8 +1,9 @@
 import React from "react";
 import {Avatar, Tooltip, Text} from "@mantine/core";
+import {UserHeader} from "@mosaiq/terrazzo-common/types";
 
 interface AvatarRowProps {
-    users: {name: string, url: string}[];
+    users: UserHeader[];
     maxUsers: number;
 }
 export const AvatarRow = (props: AvatarRowProps) => {
@@ -12,8 +13,8 @@ export const AvatarRow = (props: AvatarRowProps) => {
             {
                 // only take the first n users
                 props.users.slice(0, props.maxUsers).map((user, index) =>
-                    <Tooltip key={index} label={user.name} position="bottom" withArrow radius="lg">
-                        <Avatar src={user.url} size="sm" />
+                    <Tooltip key={index} label={user.firstName + user.lastName + "(" + user.username + ")"} position="bottom" withArrow radius="lg">
+                        <Avatar src={user.profilePicture} size="sm" />
                     </Tooltip>
                 )
             }
@@ -23,7 +24,7 @@ export const AvatarRow = (props: AvatarRowProps) => {
                     <Tooltip position="bottom" withArrow radius="lg"
                         label={
                             props.users.slice(props.maxUsers).map((user, index) =>
-                                <Text key={index}>{user.name}</Text>
+                                <Text key={index}>{user.firstName + user.lastName + "(" + user.username + ")"}</Text>
                             )
                         }
                     >

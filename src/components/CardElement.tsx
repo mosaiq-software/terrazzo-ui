@@ -14,6 +14,7 @@ interface CardElementProps {
 const CardElement = (props: CardElementProps): React.JSX.Element => {
 	const trzCtx = useTRZ();
 	const [title, setTitle] = React.useState(props.cardHeader.name || "Card Title");
+	const textColor = "#ffffff";
 
 	useEffect(() => {
 		setTitle(props.cardHeader.name);
@@ -57,8 +58,8 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 			onClick={onOpenCardModal}
 		>
 			<Pill.Group>
-				<Pill size="xs" bg='blue'>To Do</Pill>
-				<Pill size="xs" bg='red'>In Progress</Pill>
+				<Pill size="xs" bg='#87cefa' c={textColor}>To Do</Pill>
+				<Pill size="xs" bg='#ff474c' c={textColor}>In Progress</Pill>
 			</Pill.Group>
 			<Title 
 				order={5} 
@@ -73,7 +74,10 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 			<Group>
 				{/* icons for info abt the card */}
 			</Group>
-			<AvatarRow users={testUsers} maxUsers={3}/>
+			{
+				props.cardHeader.assignees != undefined && props.cardHeader.assignees.length > 0 &&
+				<AvatarRow users={props.cardHeader.assignees} maxUsers={3}/>
+			}
 		</Paper>
 	);
 };

@@ -1,12 +1,13 @@
 import React, {useEffect, useState} from "react";
 import EditableTextbox from "@trz/components/EditableTextbox";
-import {Button, Group, Paper, Stack, Title, CloseButton, TextInput, Flex, FocusTrap, Menu} from "@mantine/core";
+import {Button, Group, Paper, Stack, CloseButton, TextInput, Flex, FocusTrap, Menu} from "@mantine/core";
 import {useClickOutside, getHotkeyHandler, useInViewport} from "@mantine/hooks";
 import {List} from "@mosaiq/terrazzo-common/types";
 import {useSocket} from "@trz/util/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
 import { captureDraggableEvents, captureEvent, forAllClickEvents } from "@trz/util/eventUtils";
 import {FaArchive} from "react-icons/fa";
+import {HiDotsVertical} from "react-icons/hi";
 
 
 interface ListElementProps {
@@ -129,8 +130,8 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     position="right-start"
                     withArrow
                     arrowPosition="center"
-                    withinPortal={false}
-                    trapFocus={true}
+                    withOverlay={true}
+                    closeOnClickOutside={true}
                 >
                     <Menu.Target>
                         <Button
@@ -140,7 +141,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                             h="100%"
                             px={5}
                         >
-                            <Title order={6} c="#ffffff">•••</Title>
+                            <HiDotsVertical />
                         </Button>
                     </Menu.Target>
                     <Menu.Dropdown>
@@ -206,13 +207,17 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 <Button 
                     w="100%"
                     variant="light"
+                    color="gray"
                     onClickCapture={(e) => {
                         setVisible((v) => !v)
                     }}
                     style={{
-                        maxHeight: '2.25rem',
+                        maxHeight: '2.5rem',
                         minHeight: '2.25rem',
+                        borderTopLeftRadius: 0,
+                        borderTopRightRadius: 0
                     }}
+                    radius="md"
                 >
                     Add Card +
                 </Button>

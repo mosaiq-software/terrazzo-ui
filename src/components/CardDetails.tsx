@@ -8,6 +8,7 @@ import {NoteType, notify} from "@trz/util/notifications";
 import { useTRZ } from "@trz/util/TRZ-context";
 import { getCard } from "@trz/util/boardUtils";
 import {FaArchive} from "react-icons/fa";
+import {MdLabel} from "react-icons/md";
 
 interface CardDetailsProps {
 }
@@ -17,6 +18,12 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 	const boardCode = sockCtx.boardData?.boardCode;
 	let card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
 	const [title, setTitle] = React.useState<string>(card?.name || "Card Title");
+
+	const bgColor = "#323a40";
+	const bgDarkColor = "#22272b";
+	const textColor = "#ffffff";
+	const buttonColor = "#3b454c";
+	const closeColor = "#9fadbc";
 
 	useEffect(() => {
 		card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
@@ -57,6 +64,10 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 		onCloseModal();//this wont run ever due to sockCtx.boardData being updated
 	}
 
+	async function onChangeLabels() {
+		//TODO: Implement Change label
+	}
+
 	if(!sockCtx.boardData || !trzCtx.openedCardModal){
 		return null;
 	}
@@ -80,12 +91,17 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 			/>
 			<Modal.Content
 				h={"90vh"}
+				bg={bgColor}
+				c={textColor}
 				style={{
 					overflowX: "hidden",
 					overflowY: "scroll"
 				}}
 			>
-				<Modal.Header p="0">
+				<Modal.Header
+					p="0"
+					bg={bgColor}
+				>
 					<Modal.Title
 						w={"100%"}
 					>
@@ -111,7 +127,9 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 									gap="xs"
 									align="flex-start"
 									justify="flex-start"
-									p="sm"
+									pt="lg"
+									pl="lg"
+									pr="lg"
 								>
 									<EditableTextbox
 										value={title}
@@ -120,10 +138,14 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 										placeholder="Card name.."
 										titleProps={{
 											order:3,
-											textWrap: "nowrap"
+											textWrap: "nowrap",
 										}}
 										inputProps={{
-											w:"100%"
+											w:"100%",
+											bg: bgDarkColor,
+										}}
+										style={{
+											width: "95%",
 										}}
 									/>
 									<Text fz="sm">{boardCode} - {card.cardNumber}</Text>
@@ -132,6 +154,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 						</Group>
 						<Modal.CloseButton
 							variant="transparent"
+							c={closeColor}
 							style={{
 								position: "absolute",
 								top: "0.75rem",
@@ -153,42 +176,59 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 					>
 						<Stack style={{
 						}}>
-							<Grid style={{
-								padding: "1rem",
-							}}>
-								<Grid.Col span={4}>
-									<Stack align='left'>
-										<Text fz="sm">Members</Text>
-										<AvatarRow users={[]} maxUsers={3}/>
-									</Stack>
-								</Grid.Col>
-										
+							<Grid
+								pb="lg"
+								pr="lg"
+							>
+								{card.assignees != undefined && card.assignees.length > 0 &&
+									<Grid.Col span={4}>
+										<Stack align='left'>
+											<Text fz="sm">Members</Text>
+											<AvatarRow users={card.assignees} maxUsers={3}/>
+										</Stack>
+									</Grid.Col>
+								}
 								<Grid.Col span={4}>
 									<Stack align='left'>
 										<Select label='Priority' placeholder='Low' data={["Low", "Medium", "High"]} />
 									</Stack>
 								</Grid.Col>
 								<Grid.Col span={4}>
-									<Pill.Group>
-										<Pill size="xs" bg='blue'>To Do</Pill>
-										<Pill size="xs" bg='red'>In Progress</Pill>
+									<Text fz="sm">Labels</Text>
+									<Pill.Group
+										pt="xs"
+									>
+										<Pill size="md" bg='#87cefa' c={textColor}>To Do</Pill>
+										<Pill size="md" bg='#ff474c' c={textColor}>In Progress</Pill>
 									</Pill.Group>
 								</Grid.Col>
 							</Grid>
-							<CollaborativeTextArea textBlockId={card.descriptionTextBlockId} maxLineLength={66} />
+							<CollaborativeTextArea
+								textBlockId={card.descriptionTextBlockId}
+								maxLineLength={66}
+								textColor={textColor}
+								backgroundColor={bgDarkColor}
+							/>
 						</Stack>
-						<Stack justify='flex-start' align='stretch' pt="md">
+						<Stack justify='flex-start' align='stretch' pt="md" >
+							<Button bg={buttonColor}
+									leftSection={<MdLabel />}
+									justify={"flex-start"}
+									onClick={onChangeLabels}
+							>Labels</Button>
 							{
 								!card.archived &&
-								<Button bg='gray.8'
+								<Button bg={buttonColor}
 										leftSection={<FaArchive />}
+										justify={"flex-start"}
 										onClick={onArchiveCard.bind(null, true)}
 								>Archive card</Button>
 							}
 							{
 								card.archived &&
-								<Button bg='gray.8'
+								<Button bg={buttonColor}
 										leftSection={<FaArchive />}
+										justify={"flex-start"}
 										onClick={onArchiveCard.bind(null, false)}
 								>Unarchived card</Button>
 							}
