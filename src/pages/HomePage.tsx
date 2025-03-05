@@ -51,8 +51,8 @@ const HomePage = (): React.JSX.Element => {
             bg='#15161A'
             h={`calc(100vh - ${trz.navbarHeight}px)`}
         >
-            <Center h="100%" py='2rem' maw="1200px">
-                <Stack w="90%">
+            <Center h="100%" >
+                <Stack w="90%" py='2rem' maw="1200px">
                     <Flex direction="row" justify='space-between' py='25'>
                         <Title c='white' order={2}>Welcome {usr.userData?.firstName ?? ""}</Title>
                         <Group gap="md">
@@ -81,7 +81,7 @@ const HomePage = (): React.JSX.Element => {
                                     </Button>
                                 </HoverCard.Target>
                                 <HoverCard.Dropdown>
-                                    <Text c="#111" fz={"sm"}>
+                                    <Text fz={"sm"}>
                                         Send your username
                                         <Tooltip label={"Copy"}>
                                             <Button
