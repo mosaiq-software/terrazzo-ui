@@ -101,7 +101,7 @@ const ProjectPage = (): React.JSX.Element => {
                         />
                         <Flex direction='column'>
                             <Title c='white'>{sockCtx.projectData.name}</Title>
-                            {sockCtx.projectData.description && <Text c='#6C6C6C'>{sockCtx.projectData.description}</Text>}
+                            <Text c='#6C6C6C'>{sockCtx.projectData.description}</Text>
                         </Flex>
                     </Group>
                     <Tabs value={getTab()} pt='30' onChange={onChangeTab} color='#F2187E' variant="default">

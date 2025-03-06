@@ -92,7 +92,7 @@ const OrganizationPage = (): React.JSX.Element => {
                         />
                         <Flex direction='column'>
                             <Title c='white'>{sockCtx.orgData.name}</Title>
-                            {sockCtx.orgData.description && <Text c='#6C6C6C'>{sockCtx.orgData.description}</Text>}
+                            <Text c='#6C6C6C'>{sockCtx.orgData.description}</Text>
                         </Flex>
                     </Group>
                     <Tabs value={getTab()} pt='30' onChange={onChangeTab} color='#F2187E' variant="default">

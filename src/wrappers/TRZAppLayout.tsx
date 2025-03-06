@@ -55,8 +55,8 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
             withBorder={false}
             transitionDuration={200}
             navbar={{
-                width: sidebarCollapsed ? "50px" : "200px",
-                breakpoint: "sm",
+                width: sidebarCollapsed ? "50px" : "300px",
+                breakpoint: "0",
             }}
         >
             <AppShell.Header 
@@ -187,14 +187,25 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
 
             <AppShell.Navbar
                 bg="#0c0c10"
+                style={{
+                    transition: "width 200ms"
+                }}
             >
                 <Stack
-                    px={sidebarCollapsed ? "5" : "sm"}
+                    px={sidebarCollapsed ? "10px" : "15px"}
+                    style={{
+                        transition: "padding 200ms"
+                    }}
+                    mt="xs"
                 >
                     <Group
                         align="center"
-                        justify={sidebarCollapsed ? "center" : "space-between"}
-                        p="xs"
+                        justify={"space-between"}
+                        wrap="nowrap"
+                        px={sidebarCollapsed ? "5px" : "0px"}
+                        style={{
+                            transition: "padding 200ms"
+                        }}
                     >
                         <Tooltip
                             offset={{ mainAxis: 5 }}
@@ -212,58 +223,118 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                                 onClick={()=>{setSidebarCollapsed(!sidebarCollapsed)}}
                             />
                         </Tooltip>
-                        {!sidebarCollapsed && <NavLink to={"/"}><Image src="https://mosaiq.dev/assets/terrazzo-logo.svg" alt="terrazzo"/></NavLink>}
+                        <NavLink to={"/"}>
+                            <Image
+                                src="https://mosaiq.dev/assets/terrazzo-logo.svg"
+                                alt="terrazzo"
+                                style={{
+                                    transition: "width 200ms",
+                                    width: sidebarCollapsed ? "0px" : "100px",
+                                    overflow: "clip",
+                                }}
+                            />
+                        </NavLink>
                     </Group>
                     <Divider />
-                    <Button
-                        variant={location.pathname===`/dashboard` ? 'light' : 'subtle'}
-                        onClick={()=>{
-                            navigate(`/dashboard`);
-                        }}
-                        display={"flex"}
-                        px={0}
-                        style={{
-                            justifyContent: sidebarCollapsed ? "center" : "flex-start",
-                            alignItems: "baseline"
-                        }}
+                    <Tooltip
+                        disabled={!sidebarCollapsed}
+                        label={"Dashboard"}
+                        withArrow
+                        arrowPosition="side"
+                        position="right"
+                        openDelay={700}
+                        closeDelay={200}
                     >
-                        <MdHomeFilled size={26} style={{marginRight: "5px"}} color="#fff"/>{!sidebarCollapsed && <Title order={5} c="#fff">Dashboard</Title>}
-                    </Button>
+                        <Button
+                            variant={location.pathname===`/dashboard` ? 'light' : 'subtle'}
+                            onClick={()=>{
+                                navigate(`/dashboard`);
+                            }}
+                            display={"flex"}
+                            px={0}
+                            style={{
+                                justifyContent: sidebarCollapsed ? "center" : "flex-start",
+                                alignItems: "baseline"
+                            }}
+                        >
+                            <MdHomeFilled size={26} color="#fff"/>
+                            <Text
+                                c="#fff"
+                                pl={sidebarCollapsed ? "0px" : "5px"}
+                                style={{
+                                    transition: "width 200ms",
+                                    textWrap: "nowrap",
+                                    textAlign: "left",
+                                    width: sidebarCollapsed ? "0px" : "250px",
+                                }}
+                            >Dashboard</Text>
+                        </Button>
+                    </Tooltip>
                     <Divider />
                     {
                         sockCtx.userDash?.organizations.filter((e)=>!e.archived).map((org)=>{
                             return (
                                 <Box key={org.id} >
                                     <Group align="center" justify="flex-start" pt="0" w="100%">
-                                        <Button
-                                            w="100%"
-                                            display={"flex"}
-                                            variant={location.pathname===`/org/${org.id}` ? 'light' : 'subtle'}
-                                            px={0}
-                                            style={{
-                                                justifyContent: sidebarCollapsed ? "center" : "flex-start"
-                                            }}
-                                            onClick={()=>{
-                                                navigate(`/org/${org.id}`);
-                                            }}
+                                        <Tooltip
+                                            disabled={!sidebarCollapsed}
+                                            label={org.name}
+                                            withArrow
+                                            arrowPosition="side"
+                                            position="right"
+                                            openDelay={700}
+                                            closeDelay={200}
                                         >
-                                            <Avatar
-                                                src={org.logoUrl ?? undefined}
-                                                name={org.name}
-                                                color={'initials'}
-                                                display={"inline-block"}
-                                                size={"sm"}
-                                                mr={"5px"}
-                                            />
-                                            {!sidebarCollapsed && <Title order={5} c="#fff">{org.name}</Title>}
-                                        </Button>
+                                            <Button
+                                                w="100%"
+                                                display={"flex"}
+                                                variant={location.pathname===`/org/${org.id}` ? 'light' : 'subtle'}
+                                                px={0}
+                                                style={{
+                                                    justifyContent: sidebarCollapsed ? "center" : "flex-start"
+                                                }}
+                                                onClick={()=>{
+                                                    navigate(`/org/${org.id}`);
+                                                }}
+                                            >
+                                                <Avatar
+                                                    src={org.logoUrl ?? undefined}
+                                                    name={org.name}
+                                                    color={'initials'}
+                                                    display={"inline-block"}
+                                                    size={"sm"}
+                                                />
+                                                <Text
+                                                    c="#fff"
+                                                    pl={sidebarCollapsed ? "0px" : "5px"}
+                                                    style={{
+                                                        transition: "width 200ms",
+                                                        textWrap: "nowrap",
+                                                        textAlign: "left",
+                                                        width: sidebarCollapsed ? "0px" : "250px",
+                                                    }}
+                                                >{org.name}</Text>
+                                            </Button>
+                                        </Tooltip>
                                     </Group>
                                     <Stack
                                         gap={0}
                                     >{
-                                        !sidebarCollapsed && org.projects.filter((e)=>!e.archived).map((project)=>{
+                                        org.projects.filter((e)=>!e.archived).map((project)=>{
                                             return (
-                                                <Group key={project.id} align="center" justify="flex-start" p="0" ml="sm" w="100%">
+                                                <Group
+                                                    key={project.id}
+                                                    align="center"
+                                                    justify="flex-start"
+                                                    p="0"
+                                                    ml="sm"
+                                                    w="100%"
+                                                    style={{
+                                                        overflow: "hidden",
+                                                        height: sidebarCollapsed ? "0px" : "36px",
+                                                        transition: "height 200ms",
+                                                    }}
+                                                >
                                                     <Button
                                                         w="100%"
                                                         display={"flex"}
@@ -278,9 +349,17 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                                                             color={'initials'}
                                                             display={"inline-block"}
                                                             size={"sm"}
-                                                            mr={"5px"}
                                                         />
-                                                        <Title order={6} c="#fff">{project.name}</Title>
+                                                        <Text
+                                                            c="#fff"
+                                                            pl={sidebarCollapsed ? "0px" : "5px"}
+                                                            style={{
+                                                                transition: "width 200ms",
+                                                                textWrap: "nowrap",
+                                                                textAlign: "left",
+                                                                width: sidebarCollapsed ? "0px" : "calc(90% - 5px)",
+                                                            }}
+                                                        >{project.name}</Text>
                                                     </Button>
                                                 </Group>
                                             )
