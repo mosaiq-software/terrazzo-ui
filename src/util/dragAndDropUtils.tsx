@@ -41,11 +41,11 @@ export function renderContainerDragOverlay(list: List, boardCode: string) {
 			isOverlay={true}
 		>
 			{
-				list.cards.map((card: CardHeader, cardIndex: number) => {
+				list.cards.map((card, cardIndex) => {
 					return (
 						<CardElement
 							key={cardIndex}
-							cardHeader={card}
+							card={card}
 							dragging={false}
 							isOverlay={false}
 							boardCode={boardCode}
@@ -60,7 +60,7 @@ export function renderContainerDragOverlay(list: List, boardCode: string) {
 export function renderSortableItemDragOverlay(card: Card, boardCode: string) {
 	return (
 		<CardElement
-			cardHeader={card}
+			card={card}
 			dragging={true}
 			isOverlay={true}
 			boardCode={boardCode}

@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import {CSS} from '@dnd-kit/utilities';
 import {useSortable} from '@dnd-kit/sortable';
-import {  CardHeader } from "@mosaiq/terrazzo-common/types";
+import {  Card, CardHeader } from "@mosaiq/terrazzo-common/types";
 import { useSocket } from "@trz/contexts/socket-context";
 import CardElement from "../CardElement";
 import { createPortal } from "react-dom";
 
 interface SortableCardProps {
-	cardHeader: CardHeader;
+	card: Card;
     disabled: boolean;
     boardCode: string;
 }
@@ -23,7 +23,7 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
         transform,
         node,
     } = useSortable({
-        id: props.cardHeader.id,
+        id: props.card.id,
         data: { type: 'card' },
     });
 
@@ -33,7 +33,7 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
         }
     }, [node])
 
-    const otherDraggingPos = sockCtx.roomUsers.find((ru)=>ru.mouseRoomData?.draggingCard === props.cardHeader.id)?.mouseRoomData?.pos;
+    const otherDraggingPos = sockCtx.roomUsers.find((ru)=>ru.mouseRoomData?.draggingCard === props.card.id)?.mouseRoomData?.pos;
     if(!!otherDraggingPos && initialPosition) {
         return createPortal(
             <div style={{
@@ -42,7 +42,7 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
                 top: otherDraggingPos.y,
                 zIndex: 101,
             }}>
-                <CardElement cardHeader={props.cardHeader} dragging={true} isOverlay={true} boardCode={props.boardCode}/>
+                <CardElement card={props.card} dragging={true} isOverlay={true} boardCode={props.boardCode}/>
             </div>,
             document.body
         );
@@ -58,7 +58,7 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
                 zIndex: isDragging ? 101 : undefined,
             }}
         >
-            <CardElement cardHeader={props.cardHeader} dragging={isDragging} isOverlay={false} boardCode={props.boardCode}/>
+            <CardElement card={props.card} dragging={isDragging} isOverlay={false} boardCode={props.boardCode}/>
         </div>
     );
 }

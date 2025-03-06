@@ -38,7 +38,7 @@ import {
     TextBlockEvent,
     TextBlockId,
     UID, User,
-    UserDash, UserId
+    UserDash, UserHeader, UserId
 } from '@mosaiq/terrazzo-common/types';
 import {NoteType, notify} from '@trz/util/notifications';
 import {useIdle, useThrottledCallback} from '@mantine/hooks';
@@ -96,6 +96,7 @@ type SocketContextType = {
     acceptInvitation: (invite: Invite) => Promise<void>;
     orgData: Organization | undefined;
     projectData: Project | undefined;
+    lookupUser: (userId: UserId) => Promise<UserHeader | undefined>
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -116,6 +117,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const [userDash, setUserDash] = useState<UserDash | undefined>();
     const [orgData, setOrgData] = useState<Organization | undefined>();
     const [projectData, setProjectData] = useState<Project | undefined>();
+    const [userLookup, setUserLookup] = useState<{[userId:UserId]:UserHeader}>({});
 
     useEffect(() => {
         setIdle(idle);
@@ -292,10 +294,10 @@ const SocketProvider: React.FC<any> = ({ children }) => {
                         cards: list.cards
                             .map(card => {
                                 if (card.id === payload.id) {
-                                    return updateBaseFromPartial<CardHeader>(card, payload);
+                                    return updateBaseFromPartial<Card>(card, payload);
                                 }
                                 return card;
-                            }).filter((card: CardHeader) => !card.archived) // Remove null values (filtered out cards)
+                            }).filter((card) => !card.archived) // Remove null values (filtered out cards)
                     }))
                 };
             });
@@ -596,6 +598,10 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         await emit<ClientSE.KICK_MEMBER>(ClientSE.KICK_MEMBER, membershipRecordId);
     }
 
+    const getUserHeader = async (userId:UserId) => {
+        return await emit<ClientSE.PREVIEW_USER>(ClientSE.PREVIEW_USER, userId);
+    }
+
 
 
     // HELPERS
@@ -723,6 +729,15 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         }
     }
 
+    const lookupUser = async (userId:UserId):Promise<UserHeader | undefined> => {
+        const cached = userLookup[userId];
+        if(cached){
+            return cached;
+        }
+        const fetched = await getUserHeader(userId);
+        return fetched;
+    }
+
     return (
         <SocketContext.Provider value={{
             sid: socket?.id,
@@ -765,6 +780,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             acceptInvitation,
             orgData,
             projectData,
+            lookupUser,
         }}>
             {children}
         </SocketContext.Provider>
