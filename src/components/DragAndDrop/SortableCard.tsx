@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import {CSS} from '@dnd-kit/utilities';
 import {useSortable} from '@dnd-kit/sortable';
-import {  Card, CardHeader } from "@mosaiq/terrazzo-common/types";
+import { Card } from "@mosaiq/terrazzo-common/types";
 import { useSocket } from "@trz/contexts/socket-context";
-import CardElement from "../CardElement";
+import CardElement from "@trz/components/CardElement";
 import { createPortal } from "react-dom";
 
 interface SortableCardProps {

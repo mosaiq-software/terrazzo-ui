@@ -1,6 +1,6 @@
 import React, {createContext, useState} from 'react';
 import {User, UserHeader} from "@mosaiq/terrazzo-common/types";
-import { revokeUserAccessToGithubAuth, tryLoginWithGithub } from '../util/githubAuth';
+import { revokeUserAccessToGithubAuth, tryLoginWithGithub } from '@trz/util/githubAuth';
 import { readSessionStorageValue, useSessionStorage } from '@mantine/hooks';
 import { LocalStorageKey } from '@mosaiq/terrazzo-common/constants';
 import { useNavigate } from 'react-router-dom';

@@ -1,9 +1,9 @@
 import React from "react";
 import {Menu} from "@mantine/core"
-import {StoryPoints} from "../../../terrazzo-common/dist/constants";
-import {useSocket} from "../util/socket-context";
-import {useTRZ} from "../util/TRZ-context";
-import {NoteType, notify} from "../util/notifications";
+import {StoryPoints} from "@mosaiq/terrazzo-common/constants";
+import {useSocket} from "@trz/contexts/socket-context";
+import {useTRZ} from "@trz/contexts/TRZ-context";
+import {NoteType, notify} from "@trz/util/notifications";
 
 interface StoryPointProps{
     buttonText: string;
