@@ -136,6 +136,7 @@ const BoardPage = (): React.JSX.Element => {
 		const overId = over?.id.toString() as UID;
 		sockCtx.setDraggingObject({});
 		setActiveObject(null);
+		console.log("drop")
 		if (!sockCtx.boardData?.lists || !over) {
 			return;
 		}
@@ -229,7 +230,7 @@ const BoardPage = (): React.JSX.Element => {
 				boardId={params.boardId as BoardId}
 				style={{
 					height: "95%",
-					width: "fit-content",
+					width: "auto",
 					display: "flex",
 					gap: "20px",
 					alignItems: "flex-start",

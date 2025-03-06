@@ -396,19 +396,16 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     */
     function emit<T extends ClientSE>(event: T, payload: ClientSEPayload[T]): Promise<ClientSEReplies[T] | undefined> {
         return new Promise((resolve: (response: ClientSEReplies[T])=>void, reject: (error?: string)=>void) => {
-            setSocketState((currSock=>{
-                if(!currSock){
-                    return null;
+            if(!socket){
+                return null;
+            }
+            socket.emit(event, payload, (response: ClientSEReplies[T], error?: string) => {
+                if(error) {
+                    reject(error);
+                } else {
+                    resolve(response);
                 }
-                currSock.emit(event, payload, (response: ClientSEReplies[T], error?: string) => {
-                    if(error) {
-                        reject(error);
-                    } else {
-                        resolve(response);
-                    }
-                });
-                return currSock;
-            }));
+            });
         });
     }
 
@@ -419,20 +416,16 @@ const SocketProvider: React.FC<any> = ({ children }) => {
      */
     function volatileEmit<T extends ClientSE>(event: ClientSE, payload: ClientSEPayload[T]): Promise<ClientSEReplies[T] | undefined> {
         return new Promise((resolve: (response: ClientSEReplies[T])=>void, reject: (error?: string)=>void) => {
-            setSocketState((currSock=>{
-                if (!currSock || !room || !connected || roomUsers.length === 0) {
-                    return null;
+            if (!socket || !room || !connected || roomUsers.length === 0) {
+                return null;
+            }
+            socket.volatile.emit(event, payload, (response: ClientSEReplies[T], error?: string) => {
+                if(error) {
+                    reject(error);
+                } else {
+                    resolve(response);
                 }
-                currSock.volatile.emit(event, payload, (response: ClientSEReplies[T], error?: string) => {
-                    if(error) {
-                        reject(error);
-                    } else {
-                        resolve(response);
-                    }
-                });
-                return currSock;
-            }));
-            
+            });
         });
     }
 
@@ -577,6 +570,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     }
 
     const moveCard = async (cardId: CardId, toList: ListId, position?: number): Promise<void> => {
+        console.log("move")
         moveCardToListAndPos(cardId, toList, position);
         await emit<ClientSE.MOVE_CARD>(ClientSE.MOVE_CARD, {cardId, toList, position});
     }
