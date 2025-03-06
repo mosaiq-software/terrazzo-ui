@@ -5,6 +5,7 @@ import { getRoomCode } from '@mosaiq/terrazzo-common/utils/socketUtils';
 import { RoomType } from '@mosaiq/terrazzo-common/socketTypes';
 import { Box, MantineStyleProp } from '@mantine/core';
 import { BoardId } from '@mosaiq/terrazzo-common/types';
+import { NoteType, notify } from '@trz/util/notifications';
 
 interface CollaborativeMouseTrackerProps {
     boardId: BoardId;
@@ -17,7 +18,11 @@ const CollaborativeMouseTracker = (props: CollaborativeMouseTrackerProps) => {
 
     useEffect(() => {
         if (!sockCtx.connected) { return; }
-        sockCtx.setRoom(getRoomCode(RoomType.MOUSE, props.boardId));
+        try {
+            sockCtx.setRoom(getRoomCode(RoomType.MOUSE, props.boardId));
+        } catch (e) {
+            notify(NoteType.SOCKET_ROOM_ERROR, [getRoomCode(RoomType.MOUSE, props.boardId)]);
+        }
         return () => {
             sockCtx.setRoom(null);
         }

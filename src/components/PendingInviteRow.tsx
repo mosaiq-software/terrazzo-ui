@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import {Avatar, Button, Grid, Group, Menu, Select, TextInput, Title, Tooltip} from "@mantine/core"
+import {Avatar, Button, Grid, Group, Menu, Select, TextInput, Title, Text, Tooltip} from "@mantine/core"
 import { NoteColor, NoteType, notify } from "@trz/util/notifications";
 import { Role, RoleNames } from "@mosaiq/terrazzo-common/constants";
 import { Invite } from "@mosaiq/terrazzo-common/types";
 import { IoMdClose } from "react-icons/io";
+import { fullName } from "@mosaiq/terrazzo-common/utils/textUtils";
 interface PendingInviteRowProps {
     invite: Invite;
     editorPermLevel: Role;
@@ -20,7 +21,7 @@ export const PendingInviteRow = (props: PendingInviteRowProps) => {
                 <Avatar src={props.invite.toUser.profilePicture} />
             </Grid.Col>
             <Grid.Col span={7}>
-                <Title order={5} c="#fff">{props.invite.fromUser.firstName} {props.invite.fromUser.lastName} invited {props.invite.toUser.firstName} {props.invite.toUser.lastName} as a {RoleNames[props.invite.userRole]} at {date.toLocaleString()}</Title>
+                <Text c="#fff">{fullName(props.invite.fromUser)} invited <Text span fw="700">{fullName(props.invite.toUser)}</Text> as a {RoleNames[props.invite.userRole]} on {date.toLocaleString()}</Text>
             </Grid.Col>
             <Grid.Col span={1}>
                 { props.editorPermLevel >= Role.ADMIN &&

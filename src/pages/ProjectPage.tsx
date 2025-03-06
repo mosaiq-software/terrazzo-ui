@@ -1,152 +1,157 @@
-import React, { useEffect, useState } from "react";
-import { Box, Avatar, Group, Flex, Title, Text, Tabs, Select, Divider, Button, ScrollArea, Center, Loader, Stack} from "@mantine/core";
-import {BoardListCard} from "@trz/components/BoardListCards";
+import React, { useEffect} from "react";
+import { Box, Avatar, Group, Flex, Title, Text, Tabs, ScrollArea, Center, Stack, Button} from "@mantine/core";
 import {AvatarRow} from "@trz/components/AvatarRow";
-import {Project, ProjectId, UserHeader, UserId} from "@mosaiq/terrazzo-common/types";
-import { modals } from "@mantine/modals";
+import {OrganizationId, ProjectId, UserHeader} from "@mosaiq/terrazzo-common/types";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSocket } from "@trz/contexts/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
-import { NotFound } from "@trz/components/NotFound";
+import {NotFound, PageErrors} from "@trz/components/NotFound";
+import {Role } from "@mosaiq/terrazzo-common/constants";
+import { useTRZ } from "@trz/contexts/TRZ-context";
+import { getRoomCode } from "@mosaiq/terrazzo-common/utils/socketUtils";
+import { RoomType } from "@mosaiq/terrazzo-common/socketTypes";
+import {ProjectTabCards} from "@trz/components/ProjectTabs/ProjectTabCards";
+import {ProjectTabSettings} from "@trz/components/ProjectTabs/ProjectTabSettings";
+import {ProjectTabMembers} from "@trz/components/ProjectTabs/ProjectTabMembers";
 
 const ProjectPage = (): React.JSX.Element => {
-    const [project, setProject] = useState<Project | undefined>();
     const params = useParams();
 	const sockCtx = useSocket();
+    const trz = useTRZ();
 	const navigate = useNavigate();
+    const projectId = params.projectId as ProjectId | undefined;
+    const tabId = params.tabId;
 
 	useEffect(() => {
-		const fetchOrgData = async () => {
-			if (!params.projectId) {
-				return;
-			}
+        let strictIgnore = false;
+		const fetchProjectData = async () => {
+            await new Promise((resolve)=>setTimeout(resolve, 0));
+            if(strictIgnore || !projectId){
+                return;
+            }
+
             try{
-                const data = await sockCtx.getProjectData(params.projectId as ProjectId);
-                setProject(data);
+                await sockCtx.getProjectData(projectId);
             } catch(err) {
                 notify(NoteType.PROJECT_DATA_ERROR, err);
                 navigate("/dashboard");
                 return;
 			}
+
+            try {
+                if (!sockCtx.connected) { return; }
+                sockCtx.setRoom(getRoomCode(RoomType.DATA, projectId));
+                return () => {
+                    sockCtx.setRoom(null);
+                }
+            } catch (e) {
+                notify(NoteType.SOCKET_ROOM_ERROR, [getRoomCode(RoomType.DATA, projectId)]);
+            }
 		};
-		fetchOrgData();
-	}, [params.projectId, sockCtx.connected]);
+		fetchProjectData();
+        return ()=>{
+            strictIgnore = true;
+            sockCtx.setRoom(null);
+        }
+	}, [projectId, sockCtx.connected]);
 
-    const testUsers:UserHeader[] = Array.from({ length: 5 }).map(() => ({
-        id: `h-h-h-h-h`,
-        username: "johndoe",
-        firstName: "John",
-        lastName: "Doe",
-        profilePicture: "https://avatars.githubusercontent.com/u/47070087?v=4",
-        githubUserId: "",
-    }))
+    if(!sockCtx.projectData || !projectId){
+        return <NotFound itemType="Project" error={PageErrors.NOT_FOUND}/>
+    }
 
-    if(!project){
-        return <NotFound itemType="Project"/>
+    const orgId = sockCtx.projectData.orgId;
+    let myMembershipRecord = sockCtx.userDash?.organizations.find(o=>o.id===orgId)?.myMembershipRecord;
+    const projectMembershipRecord = sockCtx.userDash?.standaloneProjects.find(p=>p.id===projectId)?.myMembershipRecord;
+    if((!myMembershipRecord) || (myMembershipRecord && projectMembershipRecord && projectMembershipRecord.userRole > myMembershipRecord.userRole)){
+        myMembershipRecord = projectMembershipRecord;
+    }
+
+
+    if(!myMembershipRecord){
+        return <NotFound itemType="Project" error={PageErrors.FORBIDDEN}/>
+    }
+
+
+    const tabs = {
+        "Boards": <ProjectTabCards/>,
+        "Members": <ProjectTabMembers myMembershipRecord={myMembershipRecord} projectId={projectId} />,
+        "Settings": <ProjectTabSettings myMembershipRecord={myMembershipRecord} projectId={projectId}/>,
+    }
+    
+    const onChangeTab = (tab: string|null) => {
+        if(tab === Object.keys(tabs)[0])
+            tab = '';
+        navigate(`/project/${projectId}/${tab}`)
+    }
+    const getTab = () => {
+        return (tabId && tabId in tabs) ? tabId : Object.keys(tabs)[0];
     }
 
     return (
-        <ScrollArea h='100vh'>
+        <ScrollArea h={`calc(100vh - ${trz.navbarHeight}px)`}>
             <Stack bg='#15161A' mih='100vh' pb='10vh' align="center">
                 <Box py='25' w='80%'>
                     <Group gap='xl' pl='50'>
-                        <Avatar size='75' radius='lg' src={project.logoUrl}/>
+                        <Avatar
+                            src={sockCtx.projectData.logoUrl ?? undefined}
+                            name={sockCtx.projectData.name}
+                            color={'initials'}
+                            size={"75"}
+                            radius={'lg'}
+                        />
                         <Flex direction='column'>
-                            <Title c='white'>{project.name}</Title>
-                            <Text c='#6C6C6C'>The Description of Project</Text>
+                            <Title c='white'>{sockCtx.projectData.name}</Title>
+                            {sockCtx.projectData.description && <Text c='#6C6C6C'>{sockCtx.projectData.description}</Text>}
                         </Flex>
                     </Group>
-                    <Tabs defaultValue='Boards' pt='30' onChange={(e)=>console.log(e)}>
+                    <Tabs value={getTab()} pt='30' onChange={onChangeTab} color='#F2187E' variant="default">
                         <Tabs.List>
-                            <Tabs.Tab value='Boards' color='#F2187E'><Text c='white' fw='bold'>Boards</Text></Tabs.Tab>
-                            <Tabs.Tab value='Members' color='#F2187E'><Text c='white' fw='bold'>Members</Text></Tabs.Tab>
-                            <Tabs.Tab value='Settings' color='#F2187E'><Text c='white' fw='bold'>Settings</Text></Tabs.Tab>
+                            {
+                                Object.keys(tabs).map((t)=>{
+                                    return (
+                                    <Tabs.Tab 
+                                        value={t}
+                                        
+                                        key={t}
+                                    >
+                                        <Text c='white' fw='bold'>{t}</Text>
+                                    </Tabs.Tab>)
+                                })
+                            }
                             <Flex ml='auto' align='center'>
-                                <AvatarRow users={testUsers} maxUsers={5}/>
+                                <AvatarRow users={sockCtx.projectData.externalMembers.map(m=>m.user)} maxUsers={5}/>
                             </Flex>
                         </Tabs.List>
                     </Tabs>
                 </Box>
-                <Box style={{
-                    width: "80%",
-                    display: "flex",
-                    flexDirection: 'column',
-                    flexWrap: 'nowrap',
-                    alignItems: 'flex-start',
-                    justifyContent: 'flex-start',
-                }}>
-                    <Title c='white' pb='20' order={2} maw='200'>Boards</Title>
-                    {/* 
-                    // TODO implement board sorting
-                    <Group maw='40%'>
-                        <Select data={['Sort by: Alphabetical A-Z', 'Date', 'Creator']}
-                                defaultValue='Sort by: Alphabetical A-Z'
-                                size='xs'
-                                styles={{
-                                    input: {
-                                        backgroundColor: '#27292E',
-                                        color: 'white',
-                                        borderColor: '#1d2022',
-                                    },
-                                    dropdown: {
-                                        backgroundColor: '#27292E',
-                                        color: 'white',
-                                    },
-                                    option: {
-                                        backgroundColor: '#27292E',
-                                        color: 'white',
-                                    }
-                                }}
-                        />
-                        <Divider orientation='vertical' color='#868e96'/>
-                        <Button size='compact-sm' color='#27292E' fw='500'>Grid</Button>
-                        <Button size='compact-sm' color='#27292E' fw='500'>List</Button>
-                    </Group> */}
-                    <Box style={{
-                        width: "100%",
-                        display: "flex",
-                        justifyContent: "center"
-                    }}>
-                        <Box style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(auto-fill, 360px)",
-                            maxWidth: "100%"
-                        }}>
-                            {
-                                project.boards.map((board) => (
-                                    <BoardListCard 
-                                        key={board.id}
-                                        title={board.name}
-                                        bgColor={'#121314'}
-                                        color="white"
-                                        onClick={()=>{
-                                            navigate("/board/"+board.id);
-                                        }}
-                                    />
-                                ))
-                            }
-                            {
-                                (!project) && 
-                                <Center w="100%" h="100%">
-                                    <Loader type="bars"/>
-                                </Center>
-                            }
-                            <BoardListCard
-                                centered
-                                title="+ Add Board"
-                                bgColor={'#121314'}
-                                color="white"
-                                onClick={() =>
-                                    modals.openContextModal({
-                                        modal: 'board',
-                                        title: 'Create Board',
-                                        innerProps: {projectId: project.id},
-                                    })
+                {
+                    !sockCtx.projectData.archived && tabs[getTab()]
+                }
+                {
+                    sockCtx.projectData.archived && 
+                    <Center><Stack>
+                        <Title c="#fff" ta="center" order={3}>This Project is archived</Title>
+                        <Button
+                            variant="default"
+                            disabled={myMembershipRecord.userRole < Role.OWNER}
+                            onClick={async ()=>{
+                                if(myMembershipRecord.userRole < Role.OWNER){
+                                    notify(NoteType.UNAUTHORIZED);
+                                    return;
                                 }
-                            />
-                        </Box>
-                    </Box>
-                </Box>
+                                try {
+                                    sockCtx.updateProjectField(projectId, {archived: false});
+                                    sockCtx.syncUserDash();
+                                    notify(NoteType.CHANGES_SAVED);
+                                } catch (e) {
+                                    notify(NoteType.PROJECT_DATA_ERROR, e);
+                                }
+                            }}
+                        >
+                            Unarchive Project
+                        </Button>
+                    </Stack></Center>
+                }
             </Stack>
         </ScrollArea>
     )

@@ -80,9 +80,8 @@ type SocketContextType = {
     setDraggingObject: React.Dispatch<React.SetStateAction<{list?: ListId, card?: CardId}>>;
     moveListToPos: (listId: ListId, position: number) => void;
     moveCardToListAndPos: (cardId: CardId, toList: ListId, position?: number) => void;
-    getUsersDash: (userId: UserId) => Promise<UserDash | undefined>;
-    getOrganizationData: (orgId: OrganizationId) => Promise<Organization | undefined>;
-    getProjectData: (projectId: ProjectId) => Promise<Project | undefined>;
+    getOrganizationData: (orgId: OrganizationId) => Promise<void>;
+    getProjectData: (projectId: ProjectId) => Promise<void>;
     updateOrgField: (id: OrganizationId, partial: Partial<Organization>) => Promise<void>;
     updateProjectField: (id: ProjectId, partial: Partial<Project>) => Promise<void>;
     updateBoardField: (id: BoardId, partial: Partial<Board>) => Promise<void>;
@@ -95,6 +94,8 @@ type SocketContextType = {
     userDash: UserDash | undefined;
     syncUserDash: () => void;
     acceptInvitation: (invite: Invite) => Promise<void>;
+    orgData: Organization | undefined;
+    projectData: Project | undefined;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -113,6 +114,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const [collaborativeTextObject, setCollaborativeTextObject] = useState<TextObject>({text: '', caret: undefined, relative: undefined, queue:[]});
     const [draggingObject, setDraggingObject] = useState<{list?: ListId, card?: CardId}>({});
     const [userDash, setUserDash] = useState<UserDash | undefined>();
+    const [orgData, setOrgData] = useState<Organization | undefined>();
+    const [projectData, setProjectData] = useState<Project | undefined>();
 
     useEffect(() => {
         setIdle(idle);
@@ -239,6 +242,22 @@ const SocketProvider: React.FC<any> = ({ children }) => {
                     })
                 }
             });
+        });
+
+        sock.on(ServerSE.UPDATE_ORG_FIELD, (payload: ServerSEPayload[ServerSE.UPDATE_ORG_FIELD]) => {
+            setOrgData(prev => {
+                if(!prev) {return prev;}
+                return updateBaseFromPartial<Organization>(prev, payload);
+            });
+            syncUserDash();
+        });
+
+        sock.on(ServerSE.UPDATE_PROJECT_FIELD, (payload: ServerSEPayload[ServerSE.UPDATE_PROJECT_FIELD]) => {
+            setProjectData(prev => {
+                if(!prev) {return prev;}
+                return updateBaseFromPartial<Project>(prev, payload);
+            });
+            syncUserDash();
         });
 
         sock.on(ServerSE.UPDATE_BOARD_FIELD, (payload: ServerSEPayload[ServerSE.UPDATE_BOARD_FIELD]) => {
@@ -447,22 +466,20 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         }
     }
 
-    const getOrganizationData = async (orgId: OrganizationId): Promise<Organization | undefined> => {
+    const getOrganizationData = async (orgId: OrganizationId): Promise<void> => {
         try {
             const org = await emit<ClientSE.GET_ORGANIZATION>(ClientSE.GET_ORGANIZATION, orgId);
-            if(!org) throw new Error("No data found for organization "+orgId);
-            return org;
+            setOrgData(org);
         } catch (e:any){
             notify(NoteType.ORG_DATA_ERROR, e);
             return undefined;
         }
     }
 
-    const getProjectData = async (projectId: ProjectId): Promise<Project | undefined> => {
+    const getProjectData = async (projectId: ProjectId): Promise<void> => {
         try {
             const project = await emit<ClientSE.GET_PROJECT>(ClientSE.GET_PROJECT, projectId);
-            if(!project) throw new Error("No data found for project "+projectId);
-            return project;
+            setProjectData(project);
         } catch (e:any){
             notify(NoteType.PROJECT_DATA_ERROR, e);
             return undefined;
@@ -716,7 +733,6 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             boardData,
             moveMouse,
             setIdle,
-            getUsersDash,
             getOrganizationData,
             getProjectData,
             getBoardData,
@@ -747,6 +763,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             userDash,
             syncUserDash,
             acceptInvitation,
+            orgData,
+            projectData,
         }}>
             {children}
         </SocketContext.Provider>

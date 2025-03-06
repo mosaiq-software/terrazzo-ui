@@ -43,6 +43,10 @@ export const NoteType = {
         message: 'You have been connected to the server',
         color: NoteColor.SUCCESS,
     },
+    SOCKET_ROOM_ERROR: {
+        title: "Room Error",
+        message: "There was an error connecting you to the room $"
+    },
     GITHUB_AUTH_ERROR: {
         title: 'GitHub Authentication Error',
         message: 'An error occurred while authenticating with GitHub',

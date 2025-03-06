@@ -1,24 +1,20 @@
-import React, { useEffect, useState } from "react";
-import { Box, Avatar, Group, Flex, Title, Text, Tabs, ScrollArea, Center, Loader, Stack, TextInput, Textarea, ButtonGroup, Button, Divider, Space} from "@mantine/core";
-import {BOARD_CARD_WIDTH, BoardListCard} from "@trz/components/BoardListCards";
+import React, { useEffect} from "react";
+import { Box, Avatar, Group, Flex, Title, Text, Tabs, ScrollArea, Center, Stack, Button} from "@mantine/core";
 import {AvatarRow} from "@trz/components/AvatarRow";
-import {Organization, OrganizationHeader, OrganizationId, User, UserHeader, UserId} from "@mosaiq/terrazzo-common/types";
+import {OrganizationId, UserHeader} from "@mosaiq/terrazzo-common/types";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSocket } from "@trz/contexts/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
-import {modals} from "@mantine/modals";
 import {NotFound, PageErrors} from "@trz/components/NotFound";
-import {MembershipRow} from "@trz/components/MembershipRow";
-import { EntityType, Role } from "@mosaiq/terrazzo-common/constants";
-import {AddUser} from "@trz/components/AddUser";
-import {PendingInviteRow} from "@trz/components/PendingInviteRow";
-import { DEFAULT_AUTHED_ROUTE } from "@trz/contexts/user-context";
-import { MdOutlineMailOutline, MdOutlinePerson } from "react-icons/md";
+import {Role } from "@mosaiq/terrazzo-common/constants";
 import { useTRZ } from "@trz/contexts/TRZ-context";
+import { getRoomCode } from "@mosaiq/terrazzo-common/utils/socketUtils";
+import { RoomType } from "@mosaiq/terrazzo-common/socketTypes";
+import {OrgTabCards} from "@trz/components/OrganizationTabs/OrgTabCards";
+import {OrgTabSettings} from "@trz/components/OrganizationTabs/OrgTabSettings";
+import {OrgTabMembers} from "@trz/components/OrganizationTabs/OrgTabMembers";
 
 const OrganizationPage = (): React.JSX.Element => {
-    const [orgData, setOrgData] = useState<Organization | undefined>();
-    const [editedSettings, setEditedSettings] = useState<Partial<OrganizationHeader>>({});
     const params = useParams();
 	const sockCtx = useSocket();
     const trz = useTRZ();
@@ -31,384 +27,47 @@ const OrganizationPage = (): React.JSX.Element => {
         let strictIgnore = false;
 		const fetchOrgData = async () => {
             await new Promise((resolve)=>setTimeout(resolve, 0));
-            if(strictIgnore){
+            if(strictIgnore || !orgId){
                 return;
             }
-			if (!orgId) {
-				return;
-			}
+
             try{
-                const data = await sockCtx.getOrganizationData(orgId as OrganizationId)
-                setOrgData(data);
-                setEditedSettings(data ?? {});
+                await sockCtx.getOrganizationData(orgId);
             } catch(err) {
                 notify(NoteType.ORG_DATA_ERROR, err);
                 navigate("/dashboard");
                 return;
 			}
+
+            try {
+                if (!sockCtx.connected) { return; }
+                sockCtx.setRoom(getRoomCode(RoomType.DATA, orgId));
+                return () => {
+                    sockCtx.setRoom(null);
+                }
+            } catch (e) {
+                notify(NoteType.SOCKET_ROOM_ERROR, [getRoomCode(RoomType.DATA, orgId)]);
+            }
 		};
 		fetchOrgData();
         return ()=>{
             strictIgnore = true;
+            sockCtx.setRoom(null);
         }
 	}, [orgId, sockCtx.connected]);
 
-    const testUsers:UserHeader[] = Array.from({ length: 5 }).map(() => ({
-        id: `h-h-h-h-h`,
-        username: "johndoe",
-        firstName: "John",
-        lastName: "Doe",
-        profilePicture: "https://avatars.githubusercontent.com/u/47070087?v=4",
-        githubUserId: "",
-    }))
-
-    if(!orgData || !orgId){
+    if(!sockCtx.orgData || !orgId){
         return <NotFound itemType="Organization" error={PageErrors.NOT_FOUND}/>
     }
     if(!myMembershipRecord){
         return <NotFound itemType="Organization" error={PageErrors.FORBIDDEN}/>
     }
 
-    const tabs = {
-        "Projects": (
-            <Box style={{
-                width: "80%",
-                display: "flex",
-                flexDirection: 'column',
-                flexWrap: 'nowrap',
-                alignItems: 'flex-start',
-                justifyContent: 'flex-start',
-            }}>
-                <Title c='white' pb='20' order={2} maw='200'>Projects</Title>
-                <Box style={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "center"
-                }}>
-                    <Box style={{
-                        display: "grid",
-                        gridTemplateColumns: `repeat(auto-fill, ${BOARD_CARD_WIDTH + 10}px)`,
-                        maxWidth: "100%"
-                    }}>
-                        {
-                            orgData.projects.map((project) => (
-                                <BoardListCard 
-                                    key={project.id}
-                                    bgColor={'#121314'}
-                                    bgImage={project.logoUrl}
-                                    color="white"
-                                    title={project.name}
-                                    onClick={()=>{
-                                        navigate("/project/"+project.id);
-                                    }}
-                                />
-                            ))
-                        }
-                        {
-                            (!orgData) && 
-                            <Center w="100%" h="100%">
-                                <Loader type="bars"/>
-                            </Center>
-                        }
-                        <BoardListCard 
-                            centered
-                            title="+ Add Project"
-                            bgColor={'#121314'}
-                            color="white"
-                            onClick={() =>
-                                modals.openContextModal({
-                                    modal: 'project',
-                                    title: 'Create Project',
-                                    innerProps: {orgId: orgData.id},
-                                })
-                            }
-                        />
-                    </Box>
-                </Box>
-            </Box>
-        ),
-        "Members": (
-            <Box style={{
-                width: "80%",
-                display: "flex",
-                flexDirection: 'column',
-                flexWrap: 'nowrap',
-                alignItems: 'flex-start',
-                justifyContent: 'flex-start',
-            }}>
-                <Group w="100%" justify="space-between">
-                    <Title c='white' pb='20' order={2} maw='200'>Members</Title>
-                    <AddUser
-                        disabled={myMembershipRecord.userRole < Role.ADMIN}
-                        onSubmit={async (username:string, role:Role)=>{
-                            try {
-                                if(orgData.isPersonalOrg){
-                                    notify(NoteType.ADD_TO_PERSONAL_ORG_ERROR);
-                                    return false;
-                                }
-                                const invite = await sockCtx.sendInvite(username, orgId, EntityType.ORG, role);
-                                if(invite && orgData){
-                                    setOrgData({
-                                        ...orgData,
-                                        invites: [...orgData.invites, invite]
-                                    });
-                                }
-                                return !!invite;
-                            } catch (e) {
-                                notify(NoteType.GENERIC_ERROR, e);
-                                return false;
-                            }
-                        }}
-                    />
-                </Group>
-                <Tabs orientation="vertical" defaultValue="members"
-                    style={{
-                        width: "100%",
-                    }}
-                >
-                    <Tabs.List style={{
-                        width:"10rem",
-                        color:"white",
-                        gap: "lg"
-                    }}>
-                        <Tabs.Tab value="members" leftSection={<MdOutlinePerson size={18} />}>Members ({orgData.members.length})</Tabs.Tab>
-                        <Tabs.Tab value="invites" leftSection={<MdOutlineMailOutline size={18} />}>Invites ({orgData.invites.length})</Tabs.Tab>
-                    </Tabs.List>
-                    <Tabs.Panel value="members">
-                        <Stack
-                            px={"md"}
-                            style={{
-                                width: "100%",
-                                display: "flex",
-                                justifyContent: "center",
-                            }}
-                        >
-                            <Title order={4} c="#fff">Members</Title>
-                            {
-                                orgData.members.map((member)=>(
-                                    <MembershipRow
-                                        key={member.user.id}
-                                        user={member.user}
-                                        record={member.record}
-                                        editorsRecord={myMembershipRecord}
-                                        onEditRole={(recordId, role)=>{
-                                            if(myMembershipRecord.userRole >= Role.ADMIN && member.record.userRole < Role.OWNER){
-                                                sockCtx.updateMembershipRecordField(recordId, {userRole: role});
-                                                setOrgData({
-                                                    ...orgData,
-                                                    members: orgData.members.map((m)=>{
-                                                        if(m.record.id === recordId){
-                                                            return {
-                                                                ...m,
-                                                                record: {
-                                                                    ...m.record,
-                                                                    userRole: role
-                                                                }
-                                                            };
-                                                        }
-                                                        return m;
-                                                    })
-                                                });
-                                            } else {
-                                                notify(NoteType.UNAUTHORIZED);
-                                            }
-                                        }}
-                                        onRemoveMember={()=>{
-                                            if(myMembershipRecord.userRole >= Role.ADMIN && member.record.userRole < Role.OWNER){
-                                                sockCtx.revokeMembershipRecord(member.record.id);
-                                                setOrgData({
-                                                    ...orgData,
-                                                    members: orgData.members.filter((m)=>{
-                                                        return m.record.id !== member.record.id
-                                                    })
-                                                });
-                                            } else {
-                                                notify(NoteType.UNAUTHORIZED);
-                                            }
-                                        }}
-                                    />
-                                ))
-                            }
-                        </Stack>
-                    </Tabs.Panel>
-                    <Tabs.Panel value="invites">
-                        <Stack
-                            px={"md"}
-                            style={{
-                                width: "100%",
-                                display: "flex",
-                                justifyContent: "center",
-                            }}
-                        >
-                            <Title order={4} c="#fff">Pending Invites</Title>
-                            {
-                                orgData.invites.map((invite)=>(
-                                    <PendingInviteRow
-                                        key={invite.id}
-                                        invite={invite}
-                                        editorPermLevel={myMembershipRecord.userRole}
-                                        onRevokeInvite={()=>{
-                                            if(myMembershipRecord.userRole >= Role.ADMIN){
-                                                sockCtx.replyInvite(invite.id, false);
-                                                setOrgData({...orgData, invites:orgData.invites.filter(i=>i.id!==invite.id)});
-                                                notify(NoteType.INVITE_REVOKED, [invite.toUser.username])
-                                            } else {
-                                                notify(NoteType.UNAUTHORIZED);
-                                            }
-                                        }}
-                                    />
-                                ))
-                            }
-                        </Stack>
-                    </Tabs.Panel>
-                </Tabs>
-                
-                
-                
-            </Box>
-        ),
-        "Settings": (
-            <Box style={{
-                width: "80%",
-                display: "flex",
-                flexDirection: 'column',
-                flexWrap: 'nowrap',
-                alignItems: 'flex-start',
-                justifyContent: 'flex-start',
-            }}>
-                <Title c='white' pb='20' order={2} maw='200'>Settings</Title>
-                <Box style={{
-                    width: "100%",
-                    display: "flex",
-                    justifyContent: "center"
-                }}>
-                    <Stack style={{
-                        width: "40rem"
-                    }}>
-                        <TextInput
-                            labelProps={{
-                                c:"white"
-                            }}
-                            label="Organization Name"
-                            placeholder="My Organization"
-                            value={editedSettings.name ?? ''}
-                            onChange={(e)=>{
-                                setEditedSettings({...editedSettings, name: e.target.value});
-                            }}
-                            disabled={myMembershipRecord.userRole < Role.ADMIN}
-                        />
-                        <Textarea
-                            labelProps={{
-                                c:"white"
-                            }}
-                            label="Organization Description"
-                            placeholder="Write some info about your organization"
-                            value={editedSettings.description ?? ''}
-                            onChange={(e)=>{
-                                setEditedSettings({...editedSettings, description: e.target.value});
-                            }}
-                            disabled={myMembershipRecord.userRole < Role.ADMIN}
-                        />
-                        <TextInput
-                            labelProps={{
-                                c:"white"
-                            }}
-                            label="Organization Logo URL"
-                            placeholder="https://mosaiq.dev/logo.png"
-                            value={editedSettings.logoUrl ?? ''}
-                            onChange={(e)=>{
-                                setEditedSettings({...editedSettings, logoUrl: e.target.value});
-                            }}
-                            disabled={myMembershipRecord.userRole < Role.ADMIN}
-                        />
-                        <Group>
-                            <Button 
-                                variant="outline"
-                                disabled={myMembershipRecord.userRole < Role.ADMIN}
-                                onClick={()=>{
-                                    setEditedSettings(orgData ?? {});
-                                }}
-                            >
-                                Cancel
-                            </Button>
-                            <Button 
-                                variant="filled"
-                                disabled={myMembershipRecord.userRole < Role.ADMIN}
-                                onClick={async ()=>{
-                                    if(myMembershipRecord.userRole < Role.ADMIN){
-                                        notify(NoteType.UNAUTHORIZED);
-                                        return;
-                                    }
-                                    try {
-                                        sockCtx.updateOrgField(orgId, editedSettings);
-                                        sockCtx.syncUserDash();
-                                        setOrgData({...orgData, ...editedSettings})
-                                        notify(NoteType.CHANGES_SAVED);
-                                    } catch (e) {
-                                        notify(NoteType.ORG_DATA_ERROR, e);
-                                    }
-
-                                }}
-                            >
-                                Save
-                            </Button>
-                        </Group>
-                        <Divider/>
-                        <Space/>
-                        <Group gap="sm">
-                            <Button 
-                                variant="light"
-                                color="red"
-                                w="min-content"
-                                disabled={myMembershipRecord.userRole >= Role.OWNER}
-                                onClick={async ()=>{
-                                    if(myMembershipRecord.userRole >= Role.OWNER){
-                                        notify(NoteType.UNAUTHORIZED);
-                                        return;
-                                    }
-                                    try {
-                                        sockCtx.revokeMembershipRecord(myMembershipRecord.id);
-                                        sockCtx.syncUserDash();
-                                        notify(NoteType.LEFT_ENTITY, [orgData.name]);
-                                        navigate(DEFAULT_AUTHED_ROUTE);
-                                    } catch (e) {
-                                        notify(NoteType.ORG_DATA_ERROR, e);
-                                    }
-
-                                }}
-                            >
-                                Leave Organization
-                            </Button>
-                            <Button 
-                                variant="light"
-                                color="red"
-                                w="min-content"
-                                disabled={myMembershipRecord.userRole < Role.OWNER}
-                                onClick={async ()=>{
-                                    if(myMembershipRecord.userRole < Role.OWNER){
-                                        notify(NoteType.UNAUTHORIZED);
-                                        return;
-                                    }
-                                    try {
-                                        sockCtx.updateOrgField(orgId, {archived: true});
-                                        setOrgData({...orgData, archived: true})
-                                        sockCtx.syncUserDash();
-                                        notify(NoteType.CHANGES_SAVED);
-                                        navigate(DEFAULT_AUTHED_ROUTE);
-                                    } catch (e) {
-                                        notify(NoteType.ORG_DATA_ERROR, e);
-                                    }
-
-                                }}
-                            >
-                                Archive Organization
-                            </Button>
-                        </Group>
-                    </Stack>
-                </Box>
-            </Box>
-        )
-    };
+    const tabs: any = {
+        "Projects": <OrgTabCards/>,
+        "Members": <OrgTabMembers myMembershipRecord={myMembershipRecord} orgId={orgId} />,
+        "Settings": <OrgTabSettings myMembershipRecord={myMembershipRecord} orgId={orgId}/>,
+    }
     
     const onChangeTab = (tab: string|null) => {
         if(tab === Object.keys(tabs)[0])
@@ -425,15 +84,15 @@ const OrganizationPage = (): React.JSX.Element => {
                 <Box py='25' w='80%'>
                     <Group gap='xl' pl='50'>
                         <Avatar
-                            src={orgData.logoUrl ?? undefined}
-                            name={orgData.name}
+                            src={sockCtx.orgData.logoUrl ?? undefined}
+                            name={sockCtx.orgData.name}
                             color={'initials'}
                             size={"75"}
                             radius={'lg'}
                         />
                         <Flex direction='column'>
-                            <Title c='white'>{orgData.name}</Title>
-                            {orgData.description && <Text c='#6C6C6C'>{orgData.description}</Text>}
+                            <Title c='white'>{sockCtx.orgData.name}</Title>
+                            {sockCtx.orgData.description && <Text c='#6C6C6C'>{sockCtx.orgData.description}</Text>}
                         </Flex>
                     </Group>
                     <Tabs value={getTab()} pt='30' onChange={onChangeTab} color='#F2187E' variant="default">
@@ -451,16 +110,16 @@ const OrganizationPage = (): React.JSX.Element => {
                                 })
                             }
                             <Flex ml='auto' align='center'>
-                                <AvatarRow users={orgData.members.map(m=>m.user)} maxUsers={5}/>
+                                <AvatarRow users={sockCtx.orgData.members.map(m=>m.user)} maxUsers={5}/>
                             </Flex>
                         </Tabs.List>
                     </Tabs>
                 </Box>
                 {
-                    !orgData.archived && tabs[getTab()]
+                    !sockCtx.orgData.archived && tabs[getTab()]
                 }
                 {
-                    orgData.archived && 
+                    sockCtx.orgData.archived && 
                     <Center><Stack>
                         <Title c="#fff" ta="center" order={3}>This Organization is archived</Title>
                         <Button
@@ -473,7 +132,6 @@ const OrganizationPage = (): React.JSX.Element => {
                                 }
                                 try {
                                     sockCtx.updateOrgField(orgId, {archived: false});
-                                    setOrgData({...orgData, archived: false})
                                     sockCtx.syncUserDash();
                                     notify(NoteType.CHANGES_SAVED);
                                 } catch (e) {
