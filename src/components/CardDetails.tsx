@@ -12,14 +12,14 @@ import {MdLabel, MdOutlinePriorityHigh} from "react-icons/md";
 import {PriorityButtons, priorityColors} from "@trz/components/PriorityButtons";
 import {Priority} from "@mosaiq/terrazzo-common/constants";
 import {FaUserGroup} from "react-icons/fa6";
+import {StoryPointButtons} from "@trz/components/StoryPointButtons";
 
 const CardDetails = (): React.JSX.Element | null => {
 	const trzCtx = useTRZ();
 	const sockCtx = useSocket();
 	const boardCode = sockCtx.boardData?.boardCode;
-	let card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
+	const card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
 	const [title, setTitle] = React.useState<string>(card?.name || "Card Title");
-	const [priorityNumber, setPriorityNumber] = React.useState<Priority | null>(card?.priority || null);
 	const [priorityColor, setPriorityColor] = React.useState<string>("");
 
 	const bgColor = "#323a40";
@@ -29,14 +29,7 @@ const CardDetails = (): React.JSX.Element | null => {
 	const closeColor = "#9fadbc";
 
 	useEffect(() => {
-		card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
 		setTitle(card?.name || "Card Title");
-		if(card?.priority){
-			setPriorityNumber(card?.priority);
-		}
-		else{
-			setPriorityNumber(null);
-		}
 		onPriorityChange(card?.priority || Priority.LOW);
 	}, [card]);
 
@@ -212,7 +205,22 @@ const CardDetails = (): React.JSX.Element | null => {
 										</Stack>
 									</Grid.Col>
 								}
-								{ priorityNumber != null &&
+
+								{ card?.storyPoints !=null && card?.storyPoints >-1 &&
+									<Grid.Col span={4}>
+										<Text fz="sm">Story Points</Text>
+										<Stack
+											align='left'
+											pt="xs"
+										>
+											<Box bg='#f2bb6e' w='35' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
+												<Text c='white' ta='center'>{card?.storyPoints}</Text>
+											</Box>
+										</Stack>
+									</Grid.Col>
+								}
+
+								{ card?.priority != null &&
 									<Grid.Col span={4}>
 										<Text fz="sm">Priority</Text>
 										<Stack
@@ -220,7 +228,7 @@ const CardDetails = (): React.JSX.Element | null => {
 											pt="xs"
 										>
 											<Box bg={priorityColor} w='35' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
-												<Text c='white' ta='center'>{priorityNumber}</Text>
+												<Text c='white' ta='center'>{card?.priority}</Text>
 											</Box>
 										</Stack>
 									</Grid.Col>
@@ -272,6 +280,24 @@ const CardDetails = (): React.JSX.Element | null => {
                                     <PriorityButtons/>
                                 </Menu.Dropdown>
                             </Menu>
+							<Menu
+								position='right-start'
+								withArrow
+								arrowPosition="center"
+								withOverlay={true}
+								closeOnClickOutside={true}
+							>
+								<Menu.Target>
+									<Button
+										bg={buttonColor}
+										justify={"flex-start"}
+									>Story Points</Button>
+								</Menu.Target>
+								<Menu.Dropdown ta='center'>
+									<Menu.Label>Story Points</Menu.Label>
+									<StoryPointButtons/>
+								</Menu.Dropdown>
+							</Menu>
                             <Button bg={buttonColor}
 									leftSection={<MdLabel />}
 									justify={"flex-start"}

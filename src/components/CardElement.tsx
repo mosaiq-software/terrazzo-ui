@@ -13,15 +13,12 @@ interface CardElementProps {
 }
 const CardElement = (props: CardElementProps): React.JSX.Element => {
 	const trzCtx = useTRZ();
-	const [title, setTitle] = React.useState(props.card.name || "Card Title");
-	const [priorityNumber, setPriorityNumber] = React.useState<number | null>(props.card.priority);
+	const [title, setTitle] = React.useState(props.cardHeader.name || "Card Title");
 	const textColor = "#ffffff";
 
 	useEffect(() => {
-		setTitle(props.card.name);
-		setPriorityNumber(props.card.priority);
-
-	}, [props.card.name, props.card.priority]);
+		setTitle(props.cardHeader.name);
+	}, [props.cardHeader.name, props.cardHeader.priority]);
 
 	const testUsers = Array.from({ length: 1 }).map((_, index) => ({
 		name: "John Doe",
@@ -79,11 +76,16 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
                 {props.card.assignees != undefined && props.card.assignees.length > 0 &&
                     <AvatarRow users={props.card.assignees} maxUsers={3}/>
                 }
-                {priorityNumber &&
-                    <Box w='20' bg={priorityColors[priorityNumber - 1]}  style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
-                        <Text c="white" ta='center'>{priorityNumber}</Text>
+                {props.cardHeader.priority &&
+                    <Box w='20' bg={priorityColors[props.cardHeader.priority - 1]}  style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
+                        <Text c="white" ta='center'>{props.cardHeader.priority}</Text>
                     </Box>
                 }
+				{props.cardHeader.storyPoints &&
+					<Box bg='#f2bb6e' w='20' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
+						<Text c='white' ta='center'>{props.cardHeader.storyPoints}</Text>
+					</Box>
+				}
 			</Group>
 
 		</Paper>
