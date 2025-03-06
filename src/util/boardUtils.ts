@@ -31,3 +31,7 @@ export const getCardsList = (cardId: CardId, fromLists?: List[]): List | null =>
     })
     return list;
 }
+
+export const getCardNumber = (boardCode: string, cardNumber:number)=> {
+    return boardCode ? (`${boardCode}-${cardNumber}`) : `# ${cardNumber}`;
+}

@@ -6,7 +6,7 @@ import EditableTextbox from "@trz/components/EditableTextbox";
 import {useSocket} from "@trz/contexts/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
 import { useTRZ } from "@trz/contexts/TRZ-context";
-import { getCard } from "@trz/util/boardUtils";
+import { getCard, getCardNumber } from "@trz/util/boardUtils";
 import {FaArchive, FaUserPlus} from "react-icons/fa";
 import {MdLabel, MdOutlinePriorityHigh} from "react-icons/md";
 import {PriorityButtons, priorityColors} from "@trz/components/PriorityButtons";
@@ -162,7 +162,7 @@ const CardDetails = (): React.JSX.Element | null => {
 											width: "95%",
 										}}
 									/>
-									<Text fz="sm">{boardCode} - {card.cardNumber}</Text>
+									<Text fz="sm">{getCardNumber(boardCode??'', card.cardNumber)}</Text>
 								</Stack>
 							</Stack>
 						</Group>
