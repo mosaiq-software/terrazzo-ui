@@ -99,7 +99,6 @@ export const OrgTabSettings = (props: OrgTabSettingsProps) => {
                                 }
                                 try {
                                     sockCtx.updateOrgField(props.orgId, editedSettings);
-                                    sockCtx.syncUserDash();
                                     notify(NoteType.CHANGES_SAVED);
                                 } catch (e) {
                                     notify(NoteType.ORG_DATA_ERROR, e);
@@ -148,7 +147,6 @@ export const OrgTabSettings = (props: OrgTabSettingsProps) => {
                                 }
                                 try {
                                     sockCtx.updateOrgField(props.orgId, {archived: true});
-                                    sockCtx.syncUserDash();
                                     notify(NoteType.CHANGES_SAVED);
                                     navigate(DEFAULT_AUTHED_ROUTE);
                                 } catch (e) {

@@ -99,7 +99,6 @@ export const ProjectTabSettings = (props: ProjectTabSettingsProps) => {
                                 }
                                 try {
                                     sockCtx.updateProjectField(props.projectId, editedSettings);
-                                    sockCtx.syncUserDash();
                                     notify(NoteType.CHANGES_SAVED);
                                 } catch (e) {
                                     notify(NoteType.PROJECT_DATA_ERROR, e);
@@ -148,7 +147,6 @@ export const ProjectTabSettings = (props: ProjectTabSettingsProps) => {
                                 }
                                 try {
                                     sockCtx.updateProjectField(props.projectId, {archived: true});
-                                    sockCtx.syncUserDash();
                                     notify(NoteType.CHANGES_SAVED);
                                     navigate(DEFAULT_AUTHED_ROUTE);
                                 } catch (e) {

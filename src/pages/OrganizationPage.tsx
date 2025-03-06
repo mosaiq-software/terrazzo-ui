@@ -27,7 +27,7 @@ const OrganizationPage = (): React.JSX.Element => {
         let strictIgnore = false;
 		const fetchOrgData = async () => {
             await new Promise((resolve)=>setTimeout(resolve, 0));
-            if(strictIgnore || !orgId){
+            if(strictIgnore || !orgId || !sockCtx.connected){
                 return;
             }
 
@@ -132,7 +132,6 @@ const OrganizationPage = (): React.JSX.Element => {
                                 }
                                 try {
                                     sockCtx.updateOrgField(orgId, {archived: false});
-                                    sockCtx.syncUserDash();
                                     notify(NoteType.CHANGES_SAVED);
                                 } catch (e) {
                                     notify(NoteType.ORG_DATA_ERROR, e);

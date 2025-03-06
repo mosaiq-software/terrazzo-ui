@@ -25,7 +25,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
         let strictIgnore = false;
         const fetchOrgData = async () => {
             await new Promise((resolve)=>setTimeout(resolve, 0));
-            if(strictIgnore){
+            if(strictIgnore || !sockCtx.connected || !usr.userData?.id){
                 return;
             }
             try{

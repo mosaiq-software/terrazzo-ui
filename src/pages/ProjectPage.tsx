@@ -26,7 +26,7 @@ const ProjectPage = (): React.JSX.Element => {
         let strictIgnore = false;
 		const fetchProjectData = async () => {
             await new Promise((resolve)=>setTimeout(resolve, 0));
-            if(strictIgnore || !projectId){
+            if(strictIgnore || !projectId || !sockCtx.connected){
                 return;
             }
 
@@ -141,7 +141,6 @@ const ProjectPage = (): React.JSX.Element => {
                                 }
                                 try {
                                     sockCtx.updateProjectField(projectId, {archived: false});
-                                    sockCtx.syncUserDash();
                                     notify(NoteType.CHANGES_SAVED);
                                 } catch (e) {
                                     notify(NoteType.PROJECT_DATA_ERROR, e);
