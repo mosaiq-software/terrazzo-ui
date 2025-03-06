@@ -39,7 +39,7 @@ export const MembershipRow = (props: MembershipRowProps) => {
                         ]}
                         value={RoleNames[props.record.userRole]}
                         allowDeselect={false}
-                        disabled={props.readonly || props.editorsRecord.userRole < Role.ADMIN || props.record.userRole === Role.OWNER || props.editorsRecord.id === props.record.id}
+                        disabled={props.readonly || props.editorsRecord.userRole < Role.ADMIN || props.record.userRole === Role.OWNER || props.editorsRecord.userId === props.record.userId}
                         onChange={(e)=>{
                             props.onEditRole(props.record.id, RoleNames.indexOf(e ?? RoleNames[Role.READ]));
                         }}
@@ -61,11 +61,11 @@ export const MembershipRow = (props: MembershipRowProps) => {
             <Grid.Col span={1}>
                 { (!props.readonly) && props.editorsRecord.userRole >= Role.ADMIN &&
                     <Tooltip
-                        label={props.record.userRole >= Role.OWNER ? "Can't Remove Owner" : props.editorsRecord.id === props.record.id ? "Can't Remove Yourself" : "Remove Member"}
+                        label={props.record.userRole >= Role.OWNER ? "Can't Remove Owner" : props.editorsRecord.userId === props.record.userId ? "Can't Remove Yourself" : "Remove Member"}
                         bg={NoteColor.ERROR}
                     >
                         <Button
-                            disabled={props.record.userRole >= Role.OWNER || props.editorsRecord.id === props.record.id}
+                            disabled={props.record.userRole >= Role.OWNER || props.editorsRecord.userId === props.record.userId}
                             variant="subtle"
                             c={NoteColor.ERROR}
                             onClick={()=>{

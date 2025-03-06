@@ -75,14 +75,14 @@ export const ProjectTabMembers = (props: ProjectTabMembersProps) => {
                                     record={member.record}
                                     editorsRecord={props.myMembershipRecord}
                                     onEditRole={(recordId, role)=>{
-                                        if(props.myMembershipRecord.userRole >= Role.ADMIN && member.record.userRole < Role.OWNER  && props.myMembershipRecord.id !== member.record.id){
+                                        if(props.myMembershipRecord.userRole >= Role.ADMIN && member.record.userRole < Role.OWNER  && props.myMembershipRecord.userId !== member.record.userId){
                                             sockCtx.updateMembershipRecordField(recordId, {userRole: role});
                                         } else {
                                             notify(NoteType.UNAUTHORIZED);
                                         }
                                     }}
                                     onRemoveMember={()=>{
-                                        if(props.myMembershipRecord.userRole >= Role.ADMIN && member.record.userRole < Role.OWNER  && props.myMembershipRecord.id !== member.record.id){
+                                        if(props.myMembershipRecord.userRole >= Role.ADMIN && member.record.userRole < Role.OWNER  && props.myMembershipRecord.userId !== member.record.userId){
                                             sockCtx.revokeMembershipRecord(member.record.id);
                                         } else {
                                             notify(NoteType.UNAUTHORIZED);
