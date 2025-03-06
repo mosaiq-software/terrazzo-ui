@@ -698,7 +698,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
     }, TEXT_EVENT_EMIT_THROTTLE_MS);
 
-    const syncUserDash = useThrottledCallback(async () => {
+    const syncUserDash = async () => {
         try {
             if(!usr.userData?.id){
                 return;
@@ -708,7 +708,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         } catch (e) {
             notify(NoteType.DASH_ERROR, e);
         }
-    }, 100);
+    };
 
 
     const acceptInvitation = async (invite: Invite) => {
