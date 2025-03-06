@@ -13,17 +13,7 @@ interface CardElementProps {
 }
 const CardElement = (props: CardElementProps): React.JSX.Element => {
 	const trzCtx = useTRZ();
-	const [title, setTitle] = React.useState(props.cardHeader.name || "Card Title");
 	const textColor = "#ffffff";
-
-	useEffect(() => {
-		setTitle(props.cardHeader.name);
-	}, [props.cardHeader.name, props.cardHeader.priority]);
-
-	const testUsers = Array.from({ length: 1 }).map((_, index) => ({
-		name: "John Doe",
-		url: "https://avatars.githubusercontent.com/u/47070087?v=4"
-	}))
 
 	const onOpenCardModal = () => {
 		if(props.dragging || props.isOverlay){
@@ -69,21 +59,21 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 					wordWrap: "break-word",
 					textWrap: "wrap"
 				}}
-			>{title}</Title>
+			>{props.card.name}</Title>
 			<Text size='xs' c="#878787">{props.boardCode} - {props.card.cardNumber}</Text>
 			<Group justify='space-between' style={{flexDirection: "row-reverse"}}>
 				{/* icons for info abt the card */}
                 {props.card.assignees != undefined && props.card.assignees.length > 0 &&
                     <AvatarRow users={props.card.assignees} maxUsers={3}/>
                 }
-                {props.cardHeader.priority &&
-                    <Box w='20' bg={priorityColors[props.cardHeader.priority - 1]}  style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
-                        <Text c="white" ta='center'>{props.cardHeader.priority}</Text>
+                {props.card.priority &&
+                    <Box w='20' bg={priorityColors[props.card.priority - 1]}  style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
+                        <Text c="white" ta='center'>{props.card.priority}</Text>
                     </Box>
                 }
-				{props.cardHeader.storyPoints &&
+				{props.card.storyPoints &&
 					<Box bg='#f2bb6e' w='20' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
-						<Text c='white' ta='center'>{props.cardHeader.storyPoints}</Text>
+						<Text c='white' ta='center'>{props.card.storyPoints}</Text>
 					</Box>
 				}
 			</Group>
