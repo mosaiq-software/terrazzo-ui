@@ -1,5 +1,5 @@
 import React, {useEffect} from "react";
-import {Box, Button, Grid, Group, Menu, Modal, Pill, Stack, Text} from "@mantine/core";
+import {Box, Button, Checkbox, Divider, Grid, Group, Menu, Modal, Pill, Stack, Text} from "@mantine/core";
 import {CollaborativeTextArea} from "@trz/components/CollaborativeTextArea";
 import {AvatarRow} from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
@@ -13,6 +13,7 @@ import {PriorityButtons, priorityColors} from "@trz/components/PriorityButtons";
 import {Priority} from "@mosaiq/terrazzo-common/constants";
 import {FaUserGroup} from "react-icons/fa6";
 import {StoryPointButtons} from "@trz/components/StoryPointButtons";
+import {CreateLabel} from "@trz/components/LabelsCheckbox";
 
 const CardDetails = (): React.JSX.Element | null => {
 	const trzCtx = useTRZ();
@@ -298,11 +299,50 @@ const CardDetails = (): React.JSX.Element | null => {
 									<StoryPointButtons/>
 								</Menu.Dropdown>
 							</Menu>
-                            <Button bg={buttonColor}
-									leftSection={<MdLabel />}
-									justify={"flex-start"}
-									onClick={onChangeLabels}
-							>Labels</Button>
+							<Menu position='right-start'
+								  withArrow
+								  arrowPosition="center"
+								  withOverlay={true}
+								  closeOnClickOutside={true}
+							>
+								<Menu.Target>
+									<Button
+										leftSection={<MdLabel />}
+										onClick={onChangeLabels}
+										bg={buttonColor}
+										justify={"flex-start"}
+									>Labels</Button>
+								</Menu.Target>
+								<Menu.Dropdown ta='center'>
+									<Menu.Label>Labels</Menu.Label>
+									<Checkbox label='Features' styles={{
+										root: {
+											border: "1px solid red",
+											cursor: 'pointer',
+										},
+
+										label: {
+												border: "1px solid yellow",
+												fontWeight: "bold",
+												cursor: 'pointer',
+
+										},
+
+										input:{
+											border: "1px solid white",
+											paddingRight: '10px',
+											cursor: 'pointer',
+										}
+										}
+
+									}/>
+									<Divider pt='50'/>
+									<Checkbox label='Polishing' w='200' pb='10'/>
+									<Checkbox label='Bugs' w='200' pb='10'/>
+									<Divider pb='10'/>
+									<CreateLabel/>
+								</Menu.Dropdown>
+							</Menu>
 							{
 								!card.archived &&
 								<Button bg={buttonColor}
