@@ -1,4 +1,4 @@
-import React, { useEffect} from "react";
+import React, { useEffect, useState} from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom"
 import { useHotkeys, useLocalStorage} from "@mantine/hooks";
 import { AppShell, Burger, Group, Tooltip, Kbd, Divider, Input, Text, Box, Stack, Title, Avatar, Button, Image, UnstyledButton, Menu, Popover, Indicator, Notification, ScrollAreaAutosize } from "@mantine/core";
@@ -77,7 +77,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                     >
                         <Popover.Target>
                             <UnstyledButton variant="subtle" w="fit-content">
-                                <Indicator disabled={!(sockCtx.userDash?.invites.length)}>
+                                <Indicator disabled={!(sockCtx.userDash?.invites.length)} label={sockCtx.userDash?.invites.length ?? undefined} size={16}>
                                     <MdNotificationsNone size={"1.25rem"} color="white"/>
                                 </Indicator>
                             </UnstyledButton>
@@ -111,7 +111,6 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                                                         variant="outline"
                                                         size="sm"
                                                         onClick={()=>{
-                                                            
                                                             try{
                                                                 sockCtx.replyInvite(i.id, false);
                                                                 sockCtx.syncUserDash();
