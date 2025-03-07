@@ -11,6 +11,7 @@ interface CardElementProps {
 	dragging: boolean;
 	isOverlay: boolean;
 	boardCode: string;
+	onClick: ()=>void;
 }
 const CardElement = (props: CardElementProps): React.JSX.Element => {
 	const trzCtx = useTRZ();
@@ -20,7 +21,7 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 		if(props.dragging || props.isOverlay){
 			return;
 		}
-		trzCtx.setOpenedCardModal(props.card.id);
+		props.onClick();
 	}
 
 	return (

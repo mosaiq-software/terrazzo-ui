@@ -161,6 +161,11 @@ export const NoteType = {
     ADD_TO_PERSONAL_ORG_ERROR: {
         title: "Personal Organization",
         message: "You can't invite users to your personal organization"
+    },
+    ACK_AUTOSAVE: {
+        title: "Autosaved!",
+        message: "Don't worry, your changes are automatically saved!",
+        color: NoteColor.INFO
     }
 
 }

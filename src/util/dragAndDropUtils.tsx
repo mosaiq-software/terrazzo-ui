@@ -49,6 +49,7 @@ export function renderContainerDragOverlay(list: List, boardCode: string) {
 							dragging={false}
 							isOverlay={false}
 							boardCode={boardCode}
+							onClick={()=>{}}
 						/>
 					);
 				})
@@ -64,6 +65,7 @@ export function renderSortableItemDragOverlay(card: Card, boardCode: string) {
 			dragging={true}
 			isOverlay={true}
 			boardCode={boardCode}
+			onClick={()=>{}}
 		/>
 	);
 }

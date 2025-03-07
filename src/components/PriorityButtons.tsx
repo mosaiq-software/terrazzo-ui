@@ -4,12 +4,13 @@ import {Priority} from "@mosaiq/terrazzo-common/constants";
 import {useSocket} from "@trz/contexts/socket-context";
 import {useTRZ} from "@trz/contexts/TRZ-context";
 import {NoteType, notify} from "@trz/util/notifications";
+import { CardId } from "@mosaiq/terrazzo-common/types";
 
 interface PriorityButtonProps {
     Color: string;
     buttonText: string;
+    cardId: CardId;
 }
-
 export const priorityColors: string[] = [
     "#4A82C7",
     "#24296A",
@@ -45,12 +46,12 @@ const PriorityButton = (props: PriorityButtonProps): React.JSX.Element => {
                 break
         }
 
-        if(!trzCtx.openedCardModal){
+        if(!props.cardId){
             notify(NoteType.CARD_UPDATE_ERROR);
             return;
         }
         try{
-            await sockCtx.updateCardField(trzCtx.openedCardModal, {priority: priority});
+            await sockCtx.updateCardField(props.cardId, {priority: priority});
         }catch (e){
             notify(NoteType.CARD_UPDATE_ERROR);
             return;
@@ -62,7 +63,10 @@ const PriorityButton = (props: PriorityButtonProps): React.JSX.Element => {
     )
 }
 
-export const PriorityButtons = (): React.JSX.Element => {
+interface PriorityButtonsProps {
+    cardId: CardId;
+}
+export const PriorityButtons = (props: PriorityButtonsProps): React.JSX.Element => {
     const priorityLength = Object.keys(Priority).length / 2;
 
     return (
@@ -70,11 +74,11 @@ export const PriorityButtons = (): React.JSX.Element => {
             {
                 Array.from({length: priorityLength}).map((_, index) => {
                     return (
-                        <PriorityButton Color={priorityColors[index]} buttonText={`${index + 1}`} key={index}/>
+                        <PriorityButton Color={priorityColors[index]} cardId={props.cardId} buttonText={`${index + 1}`} key={index}/>
                     )
                 })
             }
-            <PriorityButton Color={"gray"} buttonText={"Remove Priority"}/>
+            <PriorityButton Color={"gray"} buttonText={"Remove Priority"} cardId={props.cardId}/>
         </>
     )
 }

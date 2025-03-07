@@ -96,7 +96,8 @@ type SocketContextType = {
     acceptInvitation: (invite: Invite) => Promise<void>;
     orgData: Organization | undefined;
     projectData: Project | undefined;
-    lookupUser: (userId: UserId) => Promise<UserHeader | undefined>
+    lookupUser: (userId: UserId) => Promise<UserHeader | undefined>;
+    updateCardAssignee: (cardId: CardId, userId: UserId, assigned: boolean) => Promise<void>;
 }
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
@@ -303,6 +304,32 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             });
         });
 
+        sock.on(ServerSE.UPDATE_CARD_ASSIGNEE, (payload: ServerSEPayload[ServerSE.UPDATE_CARD_ASSIGNEE]) => {
+            setBoardData(prev => {
+                if (!prev) return prev;
+                return {
+                    ...prev,
+                    lists: prev.lists.map(list => ({
+                        ...list,
+                        cards: list.cards
+                            .map(card => {
+                                if (card.id === payload.cardId) {
+                                    const members = card.assignees.filter(u=>u!==payload.userId);
+                                    if(payload.assigned){
+                                        members.push(payload.userId);
+                                    }
+                                    return {
+                                        ...card,
+                                        assignees: members, 
+                                    }
+                                }
+                                return card;
+                            })
+                    }))
+                };
+            });
+        });
+
         sock.on(ServerSE.UPDATE_TEXT_BLOCK, (payload: ServerSEPayload[ServerSE.UPDATE_TEXT_BLOCK]) => {
             if (!payload) {
                 return;
@@ -475,6 +502,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         try {
             const project = await emit<ClientSE.GET_PROJECT>(ClientSE.GET_PROJECT, projectId);
             setProjectData(project);
+            if(project)
+                getOrganizationData(project.orgId);
         } catch (e:any){
             notify(NoteType.PROJECT_DATA_ERROR, e);
             return undefined;
@@ -485,6 +514,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         try {
             const response = await emit<ClientSE.GET_BOARD>(ClientSE.GET_BOARD, boardId);
             setBoardData(response);
+            if(response)
+                getProjectData(response.projectId)
         } catch (e:any){
             notify(NoteType.BOARD_DATA_ERROR, e);
         }
@@ -541,6 +572,10 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const updateListField = async (id: ListId, partial: Partial<ListHeader>) => updateField<ListHeader>(ClientSE.UPDATE_LIST_FIELD, id, partial);
     const updateCardField = async (id: CardId, partial: Partial<CardHeader>) => updateField<CardHeader>(ClientSE.UPDATE_CARD_FIELD, id, partial);
     const updateMembershipRecordField = async (id: MembershipRecordId, partial: Partial<MembershipRecord>) => updateField<MembershipRecord>(ClientSE.UPDATE_MEMBERSHIP_RECORD_FIELD, id, partial);
+
+    const updateCardAssignee = async (cardId: CardId, userId: UserId, assigned:boolean) => {
+        await emit<ClientSE.UPDATE_CARD_ASSIGNEE>(ClientSE.UPDATE_CARD_ASSIGNEE, {cardId, userId, assigned});
+    };
 
     const initializeTextBlockData = async (textBlockId:TextBlockId): Promise<void> => {
         try {
@@ -775,6 +810,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             orgData,
             projectData,
             lookupUser,
+            updateCardAssignee,
         }}>
             {children}
         </SocketContext.Provider>

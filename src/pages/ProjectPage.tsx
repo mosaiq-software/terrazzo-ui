@@ -41,9 +41,6 @@ const ProjectPage = (): React.JSX.Element => {
             try {
                 if (!sockCtx.connected) { return; }
                 sockCtx.setRoom(getRoomCode(RoomType.DATA, projectId));
-                return () => {
-                    sockCtx.setRoom(null);
-                }
             } catch (e) {
                 notify(NoteType.SOCKET_ROOM_ERROR, [getRoomCode(RoomType.DATA, projectId)]);
             }

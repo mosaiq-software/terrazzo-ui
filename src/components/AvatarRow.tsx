@@ -23,14 +23,14 @@ export const AvatarRow = (props: AvatarRowProps) => {
         .then((users)=>users.filter(u=>!!u))
         .then((users)=>setUsers(users))
         .catch(e=>{console.error("Error in avatar row "+e)});
-    }, props.users)
+    }, [props.users])
 
     return (
         <Avatar.Group spacing="6" style={{ justifyContent: "flex-end" }}>
             {
                 // only take the first n users
                 users.slice(0, props.maxUsers).map((user, index) =>
-                    <Tooltip key={index} label={user.firstName + " " + user.lastName + "(" + user.username + ")"} position="bottom" withArrow radius="lg">
+                    <Tooltip key={user.id} label={user.firstName + " " + user.lastName + "(" + user.username + ")"} position="bottom" withArrow radius="lg">
                         <Avatar src={user.profilePicture} size="sm" name={user.firstName + " " + user.lastName} color="initials"/>
                     </Tooltip>
                 )
@@ -41,7 +41,7 @@ export const AvatarRow = (props: AvatarRowProps) => {
                     <Tooltip position="bottom" withArrow radius="lg"
                         label={
                             users.slice(props.maxUsers).map((user, index) =>
-                                <Text key={index}>{user.firstName + " " + user.lastName + "(" + user.username + ")"}</Text>
+                                <Text key={user.id}>{user.firstName + " " + user.lastName + "(" + user.username + ")"}</Text>
                             )
                         }
                     >

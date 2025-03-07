@@ -10,6 +10,8 @@ import { EntityType, LocalStorageKey, RoleNames } from "@mosaiq/terrazzo-common/
 import { useTRZ } from "@trz/contexts/TRZ-context";
 import { fullName } from "@mosaiq/terrazzo-common/utils/textUtils";
 
+const DEBUGMODE = true;
+
 interface TRZAppLayoutProps {
     children: any;
 }
@@ -368,6 +370,13 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                                 </Box>
                             )
                         })
+                    }
+                    {
+                        DEBUGMODE &&
+                        <>
+                            <Text>Room: {sockCtx.room}</Text>
+                            <Text>SID: {sockCtx.sid}</Text>
+                        </>
                     }
                 </Stack>
             </AppShell.Navbar>

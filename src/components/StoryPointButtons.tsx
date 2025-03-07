@@ -4,9 +4,11 @@ import {StoryPoints} from "@mosaiq/terrazzo-common/constants";
 import {useSocket} from "@trz/contexts/socket-context";
 import {useTRZ} from "@trz/contexts/TRZ-context";
 import {NoteType, notify} from "@trz/util/notifications";
+import { CardId } from "@mosaiq/terrazzo-common/types";
 
 interface StoryPointProps{
     buttonText: string;
+    cardId: CardId;
 }
 
 const StoryPointButton = (props: StoryPointProps):React.JSX.Element => {
@@ -46,13 +48,13 @@ const StoryPointButton = (props: StoryPointProps):React.JSX.Element => {
                 break
         }
 
-        if(!trzCtx.openedCardModal){
+        if(!props.cardId){
             notify(NoteType.CARD_UPDATE_ERROR);
             return;
         }
         try{
             console.log("this is the story" + storyPoint);
-            await sockCtx.updateCardField(trzCtx.openedCardModal, {storyPoints: storyPoint});
+            await sockCtx.updateCardField(props.cardId, {storyPoints: storyPoint});
         }catch (e){
             notify(NoteType.CARD_UPDATE_ERROR);
             return;
@@ -64,15 +66,18 @@ const StoryPointButton = (props: StoryPointProps):React.JSX.Element => {
     )
 }
 
-export const StoryPointButtons =  ():React.JSX.Element => {
+interface StoryPointButtonsProps {
+    cardId: CardId;
+}
+export const StoryPointButtons =  (props: StoryPointButtonsProps):React.JSX.Element => {
     const storyPointsArray = Object.values(StoryPoints).filter(value => typeof value === 'number');
 
     return(
         <>
             {storyPointsArray.map((point, index) => (
-                <StoryPointButton buttonText={`${point}`} key={index} />
+                <StoryPointButton buttonText={`${point}`} key={index} cardId={props.cardId} />
             ))}
-            <StoryPointButton buttonText={"Remove Story Point"}/>
+            <StoryPointButton buttonText={"Remove Story Point"} cardId={props.cardId}/>
         </>
     )
 }

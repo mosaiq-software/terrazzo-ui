@@ -23,9 +23,6 @@ const CollaborativeMouseTracker = (props: CollaborativeMouseTrackerProps) => {
         } catch (e) {
             notify(NoteType.SOCKET_ROOM_ERROR, [getRoomCode(RoomType.MOUSE, props.boardId)]);
         }
-        return () => {
-            sockCtx.setRoom(null);
-        }
     }, [props.boardId, sockCtx.connected]);
 
     const moveMouse: MouseEventHandler<HTMLDivElement> = (event) => {

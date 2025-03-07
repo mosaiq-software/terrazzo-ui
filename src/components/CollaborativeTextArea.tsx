@@ -6,6 +6,7 @@ import { TextBlockEvent, TextBlockId } from "@mosaiq/terrazzo-common/types";
 import {UserCaret} from '@trz/components/UserCaret';
 import { Position, RoomType } from "@mosaiq/terrazzo-common/socketTypes";
 import { getRoomCode } from "@mosaiq/terrazzo-common/utils/socketUtils";
+import { NoteType, notify } from "@trz/util/notifications";
 
 interface CollaborativeTextAreaProps {
     maxLineLength: number;
@@ -14,6 +15,7 @@ interface CollaborativeTextAreaProps {
     showOwnCursorAsCustom?: boolean; // should the cursor be a custom one (T) or the default browser one (F/u).
     textColor: string;
     backgroundColor: string;
+    onClose?: ()=>void;
 }
 
 export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
@@ -25,14 +27,9 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
     useEffect(() => {
         const initialize = async () => {
             if (!sockCtx.connected) { return; }
-
-            sockCtx.initializeTextBlockData(props.textBlockId);
             sockCtx.setRoom(getRoomCode(RoomType.TEXT, props.textBlockId));
         }
         initialize();
-        return () => {
-            sockCtx.setRoom(null);
-        }
     }, [sockCtx.connected, props.textBlockId]);
 
     useEffect(()=>{
@@ -60,6 +57,7 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
         textRef.current.selectionStart = undefined;
         textRef.current.selectionEnd = undefined;
         sockCtx.syncCaretPosition(textRef.current);
+        if(props.onClose){props.onClose();}
     }
 
     const onCut = (e: ClipboardEvent) => {
@@ -91,9 +89,16 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
     
     const onKeypress = (e:KeyboardEvent) => {
         if (e.ctrlKey || e.metaKey || e.altKey) {
-            if (e.key === 's'){
-                // catch save event, cant break some habits..
-                e.preventDefault();
+            e.preventDefault();
+            switch (e.key){
+                case 's':
+                    notify(NoteType.ACK_AUTOSAVE)
+                    break;
+                case 'Enter':
+                    if(props.onClose){
+                        props.onClose();
+                    }
+                    break;
             }
             return;
         }
@@ -133,6 +138,11 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
                 tbEvent.inserted = TAB_CHAR;
                 handleTextEvent(tbEvent);
                 return;
+            case 'Escape':
+                if(props.onClose){
+                    props.onClose();
+                }
+                break;
             default:
                 if (e.key.length === 1) {
                     e.preventDefault();
@@ -156,6 +166,7 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
             <div style={{clear:"both"}}></div>
             <textarea 
                 ref={textRef}
+                autoFocus
                 value={sockCtx.collaborativeTextObject?.text ?? ''}
                 dir="ltr" 
                 id="COLLAB_TEXTAREA"

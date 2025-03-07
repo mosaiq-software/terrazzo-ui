@@ -4,7 +4,7 @@ import CollaborativeMouseTracker from "@trz/wrappers/CollaborativeMouseTracker";
 import {useNavigate, useParams} from "react-router-dom";
 import {useSocket} from "@trz/contexts/socket-context";
 import CreateList from "@trz/components/CreateList";
-import {BoardId, Card, CardHeader, List, ListId, UID} from "@mosaiq/terrazzo-common/types";
+import {BoardId, Card, CardHeader, CardId, List, ListId, UID} from "@mosaiq/terrazzo-common/types";
 import {NoteType, notify} from "@trz/util/notifications";
 import SortableList from "@trz/components/DragAndDrop/SortableList";
 import {getCard, getCardsList, getList} from "@trz/util/boardUtils";
@@ -34,11 +34,15 @@ import {boardDropAnimation, horizontalCollisionDetection, renderContainerDragOve
 import CardDetails from "@trz/components/CardDetails";
 import { NotFound, PageErrors } from "@trz/components/NotFound";
 import { useTRZ } from "@trz/contexts/TRZ-context";
+import { getRoomCode } from "@mosaiq/terrazzo-common/utils/socketUtils";
+import { RoomType } from "@mosaiq/terrazzo-common/socketTypes";
 
 const BoardPage = (): React.JSX.Element => {
 	const [activeObject, setActiveObject] = useState<List | Card | null>(null);
+	const [openedCard, setOpenedCard] = useState<Card | undefined>();
 	const lastOverId = useRef<string | null>(null);
 	const params = useParams();
+	const boardId = params.boardId as BoardId;
 	const sockCtx = useSocket();
 	const trz = useTRZ();
 	const navigate = useNavigate();
@@ -61,10 +65,10 @@ const BoardPage = (): React.JSX.Element => {
 			if(strictIgnore){
 				return;
 			}
-			if (!params.boardId) {
+			if (!boardId) {
 				return;
 			}
-			await sockCtx.getBoardData(params.boardId as BoardId)
+			await sockCtx.getBoardData(boardId)
 				.catch((err) => {
 					notify(NoteType.BOARD_DATA_ERROR, err);
 					navigate("/dashboard");
@@ -75,13 +79,24 @@ const BoardPage = (): React.JSX.Element => {
 		return ()=>{
 			strictIgnore = true;
 		}
-	}, [params.boardId, sockCtx.connected]);
+	}, [boardId, sockCtx.connected]);
 
 	const allListIds = useMemo(()=>{
 		return sockCtx.boardData?.lists.map(l=>l.id) ?? [];
 	}, [sockCtx.boardData?.lists])
 
 	const isSortingList = !!(activeObject && allListIds.includes(activeObject.id.toString() as ListId))
+
+	const openModal = (card: Card) => {
+		setOpenedCard(card);
+		sockCtx.initializeTextBlockData(card.descriptionTextBlockId);
+		sockCtx.setRoom(getRoomCode(RoomType.TEXT, card.descriptionTextBlockId));
+	}
+
+	const closeModal = () => {
+		setOpenedCard(undefined);
+		sockCtx.setRoom(getRoomCode(RoomType.MOUSE, boardId));
+	}
 
 	function handleDragStart(event: DragStartEvent) {
 		const activeId = event.active.id.toString() as UID;
@@ -211,7 +226,7 @@ const BoardPage = (): React.JSX.Element => {
 		return [];
 	};
 
-	if (!params.boardId || ! sockCtx.boardData) {
+	if (!boardId || ! sockCtx.boardData) {
 		return <NotFound itemType="Board" error={PageErrors.NOT_FOUND}/>
 	}
 
@@ -227,7 +242,7 @@ const BoardPage = (): React.JSX.Element => {
 			}}
 		>
 			<CollaborativeMouseTracker
-				boardId={params.boardId as BoardId}
+				boardId={boardId}
 				style={{
 					height: "95%",
 					width: "auto",
@@ -281,6 +296,9 @@ const BoardPage = (): React.JSX.Element => {
 													card={card}
 													disabled={isSortingList}
 													boardCode={sockCtx.boardData?.boardCode ?? "#"}
+													onClick={()=>{
+														openModal(card);
+													}}
 												/>
 											);
 										})
@@ -301,7 +319,13 @@ const BoardPage = (): React.JSX.Element => {
 					)}
 				</DndContext>
 				<CreateList/>
-				<CardDetails/>
+				{
+					openedCard &&
+					<CardDetails 
+						card={openedCard}
+						onClose={closeModal}
+					/>
+				}	
 			</CollaborativeMouseTracker>
 		</Container>
 	);
