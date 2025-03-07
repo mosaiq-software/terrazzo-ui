@@ -62,18 +62,24 @@ const BoardPage = (): React.JSX.Element => {
         let strictIgnore = false;
 		const fetchBoardData = async () => {
 			await new Promise((resolve)=>setTimeout(resolve, 0));
-			if(strictIgnore){
+			if(strictIgnore || !boardId){
 				return;
 			}
-			if (!boardId) {
+
+			try {
+				await sockCtx.getBoardData(boardId)
+			} catch(err) {
+				notify(NoteType.BOARD_DATA_ERROR, err);
+				navigate("/dashboard");
 				return;
 			}
-			await sockCtx.getBoardData(boardId)
-				.catch((err) => {
-					notify(NoteType.BOARD_DATA_ERROR, err);
-					navigate("/dashboard");
-					return
-				});
+
+			try {
+				sockCtx.setRoom(getRoomCode(RoomType.MOUSE, boardId));
+			} catch (e) {
+				notify(NoteType.SOCKET_ROOM_ERROR, [getRoomCode(RoomType.MOUSE, boardId)]);
+				return;
+			}
 		};
 		fetchBoardData();
 		return ()=>{
@@ -89,13 +95,21 @@ const BoardPage = (): React.JSX.Element => {
 
 	const openModal = (card: Card) => {
 		setOpenedCard(card);
-		sockCtx.initializeTextBlockData(card.descriptionTextBlockId);
-		sockCtx.setRoom(getRoomCode(RoomType.TEXT, card.descriptionTextBlockId));
+		try {
+			sockCtx.initializeTextBlockData(card.descriptionTextBlockId);
+			sockCtx.setRoom(getRoomCode(RoomType.TEXT, card.descriptionTextBlockId));
+		} catch (e) {
+			notify(NoteType.SOCKET_ROOM_ERROR, [getRoomCode(RoomType.TEXT, card.descriptionTextBlockId)]);
+		}
 	}
 
 	const closeModal = () => {
 		setOpenedCard(undefined);
-		sockCtx.setRoom(getRoomCode(RoomType.MOUSE, boardId));
+		try {
+			sockCtx.setRoom(getRoomCode(RoomType.MOUSE, boardId));
+		} catch (e) {
+			notify(NoteType.SOCKET_ROOM_ERROR, [getRoomCode(RoomType.MOUSE, boardId)]);
+		}
 	}
 
 	function handleDragStart(event: DragStartEvent) {

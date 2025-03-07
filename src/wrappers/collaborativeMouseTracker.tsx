@@ -16,17 +16,10 @@ const CollaborativeMouseTracker = (props: CollaborativeMouseTrackerProps) => {
     const ref = useRef<HTMLDivElement | null>(null);
     const sockCtx = useSocket();
 
-    useEffect(() => {
-        if (!sockCtx.connected) { return; }
-        try {
-            sockCtx.setRoom(getRoomCode(RoomType.MOUSE, props.boardId));
-        } catch (e) {
-            notify(NoteType.SOCKET_ROOM_ERROR, [getRoomCode(RoomType.MOUSE, props.boardId)]);
-        }
-    }, [props.boardId, sockCtx.connected]);
-
     const moveMouse: MouseEventHandler<HTMLDivElement> = (event) => {
-        if (!ref.current) {return;}
+        if(!ref.current || !sockCtx.room || !sockCtx.room.startsWith(RoomType.MOUSE)){
+            return;
+        }
         const rect = event.currentTarget.getBoundingClientRect();
         const x = Math.max(0, Math.round(event.pageX - rect.left - (window.pageXOffset || window.scrollX)));
         const y = Math.max(0, Math.round(event.pageY - rect.top - (window.pageYOffset || window.scrollY)));
@@ -44,6 +37,7 @@ const CollaborativeMouseTracker = (props: CollaborativeMouseTrackerProps) => {
         >
             {props.children}
             {
+                sockCtx.room && sockCtx.room.startsWith(RoomType.MOUSE) &&
                 sockCtx.roomUsers.map((user) => {
                     if (user.sid === sockCtx.sid || !user.mouseRoomData) { return null; }
                     return (
