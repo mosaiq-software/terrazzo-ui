@@ -605,7 +605,6 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     }
 
     const moveCard = async (cardId: CardId, toList: ListId, position?: number): Promise<void> => {
-        console.log("move")
         moveCardToListAndPos(cardId, toList, position);
         await emit<ClientSE.MOVE_CARD>(ClientSE.MOVE_CARD, {cardId, toList, position});
     }

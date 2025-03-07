@@ -57,7 +57,7 @@ const BoardPage = (): React.JSX.Element => {
 			coordinateGetter: sortableKeyboardCoordinates,
 		})
 	);
-
+	console.log("board")
 	useEffect(() => {
         let strictIgnore = false;
 		const fetchBoardData = async () => {
@@ -165,7 +165,6 @@ const BoardPage = (): React.JSX.Element => {
 		const overId = over?.id.toString() as UID;
 		sockCtx.setDraggingObject({});
 		setActiveObject(null);
-		console.log("drop")
 		if (!sockCtx.boardData?.lists || !over) {
 			return;
 		}
