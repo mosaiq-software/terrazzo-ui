@@ -162,7 +162,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                         }
                         <Menu.Label>Settings</Menu.Label>
                         <Tooltip
-                            label={"Can\'t archive special lists"}
+                            label="Can't archive special lists"
                             position="right-start"
                             offset={12}
                             withArrow
