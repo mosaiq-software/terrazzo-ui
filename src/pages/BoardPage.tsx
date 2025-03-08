@@ -33,6 +33,7 @@ import { createPortal } from "react-dom";
 import {boardDropAnimation, horizontalCollisionDetection, renderContainerDragOverlay, renderSortableItemDragOverlay} from "@trz/util/dragAndDropUtils";
 import CardDetails from "@trz/components/CardDetails";
 import { NotFound } from "@trz/components/NotFound";
+import {ListType} from "../../../terrazzo-common/dist/constants";
 
 const BoardPage = (): React.JSX.Element => {
 	const [activeObject, setActiveObject] = useState<List | Card | null>(null);
@@ -142,7 +143,11 @@ const BoardPage = (): React.JSX.Element => {
 			const list = getList(overId, sockCtx.boardData?.lists);
 			const cardsList = getCardsList(activeId, sockCtx.boardData?.lists);
 			if(list?.id !== cardsList?.id) {
-				sockCtx.moveCard(activeId, overId);
+				if(list?.type === ListType.NORMAL){
+					sockCtx.moveCard(activeId, overId, overId);
+				}else{
+					sockCtx.moveCard(activeId, overId, undefined);
+				}
 			}
 			return;
 		}
@@ -154,7 +159,11 @@ const BoardPage = (): React.JSX.Element => {
 		}
 		const injectPos = newList.cards.findIndex(c=>c.id === overId);
 		const newIndex = injectPos >= 0 ? injectPos : newList.cards.length + 1;
-		sockCtx.moveCard(activeId, newList.id, newIndex);
+		if(newList.type === ListType.NORMAL){
+			sockCtx.moveCard(activeId, newList.id, newList.id, newIndex);
+		}else{
+			sockCtx.moveCard(activeId, newList.id, undefined, newIndex);
+		}
 	}
 
 	function handleDragAbort(event: DragAbortEvent) {

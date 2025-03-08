@@ -56,14 +56,14 @@ type SocketContextType = {
     createProject: (name: string, orgId: OrganizationId) => Promise<ProjectId | undefined>
     createBoard: (name: string, boardCode: string, projectId: ProjectId) => Promise<BoardId | undefined>;
     createList: (boardID: BoardId, listName: string, start: Date, end: Date) => Promise< undefined>;
-    createCard: (listID: ListId, cardName: string) => Promise<undefined>;
+    createCard: (listID: ListId, cardName: string, sprintId?: ListId) => Promise<undefined>;
     initializeTextBlockData: (textBlockId: TextBlockId) => Promise<void>;
     collaborativeTextObject: TextObject;
     setCollaborativeTextObject: React.Dispatch<React.SetStateAction<TextObject>>;
     receiveCollabTextEvent: (event: TextBlockEvent, element: HTMLTextAreaElement | undefined, emit: boolean) => void;
     syncCaretPosition: (element: HTMLTextAreaElement | undefined) => void;
     moveList: (listId: ListId, position: number) => Promise<void>;
-    moveCard: (cardId: CardId, toList: ListId, position?: number) => Promise<void>;
+    moveCard: (cardId: CardId, toList: ListId, toSprint?: ListId, position?: number) => Promise<void>;
     setDraggingObject: React.Dispatch<React.SetStateAction<{list?: ListId, card?: CardId}>>;
     moveListToPos: (listId: ListId, position: number) => void;
     moveCardToListAndPos: (cardId: CardId, toList: ListId, position?: number) => void;
@@ -445,8 +445,9 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         await emit<ClientSE.CREATE_LIST>(ClientSE.CREATE_LIST, {boardID, listName, start, end});
     }
 
-    const createCard = async (listID:ListId, cardName:string):Promise<undefined> => {
-        await emit<ClientSE.CREATE_CARD>(ClientSE.CREATE_CARD, {listID, cardName});
+    const createCard = async (listID:ListId, cardName:string, sprintID?:ListId):Promise<undefined> => {
+        console.log("Creating card", listID, cardName, sprintID);
+        await emit<ClientSE.CREATE_CARD>(ClientSE.CREATE_CARD, {listID, cardName, sprintID});
     }
 
     async function updateField<T extends (Card | List | Board | Project | Organization)>(
@@ -505,9 +506,9 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         await emit<ClientSE.MOVE_LIST>(ClientSE.MOVE_LIST, {listId, position});
     }
 
-    const moveCard = async (cardId: CardId, toList: ListId, position?: number): Promise<void> => {
+    const moveCard = async (cardId: CardId, toList: ListId, toSprint?: ListId, position?: number): Promise<void> => {
         moveCardToListAndPos(cardId, toList, position);
-        await emit<ClientSE.MOVE_CARD>(ClientSE.MOVE_CARD, {cardId, toList, position});
+        await emit<ClientSE.MOVE_CARD>(ClientSE.MOVE_CARD, {cardId, toList, toSprint, position});
     }
 
 

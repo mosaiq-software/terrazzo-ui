@@ -6,7 +6,7 @@ import {List} from "@mosaiq/terrazzo-common/types";
 import {useSocket} from "@trz/util/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
 import { captureDraggableEvents, captureEvent, forAllClickEvents } from "@trz/util/eventUtils";
-import {FaArchive} from "react-icons/fa";
+import {FaArchive, FaCalendarCheck} from "react-icons/fa";
 import {HiDotsVertical} from "react-icons/hi";
 import {ListType} from "../../../terrazzo-common/dist/constants";
 import {getMonthName} from "@trz/util/dateUtils";
@@ -44,7 +44,12 @@ function ListElement(props: ListElementProps): React.JSX.Element {
         }
 
         try{
-            await sockCtx.createCard(props.listType.id, cardTitle)
+            console.log(props.listType.type)
+            if(props.listType.type === ListType.NORMAL){
+                await sockCtx.createCard(props.listType.id, cardTitle, props.listType.id)
+            }else{
+                await sockCtx.createCard(props.listType.id, cardTitle)
+            }
         } catch (e) {
             notify(NoteType.CARD_CREATION_ERROR, e);
             return;
@@ -162,7 +167,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                         }
                         <Menu.Label>Settings</Menu.Label>
                         <Tooltip
-                            label="Can't archive special lists"
+                            label="Can't End Sprint on special lists"
                             position="right-start"
                             offset={12}
                             withArrow
@@ -178,9 +183,9 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                             <Menu.Item
                                 onClick={onArchive}
                                 disabled={props.listType.type !== ListType.NORMAL}
-                                leftSection={<FaArchive />}
+                                leftSection={<FaCalendarCheck />}
                             >
-                                Archive List
+                                End Sprint
                             </Menu.Item>
                         </Tooltip>
                     </Menu.Dropdown>
