@@ -9,8 +9,8 @@ import { notify, NoteType } from "@trz/util/notifications";
 import { EntityType, LocalStorageKey, RoleNames } from "@mosaiq/terrazzo-common/constants";
 import { useTRZ } from "@trz/contexts/TRZ-context";
 import { fullName } from "@mosaiq/terrazzo-common/utils/textUtils";
-
-const DEBUGMODE = true;
+import { replyInvite} from "@trz/emitters/all"
+import {useDashboard} from "@trz/contexts/dashboard-context";
 
 interface TRZAppLayoutProps {
     children: any;
@@ -21,31 +21,8 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
     const usr = useUser();
     const navigate = useNavigate();
     const location = useLocation();
+    const {userDash, updateUserDash} = useDashboard();
     const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorage<boolean>({ key: LocalStorageKey.SIDEBAR_COLLAPSED, defaultValue: false });
-
-    useEffect(() => {
-        let strictIgnore = false;
-        const fetchOrgData = async () => {
-            await new Promise((resolve)=>setTimeout(resolve, 0));
-            if(strictIgnore || !sockCtx.connected || !usr.userData?.id){
-                return;
-            }
-            try{
-                if(!usr.userData?.id){
-                    notify(NoteType.NOT_LOGGED_IN);
-                    return;
-                }
-                sockCtx.syncUserDash();
-            } catch(err) {
-                notify(NoteType.DASH_ERROR, err);
-                return;
-            }
-        };
-        fetchOrgData();
-        return ()=>{
-            strictIgnore = true;
-        }
-    }, [sockCtx.connected, usr.userData?.id]);
 
     useHotkeys([
         ['[', ()=>{setSidebarCollapsed(!sidebarCollapsed)}],
@@ -79,7 +56,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                     >
                         <Popover.Target>
                             <UnstyledButton variant="subtle" w="fit-content">
-                                <Indicator disabled={!(sockCtx.userDash?.invites.length)} label={sockCtx.userDash?.invites.length ?? undefined} size={16}>
+                                <Indicator disabled={!(userDash?.invites.length)} label={userDash?.invites.length ?? undefined} size={16}>
                                     <MdNotificationsNone size={"1.25rem"} color="white"/>
                                 </Indicator>
                             </UnstyledButton>
@@ -88,7 +65,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                             <ScrollAreaAutosize mah="60vh">
                             <Stack w="30rem">
                                 {
-                                    sockCtx.userDash?.invites.map(i=>{
+                                    userDash?.invites.map(i=>{
                                         return (
                                             <Notification 
                                                 key={i.id}
@@ -114,8 +91,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                                                         size="sm"
                                                         onClick={()=>{
                                                             try{
-                                                                sockCtx.replyInvite(i.id, false);
-                                                                sockCtx.syncUserDash();
+                                                                replyInvite(sockCtx, i.id, false);
                                                             } catch (e) {
                                                                 notify(NoteType.GENERIC_ERROR, e)
                                                             }
@@ -126,7 +102,13 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                                                         size="sm"
                                                         onClick={()=>{
                                                             try{
-                                                                sockCtx.acceptInvitation(i);
+                                                                replyInvite(sockCtx, i.id, true);
+                                                                notify(NoteType.JOINED_ENTITY, [i.entity.name]);
+                                                                if(i.entityType === EntityType.ORG){
+                                                                    navigate("/org/"+i.entity.id)
+                                                                } else if (i.entityType === EntityType.PROJECT) {
+                                                                    navigate("/project/"+i.entity.id)
+                                                                }
                                                             } catch (e) {
                                                                 notify(NoteType.GENERIC_ERROR, e)
                                                             }
@@ -138,7 +120,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                                     })
                                 }
                                 {
-                                    (!sockCtx.userDash?.invites.length) &&
+                                    (!userDash?.invites.length) &&
                                     <Title ta="center" order={5}>No notifications to show!</Title>
                                 }
                             </Stack>
@@ -274,7 +256,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                     </Tooltip>
                     <Divider />
                     {
-                        sockCtx.userDash?.organizations.filter((e)=>!e.archived).map((org)=>{
+                        userDash?.organizations.filter((e)=>!e.archived).map((org)=>{
                             return (
                                 <Box key={org.id} >
                                     <Group align="center" justify="flex-start" pt="0" w="100%">
@@ -370,13 +352,6 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                                 </Box>
                             )
                         })
-                    }
-                    {
-                        DEBUGMODE &&
-                        <>
-                            <Text>Room: {sockCtx.room}</Text>
-                            <Text>SID: {sockCtx.sid}</Text>
-                        </>
                     }
                 </Stack>
             </AppShell.Navbar>

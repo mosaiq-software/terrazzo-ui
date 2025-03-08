@@ -42,7 +42,7 @@ function SortableList(props: SortableListProps): React.JSX.Element {
         }
     }, [node])
 
-    const otherDraggingPos = sockCtx.roomUsers.find((ru)=>ru.mouseRoomData?.draggingList === props.listType.id)?.mouseRoomData?.pos;
+    const otherDraggingPos = null;//sockCtx.roomUsers.find((ru)=>ru.mouseRoomData?.draggingList === props.listType.id)?.mouseRoomData?.pos;
     let listTransform: Transform  | null = transform
     if(listTransform) {
         listTransform.scaleY = 1;

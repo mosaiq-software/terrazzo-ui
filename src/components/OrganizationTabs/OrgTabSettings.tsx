@@ -3,13 +3,14 @@ import { Box, Title, Stack, TextInput, Textarea, Group, Button, Divider, Space }
 import { Role } from "@mosaiq/terrazzo-common/constants";
 import { DEFAULT_AUTHED_ROUTE } from "@trz/contexts/user-context";
 import { notify, NoteType } from "@trz/util/notifications";
-import { MembershipRecord, OrganizationHeader, OrganizationId } from "@mosaiq/terrazzo-common/types";
+import { MembershipRecord, Organization, OrganizationHeader, OrganizationId } from "@mosaiq/terrazzo-common/types";
 import { useSocket } from "@trz/contexts/socket-context";
 import { useNavigate } from "react-router-dom";
+import { revokeMembershipRecord, updateOrgField } from "@trz/emitters/all";
 
 interface OrgTabSettingsProps {
     myMembershipRecord: MembershipRecord;
-    orgId: OrganizationId;
+    orgData: Organization;
 }
 export const OrgTabSettings = (props: OrgTabSettingsProps) => {
     const [editedSettings, setEditedSettings] = useState<Partial<OrganizationHeader>>({});
@@ -17,13 +18,9 @@ export const OrgTabSettings = (props: OrgTabSettingsProps) => {
     const navigate = useNavigate();
 
     useEffect(()=>{
-        if(sockCtx.orgData)
-            setEditedSettings(sockCtx.orgData);
-    }, [sockCtx.orgData]);
-
-    if(!sockCtx.orgData) {
-        return null;
-    }
+        if(props.orgData)
+            setEditedSettings(props.orgData);
+    }, [props.orgData]);
 
     return (
         <Box style={{
@@ -84,7 +81,7 @@ export const OrgTabSettings = (props: OrgTabSettingsProps) => {
                             variant="outline"
                             disabled={props.myMembershipRecord.userRole < Role.ADMIN}
                             onClick={()=>{
-                                setEditedSettings(sockCtx.orgData ?? {});
+                                setEditedSettings(props.orgData ?? {});
                             }}
                         >
                             Cancel
@@ -98,7 +95,7 @@ export const OrgTabSettings = (props: OrgTabSettingsProps) => {
                                     return;
                                 }
                                 try {
-                                    sockCtx.updateOrgField(props.orgId, editedSettings);
+                                    updateOrgField(sockCtx, props.orgData.id, editedSettings);
                                     notify(NoteType.CHANGES_SAVED);
                                 } catch (e) {
                                     notify(NoteType.ORG_DATA_ERROR, e);
@@ -123,9 +120,8 @@ export const OrgTabSettings = (props: OrgTabSettingsProps) => {
                                     return;
                                 }
                                 try {
-                                    sockCtx.revokeMembershipRecord(props.myMembershipRecord.id);
-                                    sockCtx.syncUserDash();
-                                    notify(NoteType.LEFT_ENTITY, [sockCtx.orgData?.name]);
+                                    revokeMembershipRecord(sockCtx, props.myMembershipRecord.id);
+                                    notify(NoteType.LEFT_ENTITY, [props.orgData.name]);
                                     navigate(DEFAULT_AUTHED_ROUTE);
                                 } catch (e) {
                                     notify(NoteType.ORG_DATA_ERROR, e);
@@ -146,7 +142,7 @@ export const OrgTabSettings = (props: OrgTabSettingsProps) => {
                                     return;
                                 }
                                 try {
-                                    sockCtx.updateOrgField(props.orgId, {archived: true});
+                                    updateOrgField(sockCtx, props.orgData.id, {archived: true});
                                     notify(NoteType.CHANGES_SAVED);
                                     navigate(DEFAULT_AUTHED_ROUTE);
                                 } catch (e) {

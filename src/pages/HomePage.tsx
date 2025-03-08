@@ -1,14 +1,14 @@
-import React, { useEffect } from "react";
-import {Box, ScrollArea, Title, Flex, Divider, Text, Loader, Center, Paper, Kbd, Button, Tooltip, Collapse, Accordion, Avatar, Group, Stack, HoverCard, UnstyledButton} from "@mantine/core";
+import React from "react";
+import {Box, ScrollArea, Title, Flex, Divider, Text, Loader, Center, Kbd, Button, Tooltip, Avatar, Group, Stack, HoverCard, UnstyledButton} from "@mantine/core";
 import { BOARD_CARD_WIDTH, BoardListCard} from "@trz/components/BoardListCards";
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useSocket } from "@trz/contexts/socket-context";
-import { NoteType, notify } from "@trz/util/notifications";
 import { useUser } from "@trz/contexts/user-context";
-import { useClipboard, useDisclosure } from "@mantine/hooks";
+import { useClipboard } from "@mantine/hooks";
 import { modals } from "@mantine/modals";
 import { useTRZ } from "@trz/contexts/TRZ-context";
 import { AvatarRow } from "@trz/components/AvatarRow";
+import { useDashboard } from "@trz/contexts/dashboard-context";
 
 const HomePage = (): React.JSX.Element => {
     const usr = useUser();
@@ -16,35 +16,12 @@ const HomePage = (): React.JSX.Element => {
     const trz = useTRZ();
 	const navigate = useNavigate();
     const clipboard = useClipboard();
+    const {userDash, updateUserDash} = useDashboard();
 
-    useEffect(() => {
-        let strictIgnore = false;
-		const fetchOrgData = async () => {
-            await new Promise((resolve)=>setTimeout(resolve, 0));
-            if(strictIgnore){
-                return;
-            }
-            try{
-                if(!usr.userData?.id){
-                    notify(NoteType.NOT_LOGGED_IN);
-                    return;
-                }
-                sockCtx.syncUserDash();
-            } catch(err) {
-                notify(NoteType.DASH_ERROR, err);
-                return;
-			}
-		};
-		fetchOrgData();
-        return ()=>{
-            strictIgnore = true;
-        }
-	}, [sockCtx.connected, usr.userData?.id]);
-
-    const orgs = sockCtx?.userDash?.organizations.filter((e)=>!e.archived);
-    const orgsArch = sockCtx?.userDash?.organizations.filter((e)=>e.archived);
-    const projects = sockCtx?.userDash?.standaloneProjects.filter((e)=>!e.archived);
-    const projectsArch = sockCtx?.userDash?.standaloneProjects.filter((e)=>e.archived);
+    const orgs = userDash?.organizations.filter((e)=>!e.archived);
+    const orgsArch = userDash?.organizations.filter((e)=>e.archived);
+    const projects = userDash?.standaloneProjects.filter((e)=>!e.archived);
+    const projectsArch = userDash?.standaloneProjects.filter((e)=>e.archived);
 
     return (
         <ScrollArea 
@@ -207,18 +184,12 @@ const HomePage = (): React.JSX.Element => {
                         }
                         
                         {
-                            (!sockCtx.userDash) && 
+                            (!userDash) && 
                             <Center w="100%" h="100%">
                                 <Loader type="bars"/>
                             </Center>
                         }
                     </Box>
-                    {
-                        sockCtx.userDash &&
-                        <Center display="block" w="100%">
-                            
-                        </Center>
-                    }
                 </Stack>
             </Center>
         </ScrollArea>

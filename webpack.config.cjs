@@ -54,6 +54,9 @@ module.exports= () => {
             new Dotenv({
                 path: envPath
             })
-        ]
+        ],
+        optimization: {
+            moduleIds: 'deterministic',
+        },
     }
 }

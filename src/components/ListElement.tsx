@@ -8,6 +8,7 @@ import {NoteType, notify} from "@trz/util/notifications";
 import { captureDraggableEvents, captureEvent, forAllClickEvents } from "@trz/util/eventUtils";
 import {FaArchive} from "react-icons/fa";
 import {HiDotsVertical} from "react-icons/hi";
+import { createCard, updateListField } from "@trz/emitters/all";
 
 
 interface ListElementProps {
@@ -41,7 +42,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
         }
 
         try{
-            await sockCtx.createCard(props.listType.id, cardTitle)
+            await createCard(sockCtx, props.listType.id, cardTitle)
         } catch (e) {
             notify(NoteType.CARD_CREATION_ERROR, e);
             return;
@@ -49,10 +50,10 @@ function ListElement(props: ListElementProps): React.JSX.Element {
         setVisible(false);
     }
 
-    function onTitleChange(value: string) {
+    async function onTitleChange(value: string) {
         setListTitle(value);
         try {
-            sockCtx.updateListField(props.listType.id, {name: value})
+            await updateListField(sockCtx, props.listType.id, {name: value})
         } catch (e: any){
             notify(NoteType.LIST_UPDATE_ERROR, e);
             return;
@@ -60,7 +61,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
     }
 
     async function onArchive() {
-        await sockCtx.updateListField(props.listType.id, {archived: true, order: -1});
+       await updateListField(sockCtx, props.listType.id, {archived: true, order: -1});
     }
 
     useEffect(() => {

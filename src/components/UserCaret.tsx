@@ -1,6 +1,6 @@
 import React from 'react';
 import {Box, Group, Tooltip, Text, Avatar} from '@mantine/core';
-import { useImageColor } from '@trz/util/useImageColor';
+import { useImageColor } from '@trz/hooks/useImageColor';
 
 interface UserCaretProps {
     color?: string;

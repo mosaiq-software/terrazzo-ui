@@ -1,7 +1,7 @@
 import React from "react";
 import {Flex, Paper, Text} from "@mantine/core";
 import { useHover } from "@mantine/hooks";
-import { useImageColor } from "@trz/util/useImageColor";
+import { useImageColor } from "@trz/hooks/useImageColor";
 
 interface BoardListCardProps {
     bgColor: string;

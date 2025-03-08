@@ -3,13 +3,14 @@ import { Box, Title, Stack, TextInput, Textarea, Group, Button, Divider, Space }
 import { Role } from "@mosaiq/terrazzo-common/constants";
 import { DEFAULT_AUTHED_ROUTE } from "@trz/contexts/user-context";
 import { notify, NoteType } from "@trz/util/notifications";
-import { MembershipRecord, ProjectHeader, ProjectId } from "@mosaiq/terrazzo-common/types";
+import { MembershipRecord, Project, ProjectHeader, ProjectId } from "@mosaiq/terrazzo-common/types";
 import { useSocket } from "@trz/contexts/socket-context";
 import { useNavigate } from "react-router-dom";
+import { revokeMembershipRecord, updateProjectField } from "@trz/emitters/all";
 
 interface ProjectTabSettingsProps {
     myMembershipRecord: MembershipRecord;
-    projectId: ProjectId;
+    projectData: Project;
 }
 export const ProjectTabSettings = (props: ProjectTabSettingsProps) => {
     const [editedSettings, setEditedSettings] = useState<Partial<ProjectHeader>>({});
@@ -17,13 +18,9 @@ export const ProjectTabSettings = (props: ProjectTabSettingsProps) => {
     const navigate = useNavigate();
 
     useEffect(()=>{
-        if(sockCtx.projectData)
-            setEditedSettings(sockCtx.projectData);
-    }, [sockCtx.projectData]);
-
-    if(!sockCtx.projectData) {
-        return null;
-    }
+        if(props.projectData)
+            setEditedSettings(props.projectData);
+    }, [props.projectData]);
 
     return (
         <Box style={{
@@ -84,7 +81,7 @@ export const ProjectTabSettings = (props: ProjectTabSettingsProps) => {
                             variant="outline"
                             disabled={props.myMembershipRecord.userRole < Role.ADMIN}
                             onClick={()=>{
-                                setEditedSettings(sockCtx.projectData ?? {});
+                                setEditedSettings(props.projectData ?? {});
                             }}
                         >
                             Cancel
@@ -98,7 +95,7 @@ export const ProjectTabSettings = (props: ProjectTabSettingsProps) => {
                                     return;
                                 }
                                 try {
-                                    sockCtx.updateProjectField(props.projectId, editedSettings);
+                                    updateProjectField(sockCtx, props.projectData.id, editedSettings);
                                     notify(NoteType.CHANGES_SAVED);
                                 } catch (e) {
                                     notify(NoteType.PROJECT_DATA_ERROR, e);
@@ -123,9 +120,8 @@ export const ProjectTabSettings = (props: ProjectTabSettingsProps) => {
                                     return;
                                 }
                                 try {
-                                    sockCtx.revokeMembershipRecord(props.myMembershipRecord.id);
-                                    sockCtx.syncUserDash();
-                                    notify(NoteType.LEFT_ENTITY, [sockCtx.projectData?.name]);
+                                    revokeMembershipRecord(sockCtx, props.myMembershipRecord.id);
+                                    notify(NoteType.LEFT_ENTITY, [props.projectData.name]);
                                     navigate(DEFAULT_AUTHED_ROUTE);
                                 } catch (e) {
                                     notify(NoteType.PROJECT_DATA_ERROR, e);
@@ -146,7 +142,7 @@ export const ProjectTabSettings = (props: ProjectTabSettingsProps) => {
                                     return;
                                 }
                                 try {
-                                    sockCtx.updateProjectField(props.projectId, {archived: true});
+                                    updateProjectField(sockCtx, props.projectData.id, {archived: true});
                                     notify(NoteType.CHANGES_SAVED);
                                     navigate(DEFAULT_AUTHED_ROUTE);
                                 } catch (e) {

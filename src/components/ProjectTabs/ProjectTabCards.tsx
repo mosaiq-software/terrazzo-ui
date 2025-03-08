@@ -2,19 +2,15 @@ import React from "react";
 import {Box, Title, Center, Loader} from "@mantine/core";
 import { BOARD_CARD_WIDTH, BoardListCard } from "@trz/components/BoardListCards";
 import { useSocket } from "@trz/contexts/socket-context";
-import { useNavigate } from "react-router-dom";
-import { modals } from "@mantine/modals";
+import { BoardId, Project } from "@mosaiq/terrazzo-common/types";
 
 interface ProjectTabCardsProps {
-
+    projectData: Project;
+    onClickBoard: (boardId: BoardId)=>void;
+    onClickCreate: ()=>void;
 }
 export const ProjectTabCards = (props: ProjectTabCardsProps) => {
     const sockCtx = useSocket();
-    const navigate = useNavigate();
-
-    if(!sockCtx.projectData) {
-        return null;
-    }
 
     return (
         <Box style={{
@@ -37,36 +33,22 @@ export const ProjectTabCards = (props: ProjectTabCardsProps) => {
                     maxWidth: "100%"
                 }}>
                     {
-                        sockCtx.projectData.boards.map((board) => (
+                        props.projectData.boards.map((board) => (
                             <BoardListCard 
                                 key={board.id}
                                 bgColor={'#121314'}
                                 color="white"
                                 title={board.name}
-                                onClick={()=>{
-                                    navigate("/board/"+board.id);
-                                }}
+                                onClick={()=>props.onClickBoard(board.id)}
                             />
                         ))
-                    }
-                    {
-                        (!sockCtx.projectData) && 
-                        <Center w="100%" h="100%">
-                            <Loader type="bars"/>
-                        </Center>
                     }
                     <BoardListCard 
                         centered
                         title="+ Add Board"
                         bgColor={'#121314'}
                         color="white"
-                        onClick={() =>
-                            modals.openContextModal({
-                                modal: 'board',
-                                title: 'Create Board',
-                                innerProps: {projectId: sockCtx.projectData?.id},
-                            })
-                        }
+                        onClick={props.onClickCreate}
                     />
                 </Box>
             </Box>

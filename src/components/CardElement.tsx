@@ -1,8 +1,7 @@
-import React, {useEffect} from "react";
+import React from "react";
 import {Box, Group, Paper, Pill, Text, Title} from "@mantine/core";
 import {Card} from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from "@trz/components/AvatarRow";
-import { useTRZ } from "@trz/contexts/TRZ-context";
 import {priorityColors} from "@trz/components/PriorityButtons";
 import { getCardNumber } from "@trz/util/boardUtils";
 
@@ -14,7 +13,6 @@ interface CardElementProps {
 	onClick: ()=>void;
 }
 const CardElement = (props: CardElementProps): React.JSX.Element => {
-	const trzCtx = useTRZ();
 	const textColor = "#ffffff";
 
 	const onOpenCardModal = () => {

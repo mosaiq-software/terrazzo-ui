@@ -1,21 +1,14 @@
 import React from "react";
-import {Box, Title, Center, Loader} from "@mantine/core";
+import {Box, Title} from "@mantine/core";
 import { BOARD_CARD_WIDTH, BoardListCard } from "@trz/components/BoardListCards";
-import { useSocket } from "@trz/contexts/socket-context";
-import { useNavigate } from "react-router-dom";
-import { modals } from "@mantine/modals";
+import { ProjectHeader, ProjectId } from "@mosaiq/terrazzo-common/types";
 
 interface OrgTabCardsProps {
-
+    projects: ProjectHeader[];
+    onClickProject: (projectId:ProjectId)=>void;
+    onClickCreate: ()=>void;
 }
 export const OrgTabCards = (props: OrgTabCardsProps) => {
-    const sockCtx = useSocket();
-    const navigate = useNavigate();
-
-    if(!sockCtx.orgData) {
-        return null;
-    }
-
     return (
         <Box style={{
             width: "80%",
@@ -37,37 +30,23 @@ export const OrgTabCards = (props: OrgTabCardsProps) => {
                     maxWidth: "100%"
                 }}>
                     {
-                        sockCtx.orgData.projects.map((project) => (
+                        props.projects.map((project) => (
                             <BoardListCard 
                                 key={project.id}
                                 bgColor={'#121314'}
                                 bgImage={project.logoUrl}
                                 color="white"
                                 title={project.name}
-                                onClick={()=>{
-                                    navigate("/project/"+project.id);
-                                }}
+                                onClick={()=>props.onClickProject(project.id)}
                             />
                         ))
-                    }
-                    {
-                        (!sockCtx.orgData) && 
-                        <Center w="100%" h="100%">
-                            <Loader type="bars"/>
-                        </Center>
                     }
                     <BoardListCard 
                         centered
                         title="+ Add Project"
                         bgColor={'#121314'}
                         color="white"
-                        onClick={() =>
-                            modals.openContextModal({
-                                modal: 'project',
-                                title: 'Create Project',
-                                innerProps: {orgId: sockCtx.orgData?.id},
-                            })
-                        }
+                        onClick={props.onClickCreate}
                     />
                 </Box>
             </Box>

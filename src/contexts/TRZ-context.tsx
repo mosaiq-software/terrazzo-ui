@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState } from 'react';
-import { CardId } from '@mosaiq/terrazzo-common/types';
 
 type TRZContextType = {
     navbarHeight: number;

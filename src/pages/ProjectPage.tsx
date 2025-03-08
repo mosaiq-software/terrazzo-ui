@@ -1,26 +1,34 @@
-import React, { useEffect} from "react";
+import React, { useEffect, useState} from "react";
 import { Box, Avatar, Group, Flex, Title, Text, Tabs, ScrollArea, Center, Stack, Button} from "@mantine/core";
 import {AvatarRow} from "@trz/components/AvatarRow";
-import {OrganizationId, ProjectId, UserHeader} from "@mosaiq/terrazzo-common/types";
+import {Project, ProjectId} from "@mosaiq/terrazzo-common/types";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSocket } from "@trz/contexts/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
 import {NotFound, PageErrors} from "@trz/components/NotFound";
 import {Role } from "@mosaiq/terrazzo-common/constants";
 import { useTRZ } from "@trz/contexts/TRZ-context";
-import { getRoomCode } from "@mosaiq/terrazzo-common/utils/socketUtils";
-import { RoomType } from "@mosaiq/terrazzo-common/socketTypes";
+import { RoomType, ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
 import {ProjectTabCards} from "@trz/components/ProjectTabs/ProjectTabCards";
 import {ProjectTabSettings} from "@trz/components/ProjectTabs/ProjectTabSettings";
 import {ProjectTabMembers} from "@trz/components/ProjectTabs/ProjectTabMembers";
+import { useDashboard } from "@trz/contexts/dashboard-context";
+import { getProjectData, updateProjectField } from "@trz/emitters/all";
+import { useRoom } from "@trz/hooks/useRoom";
+import { useSocketListener } from "@trz/hooks/useSocketListener";
+import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
+import { modals } from "@mantine/modals";
 
 const ProjectPage = (): React.JSX.Element => {
     const params = useParams();
 	const sockCtx = useSocket();
     const trz = useTRZ();
 	const navigate = useNavigate();
+    const {userDash, updateUserDash} = useDashboard();
+    const [projectData, setProjectData] = useState<Project | undefined>();
     const projectId = params.projectId as ProjectId | undefined;
     const tabId = params.tabId;
+    useRoom(RoomType.DATA, projectId);
 
 	useEffect(() => {
         let strictIgnore = false;
@@ -31,48 +39,66 @@ const ProjectPage = (): React.JSX.Element => {
             }
 
             try{
-                await sockCtx.getProjectData(projectId);
+                const prj = await getProjectData(sockCtx, projectId);
+                setProjectData(prj);
             } catch(err) {
                 notify(NoteType.PROJECT_DATA_ERROR, err);
                 navigate("/dashboard");
                 return;
 			}
-
-            try {
-                if (!sockCtx.connected) { return; }
-                sockCtx.setRoom(getRoomCode(RoomType.DATA, projectId));
-            } catch (e) {
-                notify(NoteType.SOCKET_ROOM_ERROR, [getRoomCode(RoomType.DATA, projectId)]);
-            }
 		};
 		fetchProjectData();
         return ()=>{
             strictIgnore = true;
-            sockCtx.setRoom(null);
         }
 	}, [projectId, sockCtx.connected]);
 
-    if(!sockCtx.projectData || !projectId){
+    useSocketListener<ServerSE.UPDATE_PROJECT_FIELD>(ServerSE.UPDATE_PROJECT_FIELD, (payload)=>{
+        setProjectData(prev => {
+            if(!prev) {return prev;}
+            return updateBaseFromPartial<Project>(prev, payload);
+        });
+    });
+
+    if(!projectData || !projectId){
         return <NotFound itemType="Project" error={PageErrors.NOT_FOUND}/>
     }
 
-    const orgId = sockCtx.projectData.orgId;
-    let myMembershipRecord = sockCtx.userDash?.organizations.find(o=>o.id===orgId)?.myMembershipRecord;
-    const projectMembershipRecord = sockCtx.userDash?.standaloneProjects.find(p=>p.id===projectId)?.myMembershipRecord;
+    let myMembershipRecord = userDash?.organizations.find(o=>o.id===projectData.orgId)?.myMembershipRecord;
+    const projectMembershipRecord = userDash?.standaloneProjects.find(p=>p.id===projectId)?.myMembershipRecord;
     if((!myMembershipRecord) || (myMembershipRecord && projectMembershipRecord && projectMembershipRecord.userRole > myMembershipRecord.userRole)){
         myMembershipRecord = projectMembershipRecord;
     }
-
 
     if(!myMembershipRecord){
         return <NotFound itemType="Project" error={PageErrors.FORBIDDEN}/>
     }
 
-
     const tabs = {
-        "Boards": <ProjectTabCards/>,
-        "Members": <ProjectTabMembers myMembershipRecord={myMembershipRecord} projectId={projectId} />,
-        "Settings": <ProjectTabSettings myMembershipRecord={myMembershipRecord} projectId={projectId}/>,
+        "Boards":
+            <ProjectTabCards
+                projectData={projectData}
+                onClickCreate={()=>{
+                    modals.openContextModal({
+                        modal: 'board',
+                        title: 'Create Board',
+                        innerProps: {projectId: projectData.id},
+                    })
+                }}
+                onClickBoard={(boardId)=>{
+                    navigate(`/board/${boardId}`);
+                }}
+            />,
+        "Members":
+            <ProjectTabMembers
+                myMembershipRecord={myMembershipRecord}
+                projectData={projectData}
+            />,
+        "Settings":
+            <ProjectTabSettings
+                myMembershipRecord={myMembershipRecord}
+                projectData={projectData}
+            />,
     }
     
     const onChangeTab = (tab: string|null) => {
@@ -90,15 +116,15 @@ const ProjectPage = (): React.JSX.Element => {
                 <Box py='25' w='80%'>
                     <Group gap='xl' pl='50'>
                         <Avatar
-                            src={sockCtx.projectData.logoUrl ?? undefined}
-                            name={sockCtx.projectData.name}
+                            src={projectData.logoUrl ?? undefined}
+                            name={projectData.name}
                             color={'initials'}
                             size={"75"}
                             radius={'lg'}
                         />
                         <Flex direction='column'>
-                            <Title c='white'>{sockCtx.projectData.name}</Title>
-                            <Text c='#6C6C6C'>{sockCtx.projectData.description}</Text>
+                            <Title c='white'>{projectData.name}</Title>
+                            <Text c='#6C6C6C'>{projectData.description}</Text>
                         </Flex>
                     </Group>
                     <Tabs value={getTab()} pt='30' onChange={onChangeTab} color='#F2187E' variant="default">
@@ -116,16 +142,16 @@ const ProjectPage = (): React.JSX.Element => {
                                 })
                             }
                             <Flex ml='auto' align='center'>
-                                <AvatarRow users={sockCtx.projectData.externalMembers.map(m=>m.user)} maxUsers={5}/>
+                                <AvatarRow users={projectData.externalMembers.map(m=>m.user)} maxUsers={5}/>
                             </Flex>
                         </Tabs.List>
                     </Tabs>
                 </Box>
                 {
-                    !sockCtx.projectData.archived && tabs[getTab()]
+                    !projectData.archived && tabs[getTab()]
                 }
                 {
-                    sockCtx.projectData.archived && 
+                    projectData.archived && 
                     <Center><Stack>
                         <Title c="#fff" ta="center" order={3}>This Project is archived</Title>
                         <Button
@@ -137,7 +163,7 @@ const ProjectPage = (): React.JSX.Element => {
                                     return;
                                 }
                                 try {
-                                    sockCtx.updateProjectField(projectId, {archived: false});
+                                    updateProjectField(sockCtx, projectId, {archived: false});
                                     notify(NoteType.CHANGES_SAVED);
                                 } catch (e) {
                                     notify(NoteType.PROJECT_DATA_ERROR, e);

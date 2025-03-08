@@ -34,7 +34,7 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
         }
     }, [node])
 
-    const otherDraggingPos = sockCtx.roomUsers.find((ru)=>ru.mouseRoomData?.draggingCard === props.card.id)?.mouseRoomData?.pos;
+    const otherDraggingPos = null;//sockCtx.roomUsers.find((ru)=>ru.mouseRoomData?.draggingCard === props.card.id)?.mouseRoomData?.pos;
     if(!!otherDraggingPos && initialPosition) {
         return createPortal(
             <div style={{
