@@ -55,7 +55,7 @@ type SocketContextType = {
     createOrganization: (name: string, creator: UserId) => Promise<OrganizationId | undefined>
     createProject: (name: string, orgId: OrganizationId) => Promise<ProjectId | undefined>
     createBoard: (name: string, boardCode: string, projectId: ProjectId) => Promise<BoardId | undefined>;
-    createList: (boardID: BoardId, listName: string) => Promise< undefined>;
+    createList: (boardID: BoardId, listName: string, start: Date, end: Date) => Promise< undefined>;
     createCard: (listID: ListId, cardName: string) => Promise<undefined>;
     initializeTextBlockData: (textBlockId: TextBlockId) => Promise<void>;
     collaborativeTextObject: TextObject;
@@ -441,8 +441,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         return await emit<ClientSE.CREATE_BOARD>(ClientSE.CREATE_BOARD, {name, boardCode, projectId});
     }
 
-    const createList = async (boardID:BoardId, listName:string):Promise<undefined> => {
-        await emit<ClientSE.CREATE_LIST>(ClientSE.CREATE_LIST, {boardID, listName});
+    const createList = async (boardID:BoardId, listName:string, start:Date, end:Date):Promise<undefined> => {
+        await emit<ClientSE.CREATE_LIST>(ClientSE.CREATE_LIST, {boardID, listName, start, end});
     }
 
     const createCard = async (listID:ListId, cardName:string):Promise<undefined> => {

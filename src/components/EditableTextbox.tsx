@@ -11,6 +11,7 @@ interface EditableTextboxProps {
     textProps?: TextProps;
     inputProps?: InputProps;
     style?: CSSProperties;
+    subText?: string;
 }
 const EditableTextbox = (props: EditableTextboxProps) => {
     const { value, onChange, placeholder, type, titleProps, textProps, inputProps, style } = props;
@@ -65,7 +66,7 @@ const EditableTextbox = (props: EditableTextboxProps) => {
             <div style={style}>{
                 editingValue === null &&
                 type === "title" &&
-                <Title {...titleProps} >{value || placeholder}</Title>
+                <Title {...titleProps} >{value || placeholder}{props.subText || ""}</Title>
             }{
                 editingValue === null &&
                 type === "text" &&

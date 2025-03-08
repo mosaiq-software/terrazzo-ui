@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import EditableTextbox from "@trz/components/EditableTextbox";
-import {Button, Group, Paper, Stack, CloseButton, TextInput, Flex, FocusTrap, Menu} from "@mantine/core";
+import {Button, Group, Paper, Stack, CloseButton, TextInput, Flex, FocusTrap, Menu, Tooltip} from "@mantine/core";
 import {useClickOutside, getHotkeyHandler, useInViewport} from "@mantine/hooks";
 import {List} from "@mosaiq/terrazzo-common/types";
 import {useSocket} from "@trz/util/socket-context";
@@ -8,6 +8,8 @@ import {NoteType, notify} from "@trz/util/notifications";
 import { captureDraggableEvents, captureEvent, forAllClickEvents } from "@trz/util/eventUtils";
 import {FaArchive} from "react-icons/fa";
 import {HiDotsVertical} from "react-icons/hi";
+import {ListType} from "../../../terrazzo-common/dist/constants";
+import {getMonthName} from "@trz/util/dateUtils";
 
 
 interface ListElementProps {
@@ -20,6 +22,7 @@ interface ListElementProps {
 }
 function ListElement(props: ListElementProps): React.JSX.Element {
     const [listTitle, setListTitle] = React.useState(props.listType.name || "List Title");
+    const [dateTitle, setDateTitle] = React.useState("");
     const [visible, setVisible] = useState(false);
     const [error, setError] = useState("");
     const [cardTitle, setCardTitle] = useState("");
@@ -64,7 +67,13 @@ function ListElement(props: ListElementProps): React.JSX.Element {
     }
 
     useEffect(() => {
-        setListTitle(props.listType.name || "List Title");
+        if(props.listType.startDate != null && props.listType.endDate != null){
+            const start = new Date(props.listType.startDate);
+            const end = new Date(props.listType.endDate);
+            setDateTitle(` (${getMonthName(start.getMonth())}/${start.getDate()} - ${getMonthName(end.getMonth())}/${end.getDate()})`);
+        }else{
+            setListTitle(props.listType.name || "List Title");
+        }
     })
 
     function onBlur(){
@@ -83,8 +92,8 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 flexDirection: "column",
                 justifyContent: "space-between",
                 alignItems: "center",
-                minWidth: "250px",
-                maxWidth: "250px",
+                minWidth: "275px",
+                maxWidth: "275px",
                 minHeight: "5rem",
                 maxHeight: "88vh",
                 transition: `transform .1s, box-shadow .1s, filter 0ms linear ${props.dragging ? '0ms' : '225ms'}`,
@@ -113,14 +122,15 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     height: "3rem",
                 }}
             >
-                <EditableTextbox 
+                <EditableTextbox
                     value={listTitle}
                     onChange={onTitleChange}
+                    subText={dateTitle}
                     placeholder="Click to edit!"
                     type="title"
                     titleProps={{order: 6, c: "#ffffff"}}
                     style={{
-                        width: "90%",
+                        width: "100%",
                     }}
                 />
 
@@ -147,13 +157,32 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     <Menu.Dropdown
                         {...captureDraggableEvents(captureEvent, forAllClickEvents((e)=>{captureEvent(e)}))}
                     >
+                        {props.listType.type !== ListType.NORMAL &&
+                            <Menu.Label>Special list of {props.listType.type}</Menu.Label>
+                        }
                         <Menu.Label>Settings</Menu.Label>
-                        <Menu.Item
-                            onClick={onArchive}
-                            leftSection={<FaArchive />}
+                        <Tooltip
+                            label={"Can\'t archive special lists"}
+                            position="right-start"
+                            offset={12}
+                            withArrow
+                            arrowPosition="center"
+                            arrowOffset={24}
+                            arrowSize={5}
+                            events={{
+                                hover:props.listType.type !== ListType.NORMAL,
+                                focus:props.listType.type !== ListType.NORMAL,
+                                touch:props.listType.type !== ListType.NORMAL
+                            }}
                         >
-                            Archive List
-                        </Menu.Item>
+                            <Menu.Item
+                                onClick={onArchive}
+                                disabled={props.listType.type !== ListType.NORMAL}
+                                leftSection={<FaArchive />}
+                            >
+                                Archive List
+                            </Menu.Item>
+                        </Tooltip>
                     </Menu.Dropdown>
                 </Menu>
             </Group>

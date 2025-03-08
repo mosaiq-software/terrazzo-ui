@@ -1,7 +1,7 @@
 import React from "react";
+import '@mantine/dates/styles.css';
 import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { GithubAuth } from "@trz/pages/auth/github";
-import Navbar from "@trz/components/Navbar";
 import {CreateBoardModal} from "@trz/components/modals/CreateBoard";
 import {CreateProjectModal} from "@trz/components/modals/CreateProject";
 import {CreateOrganizationModal} from "@trz/components/modals/CreateOrganization";

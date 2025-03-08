@@ -42,7 +42,7 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 			style={{
 				cursor: "pointer",
 				marginInline: "5px",
-				width: "230px",
+				width: "250px",
 				transition: `transform .1s, box-shadow .1s, filter 0ms linear ${props.dragging ? '0ms' : '225ms'}`,
 				...(props.dragging ? props.isOverlay ? {
 					transform: "rotateZ(3deg) scale(1.02)",
