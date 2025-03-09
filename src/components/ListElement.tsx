@@ -67,8 +67,8 @@ function ListElement(props: ListElementProps): React.JSX.Element {
         }
     }
 
-    async function onArchive() {
-        await sockCtx.updateListField(props.listType.id, {archived: true, order: -1});
+    async function onEndSprint() {
+        await sockCtx.endSprint(props.listType.id);
     }
 
     useEffect(() => {
@@ -181,7 +181,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                             }}
                         >
                             <Menu.Item
-                                onClick={onArchive}
+                                onClick={onEndSprint}
                                 disabled={props.listType.type !== ListType.NORMAL}
                                 leftSection={<FaCalendarCheck />}
                             >

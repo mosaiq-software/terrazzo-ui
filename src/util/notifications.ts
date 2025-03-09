@@ -101,6 +101,9 @@ export const NoteType = {
     },
     USER_CREATION_ERROR: {
         title: "Error creating the user"
+    },
+    SPRINT_END_ERROR: {
+        title: "Error ending the sprint"
     }
 
 }

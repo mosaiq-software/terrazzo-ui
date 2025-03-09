@@ -75,6 +75,7 @@ type SocketContextType = {
     updateBoardField: (id: BoardId, partial: Partial<Board>) => Promise<void>;
     updateListField: (id: ListId, partial: Partial<List>) => Promise<void>;
     updateCardField: (id: CardId, partial: Partial<Card>) => Promise<void>;
+    endSprint: (sprintId: ListId) => Promise<void>;
     getUserViaGithub: (userId: string) => Promise<User | undefined>;
     setupUser: (id:string, username: string, firstName: string, lastName: string) => Promise<User | undefined>;
     checkUserNameTaken: (username: string) => Promise<boolean | undefined>;
@@ -479,6 +480,14 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const updateListField = async (id: ListId, partial: Partial<List>) => updateField<List>(ClientSE.UPDATE_LIST_FIELD, id, partial);
     const updateCardField = async (id: CardId, partial: Partial<Card>) => updateField<Card>(ClientSE.UPDATE_CARD_FIELD, id, partial);
 
+    const endSprint = async (sprintId: ListId): Promise<void> => {
+        try {
+            await emit<ClientSE.END_SPRINT>(ClientSE.END_SPRINT, sprintId);
+        } catch (e:any) {
+            notify(NoteType.SPRINT_END_ERROR, e);
+        }
+    }
+
     const initializeTextBlockData = async (textBlockId:TextBlockId): Promise<void> => {
         try {
             const text = await emit<ClientSE.GET_TEXT_BLOCK>(ClientSE.GET_TEXT_BLOCK, textBlockId);
@@ -661,6 +670,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             updateBoardField,
             updateListField,
             updateCardField,
+            endSprint,
             getUserViaGithub,
             setupUser,
             checkUserNameTaken,
