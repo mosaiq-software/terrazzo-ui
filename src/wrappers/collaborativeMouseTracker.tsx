@@ -1,15 +1,14 @@
-import React, { MouseEventHandler, useEffect, useRef, useState } from 'react';
+import React, { MouseEventHandler, useEffect, useRef } from 'react';
 import { useSocket } from "@trz/contexts/socket-context";
 import UserCursor from "@trz/components/UserCursor";
-import { getRoomCode } from '@mosaiq/terrazzo-common/utils/socketUtils';
-import { ClientSE, Position, RoomType, ServerSE, ServerSEPayload, UserData } from '@mosaiq/terrazzo-common/socketTypes';
+import { ClientSE, Position, RoomType, ServerSE} from '@mosaiq/terrazzo-common/socketTypes';
 import { Box, MantineStyleProp } from '@mantine/core';
 import { BoardId, CardId, ListId } from '@mosaiq/terrazzo-common/types';
-import { NoteType, notify } from '@trz/util/notifications';
 import { useIdle, useThrottledCallback } from '@mantine/hooks';
 import { IDLE_TIMEOUT_MS, MOUSE_UPDATE_THROTTLE_MS } from '@trz/util/textUtils';
 import {useSocketListener} from "@trz/hooks/useSocketListener";
 import {useRoom} from "@trz/hooks/useRoom";
+import { fullName } from '@mosaiq/terrazzo-common/utils/textUtils';
 
 interface CollaborativeMouseTrackerProps {
     boardId: BoardId;
@@ -58,7 +57,7 @@ const CollaborativeMouseTracker = (props: CollaborativeMouseTrackerProps) => {
     }
 
     const handleMoveMouse: MouseEventHandler<HTMLDivElement> = (event) => {
-        if(!ref.current){
+        if(!ref.current || roomUsers.length === 0){
             return;
         }
         const rect = event.currentTarget.getBoundingClientRect();
@@ -84,8 +83,8 @@ const CollaborativeMouseTracker = (props: CollaborativeMouseTrackerProps) => {
                                 x: user.mouseRoomData.pos.x + (ref.current?.getBoundingClientRect().left ?? 0),
                                 y: user.mouseRoomData.pos.y + (ref.current?.getBoundingClientRect().top ?? 0)
                             }}
-                            name={user.fullName}
-                            avatarUrl={user.avatarUrl}
+                            name={fullName(user.user)}
+                            avatarUrl={user.user.profilePicture}
                             idle={user.idle}
                         />
                     );

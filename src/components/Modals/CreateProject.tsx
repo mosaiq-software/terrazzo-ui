@@ -6,6 +6,7 @@ import {useSocket} from "@trz/contexts/socket-context";
 import {useNavigate, useParams} from "react-router-dom";
 import {NoteType, notify} from "@trz/util/notifications";
 import { OrganizationId } from "@mosaiq/terrazzo-common/types";
+import { createProject } from "@trz/emitters/all";
 
 const CreateProject = (props: ContextModalProps<{ modalBody: string, orgId: OrganizationId}>): React.JSX.Element => {
     const [projectName, setProjectName] = React.useState("");
@@ -26,8 +27,7 @@ const CreateProject = (props: ContextModalProps<{ modalBody: string, orgId: Orga
             return;
         }
         try {
-            const projectId = await sockCtx.createProject(projectName, props.innerProps.orgId);
-            sockCtx.syncUserDash();
+            const projectId = await createProject(sockCtx, projectName, props.innerProps.orgId);
             navigate(`/project/${projectId}`);
         } catch (e) {
             notify(NoteType.PROJECT_CREATION_ERROR, e);

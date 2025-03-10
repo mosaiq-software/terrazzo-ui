@@ -6,6 +6,7 @@ import {useSocket} from "@trz/contexts/socket-context";
 import {useNavigate} from "react-router-dom";
 import {NoteType, notify} from "@trz/util/notifications";
 import { useUser } from "@trz/contexts/user-context";
+import { createOrganization } from "@trz/emitters/all";
 
 const CreateOrganization = (props: ContextModalProps<{ modalBody: string }>): React.JSX.Element => {
     const [orgName, setOrgName] = React.useState("");
@@ -31,8 +32,7 @@ const CreateOrganization = (props: ContextModalProps<{ modalBody: string }>): Re
                 notify(NoteType.NOT_LOGGED_IN);
                 return;
             }
-            const ordId = await sockCtx.createOrganization(orgName, userId);
-            sockCtx.syncUserDash();
+            const ordId = await createOrganization(sockCtx, orgName, userId);
             navigate(`/org/${ordId}`);
         } catch (e) {
             notify(NoteType.ORG_CREATION_ERROR, e);

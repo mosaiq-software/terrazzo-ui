@@ -67,6 +67,12 @@ export const NoteType = {
         title: 'List Creation Error',
         message: 'An error occurred while creating a new list',
     },
+    LIST_DATA_ERROR: {
+        title: "There was an error getting a list"
+    },
+    CARD_DATA_ERROR: {
+        title: "There was an error getting a card"
+    },
     CARD_CREATION_ERROR: {
         title: 'Card Creation Error',
         message: 'An error occurred while creating a new card',

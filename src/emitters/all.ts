@@ -1,6 +1,6 @@
 import { EntityType, Role } from "@mosaiq/terrazzo-common/constants";
 import { ClientSE } from "@mosaiq/terrazzo-common/socketTypes";
-import { Board, BoardHeader, BoardId, CardHeader, CardId, EntityId, Invite, InviteId, ListHeader, ListId, MembershipRecord, MembershipRecordId, Organization, OrganizationHeader, OrganizationId, Project, ProjectHeader, ProjectId, UID, UserDash, UserId } from "@mosaiq/terrazzo-common/types";
+import { Board, BoardHeader, BoardId, BoardRes, Card, CardHeader, CardId, EntityId, Invite, InviteId, List, ListHeader, ListId, ListRes, MembershipRecord, MembershipRecordId, Organization, OrganizationHeader, OrganizationId, Project, ProjectHeader, ProjectId, UID, UserDash, UserId } from "@mosaiq/terrazzo-common/types";
 import { SocketContextType } from "@trz/contexts/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
 
@@ -35,12 +35,30 @@ export const getProjectData = async (sockCtx:SocketContextType, projectId: Proje
     }
 }
 
-export const getBoardData = async (sockCtx:SocketContextType, boardId: BoardId): Promise<Board | undefined> => {
+export const getBoardData = async (sockCtx:SocketContextType, boardId: BoardId): Promise<BoardRes | undefined> => {
     try {
         const board = await sockCtx.emit<ClientSE.GET_BOARD>(ClientSE.GET_BOARD, boardId);
         return board;
     } catch (e:any){
         notify(NoteType.BOARD_DATA_ERROR, e);
+    }
+}
+
+export const getListData = async (sockCtx:SocketContextType, listId: BoardId): Promise<ListRes | undefined> => {
+    try {
+        const list = await sockCtx.emit<ClientSE.GET_LIST>(ClientSE.GET_LIST, listId);
+        return list;
+    } catch (e:any){
+        notify(NoteType.LIST_DATA_ERROR, e);
+    }
+}
+
+export const getCardData = async (sockCtx:SocketContextType, cardId: BoardId): Promise<Card | undefined> => {
+    try {
+        const card = await sockCtx.emit<ClientSE.GET_CARD>(ClientSE.GET_CARD, cardId);
+        return card;
+    } catch (e:any){
+        notify(NoteType.CARD_DATA_ERROR, e);
     }
 }
 

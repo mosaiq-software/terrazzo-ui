@@ -110,93 +110,9 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             setConnected(true);
         });
 
-        sock.on(ServerSE.ADD_LIST, (payload: ServerSEPayload[ServerSE.ADD_LIST]) => {
-            setBoardData(prev => {
-                if(!prev) {return prev;}
-                return {
-                    ...prev,
-                    lists: prev.lists.concat(payload)
-                }
-            });
-        });
+        
 
-        sock.on(ServerSE.ADD_CARD, (payload: ServerSEPayload[ServerSE.ADD_CARD]) => {
-            setBoardData(prev => {
-                if(!prev) {return prev;}
-                return {
-                    ...prev,
-                    lists: prev.lists.map(list => {
-                        if(list.id === payload.listId) {
-                            return {
-                                ...list,
-                                cards: list.cards.concat(payload)
-                            }
-                        }
-                        return list;
-                    })
-                }
-            });
-        });
 
-        sock.on(ServerSE.UPDATE_LIST_FIELD, (payload: ServerSEPayload[ServerSE.UPDATE_LIST_FIELD]) => {
-            setBoardData(prev => {
-                if(!prev) {return prev;}
-                return {
-                    ...prev,
-                    lists: prev.lists.map(list => {
-                        if(list.id === payload.id) {
-                            return updateBaseFromPartial<List>(list, payload)
-                        }
-                        return list;
-                    })
-                }
-            });
-        });
-
-        sock.on(ServerSE.UPDATE_CARD_FIELD, (payload: ServerSEPayload[ServerSE.UPDATE_CARD_FIELD]) => {
-            setBoardData(prev => {
-                if (!prev) return prev;
-                return {
-                    ...prev,
-                    lists: prev.lists.map(list => ({
-                        ...list,
-                        cards: list.cards
-                            .map(card => {
-                                if (card.id === payload.id) {
-                                    return updateBaseFromPartial<Card>(card, payload);
-                                }
-                                return card;
-                            }).filter((card) => !card.archived) // Remove null values (filtered out cards)
-                    }))
-                };
-            });
-        });
-
-        sock.on(ServerSE.UPDATE_CARD_ASSIGNEE, (payload: ServerSEPayload[ServerSE.UPDATE_CARD_ASSIGNEE]) => {
-            setBoardData(prev => {
-                if (!prev) return prev;
-                return {
-                    ...prev,
-                    lists: prev.lists.map(list => ({
-                        ...list,
-                        cards: list.cards
-                            .map(card => {
-                                if (card.id === payload.cardId) {
-                                    const members = card.assignees.filter(u=>u!==payload.userId);
-                                    if(payload.assigned){
-                                        members.push(payload.userId);
-                                    }
-                                    return {
-                                        ...card,
-                                        assignees: members, 
-                                    }
-                                }
-                                return card;
-                            })
-                    }))
-                };
-            });
-        });
 
         sock.on(ServerSE.UPDATE_TEXT_BLOCK, (payload: ServerSEPayload[ServerSE.UPDATE_TEXT_BLOCK]) => {
             if (!payload) {
@@ -219,43 +135,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             }));
         });
 
-        sock.on(ServerSE.MOVE_LIST, (payload: ServerSEPayload[ServerSE.MOVE_LIST]) => {
-            moveListToPos(payload.listId, payload.position)
-            setRoomUsersState((prev)=>{
-                return prev.map((ru)=>{
-                    if(ru.mouseRoomData?.draggingList === payload.listId){
-                        return {
-                            ...ru,
-                            mouseRoomData: {
-                                ...ru.mouseRoomData,
-                                draggingList: undefined,
-                            }
-                        }
-                    }else{
-                        return ru;
-                    }
-                })
-            })
-        });
-
-        sock.on(ServerSE.MOVE_CARD, (payload: ServerSEPayload[ServerSE.MOVE_CARD]) => {
-            moveCardToListAndPos(payload.cardId, payload.toList, payload.position);
-            setRoomUsersState((prev)=>{
-                return prev.map((ru)=>{
-                    if(ru.mouseRoomData?.draggingCard === payload.cardId){
-                        return {
-                            ...ru,
-                            mouseRoomData: {
-                                ...ru.mouseRoomData,
-                                draggingList: undefined,
-                            }
-                        }
-                    }else{
-                        return ru;
-                    }
-                })
-            })
-        });
+        
 
         sock.on(ServerSE.RECEIVE_INVITE, (payload: ServerSEPayload[ServerSE.RECEIVE_INVITE]) => {
             notify(NoteType.INVITE_RECEIVED, [fullName(payload.fromUser), payload.entity.name],{
@@ -280,6 +160,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
 
         return () => {
             setConnected(false);
+            console.warn("Effect closed")
             sock.disconnect();
         }
     }, [usr.userData?.id, usr.githubAuthToken]);

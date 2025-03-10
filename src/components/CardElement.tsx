@@ -1,22 +1,73 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {Box, Group, Paper, Pill, Text, Title} from "@mantine/core";
-import {Card} from "@mosaiq/terrazzo-common/types";
+import {Card, CardId} from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from "@trz/components/AvatarRow";
 import {priorityColors} from "@trz/components/PriorityButtons";
 import { getCardNumber } from "@trz/util/boardUtils";
+import { useSocketListener } from "@trz/hooks/useSocketListener";
+import { ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
+import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
+import { useSocket } from "@trz/contexts/socket-context";
+import { getCardData } from "@trz/emitters/all";
+import { NoteType, notify } from "@trz/util/notifications";
+import { useInViewport } from "@mantine/hooks";
 
 interface CardElementProps {
-	card: Card;
+	cardId: CardId;
 	dragging: boolean;
 	isOverlay: boolean;
 	boardCode: string;
 	onClick: ()=>void;
 }
-const CardElement = (props: CardElementProps): React.JSX.Element => {
+const CardElement = (props: CardElementProps) => {
+	const sockCtx = useSocket();
+	const [card, setCard] = useState<Card | undefined>(undefined);
 	const textColor = "#ffffff";
+	const {ref: viewportRef, inViewport} = useInViewport();
+	console.log("card", props.cardId)
+	useEffect(()=>{
+		let strictIgnore = false;
+		const fetchCardData = async () => {
+			await new Promise((resolve)=>setTimeout(resolve, 0));
+			if(strictIgnore || !props.cardId || !sockCtx.connected || !inViewport){
+				return;
+			}
+			if(inViewport && card && card.id === props.cardId){
+				return;
+			}
+			console.log("fetching", props.cardId)
+			try{
+				const cardRes = await getCardData(sockCtx, props.cardId);
+				setCard(cardRes);
+			} catch(err) {
+				notify(NoteType.CARD_DATA_ERROR, err);
+				return;
+			}
+		};
+		fetchCardData();
+		return ()=>{
+			strictIgnore = true;
+		}
+	}, [props.cardId, sockCtx.connected, inViewport]);
+	
+	useSocketListener<ServerSE.UPDATE_CARD_FIELD>(ServerSE.UPDATE_CARD_FIELD, (payload)=>{
+		if(payload.id !== props.cardId){
+			return;
+		}
+		setCard((prev)=>{
+			if(!prev){
+				return prev;
+			}
+			return {...updateBaseFromPartial<Card>(prev, payload)};
+		});
+	});
 
+	useSocketListener<ServerSE.UPDATE_CARD_ASSIGNEE>(ServerSE.UPDATE_CARD_ASSIGNEE, (payload)=>{
+
+	});
+	
 	const onOpenCardModal = () => {
-		if(props.dragging || props.isOverlay){
+		if(!card || props.dragging || props.isOverlay){
 			return;
 		}
 		props.onClick();
@@ -24,11 +75,13 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 
 	return (
 		<Paper
+			ref={viewportRef}
 			bg="#17191b"
 			radius="md"
 			p="sm"
 			shadow="lg"
 			bd="1px solid #757575"
+			mih="85px"
 			style={{
 				cursor: "pointer",
 				marginInline: "5px",
@@ -47,58 +100,59 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 			}}
 			onClick={onOpenCardModal}
 		>
-			<Pill.Group>
-				<Pill
-					size="xs"
-					bg='#87cefa'
-					c={textColor}
+			{card && inViewport && <React.Fragment>
+				<Pill.Group>
+					<Pill
+						size="xs"
+						bg='#87cefa'
+						c={textColor}
+						style={{
+							userSelect: "none",
+						}}
+					>To Do</Pill>
+					<Pill
+						size="xs"
+						bg='#ff474c'
+						c={textColor}
+						style={{
+							userSelect: "none",
+						}}
+					>In Progress</Pill>
+				</Pill.Group>
+				<Title 
+					order={5} 
+					lineClamp={7} 
+					c="#ffffff"
+					style={{
+						wordWrap: "break-word",
+						textWrap: "wrap",
+						userSelect: "none",
+					}}
+				>{card.name}</Title>
+				<Text
+					size='xs'
+					c="#878787"
 					style={{
 						userSelect: "none",
 					}}
-				>To Do</Pill>
-				<Pill
-					size="xs"
-					bg='#ff474c'
-					c={textColor}
-					style={{
-						userSelect: "none",
-					}}
-				>In Progress</Pill>
-			</Pill.Group>
-			<Title 
-				order={5} 
-				lineClamp={7} 
-				c="#ffffff"
-				style={{
-					wordWrap: "break-word",
-					textWrap: "wrap",
-					userSelect: "none",
-				}}
-			>{props.card.name}</Title>
-			<Text
-				size='xs'
-				c="#878787"
-				style={{
-					userSelect: "none",
-				}}
-			>{getCardNumber(props.boardCode, props.card.cardNumber)}</Text>
-			<Group justify='space-between' style={{flexDirection: "row-reverse"}}>
-				{/* icons for info abt the card */}
-                {props.card.assignees != undefined && props.card.assignees.length > 0 &&
-                    <AvatarRow users={props.card.assignees} maxUsers={3}/>
-                }
-                {props.card.priority &&
-                    <Box w='20' bg={priorityColors[props.card.priority - 1]}  style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
-                        <Text c="white" ta='center'>{props.card.priority}</Text>
-                    </Box>
-                }
-				{props.card.storyPoints &&
-					<Box bg='#f2bb6e' w='20' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
-						<Text c='white' ta='center'>{props.card.storyPoints}</Text>
-					</Box>
-				}
-			</Group>
-
+				>{getCardNumber(props.boardCode, card.cardNumber)}</Text>
+				<Group justify='space-between' style={{flexDirection: "row-reverse"}}>
+					{/* icons for info abt the card */}
+					{card.assignees != undefined && card.assignees.length > 0 &&
+						<AvatarRow users={card.assignees} maxUsers={3}/>
+					}
+					{card.priority &&
+						<Box w='20' bg={priorityColors[card.priority - 1]}  style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
+							<Text c="white" ta='center'>{card.priority}</Text>
+						</Box>
+					}
+					{card.storyPoints &&
+						<Box bg='#f2bb6e' w='20' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
+							<Text c='white' ta='center'>{card.storyPoints}</Text>
+						</Box>
+					}
+				</Group>
+			</React.Fragment>}
 		</Paper>
 	);
 };

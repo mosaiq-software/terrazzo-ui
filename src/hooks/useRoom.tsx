@@ -11,14 +11,32 @@ export function useRoom(roomType:RoomType, roomId: UID | null | undefined): [Use
     const sockCtx = useSocket();
 
     useEffect(()=>{
-        sockCtx.emit<ClientSE.SET_ROOM>(ClientSE.SET_ROOM, roomId ? getRoomCode(roomType, roomId) : null).then(res=>{
-            if(res) {
-                setRoomUsers(res.users);
+        if(!sockCtx.connected){
+            return;
+        }
+        if(roomId){
+            sockCtx.emit<ClientSE.JOIN_ROOM>(ClientSE.JOIN_ROOM, getRoomCode(roomType, roomId)).then(res=>{
+                if(res) {
+                    setRoomUsers(res);
+                }
+            }).catch((e)=>{
+                notify(NoteType.SOCKET_ROOM_ERROR, [roomId, e]);
+            })
+        }
+
+        return ()=>{
+            if(roomId){
+                sockCtx.emit<ClientSE.LEAVE_ROOM>(ClientSE.LEAVE_ROOM, getRoomCode(roomType, roomId)).then(res=>{
+                    if(res) {
+                        setRoomUsers(res);
+                    }
+                }).catch((e)=>{
+                    notify(NoteType.SOCKET_ROOM_ERROR, [roomId, e]);
+                })
             }
-        }).catch((e)=>{
-            notify(NoteType.SOCKET_ROOM_ERROR, [roomId, e]);
-        })
-    }, [roomId])
+            
+        }
+    }, [roomId, sockCtx.connected, sockCtx.sid])
 
     useSocketListener<ServerSE.CLIENT_JOINED_ROOM>(ServerSE.CLIENT_JOINED_ROOM, (payload) => {
         setRoomUsers(prev => prev.filter(user => {

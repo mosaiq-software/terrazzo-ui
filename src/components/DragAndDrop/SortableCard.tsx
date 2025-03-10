@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import {CSS} from '@dnd-kit/utilities';
 import {useSortable} from '@dnd-kit/sortable';
-import { Card } from "@mosaiq/terrazzo-common/types";
+import { Card, CardId } from "@mosaiq/terrazzo-common/types";
 import { useSocket } from "@trz/contexts/socket-context";
 import CardElement from "@trz/components/CardElement";
 import { createPortal } from "react-dom";
 
 interface SortableCardProps {
-	card: Card;
+	cardId: CardId;
     disabled: boolean;
     boardCode: string;
     onClick: ()=>void;
@@ -24,7 +24,7 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
         transform,
         node,
     } = useSortable({
-        id: props.card.id,
+        id: props.cardId,
         data: { type: 'card' },
     });
 
@@ -39,11 +39,11 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
         return createPortal(
             <div style={{
                 position: 'absolute',
-                left: otherDraggingPos.x,
-                top: otherDraggingPos.y,
+                // left: otherDraggingPos.x,
+                // top: otherDraggingPos.y,
                 zIndex: 101,
             }}>
-                <CardElement card={props.card} dragging={true} isOverlay={true} boardCode={props.boardCode} onClick={props.onClick}/>
+                <CardElement cardId={props.cardId} dragging={true} isOverlay={true} boardCode={props.boardCode} onClick={props.onClick}/>
             </div>,
             document.body
         );
@@ -59,7 +59,7 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
                 zIndex: isDragging ? 101 : undefined,
             }}
         >
-            <CardElement card={props.card} dragging={isDragging} isOverlay={false} boardCode={props.boardCode} onClick={props.onClick}/>
+            <CardElement cardId={props.cardId} dragging={isDragging} isOverlay={false} boardCode={props.boardCode} onClick={props.onClick}/>
         </div>
     );
 }
