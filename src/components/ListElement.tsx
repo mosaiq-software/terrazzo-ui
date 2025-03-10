@@ -1,14 +1,14 @@
 import React, {useEffect, useState} from "react";
 import EditableTextbox from "@trz/components/EditableTextbox";
 import {Button, Group, Paper, Stack, CloseButton, TextInput, Flex, FocusTrap, Menu, Text} from "@mantine/core";
-import {useClickOutside, getHotkeyHandler, useInViewport} from "@mantine/hooks";
-import {Card, CardId, List, ListHeader, ListId} from "@mosaiq/terrazzo-common/types";
+import {useClickOutside, getHotkeyHandler} from "@mantine/hooks";
+import {CardId, ListHeader, ListId} from "@mosaiq/terrazzo-common/types";
 import {useSocket} from "@trz/contexts/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
 import { captureDraggableEvents, captureEvent, forAllClickEvents } from "@trz/util/eventUtils";
 import {FaArchive} from "react-icons/fa";
 import {HiDotsVertical} from "react-icons/hi";
-import { createCard, getBoardData, getListData, updateListField } from "@trz/emitters/all";
+import { createCard, getListData, updateListField } from "@trz/emitters/all";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import SortableCard from "./DragAndDrop/SortableCard";
 import { useSocketListener } from "@trz/hooks/useSocketListener";
@@ -34,7 +34,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
     const clickOutsideRef = useClickOutside(() => onBlur());
     const sockCtx = useSocket();
     const [cardIds, setCardIds] = useState<CardId[]>([]);
-    console.log("Renrender", props.listId)
+    
     useEffect(()=>{
         let strictIgnore = false;
         const fetchListData = async () => {

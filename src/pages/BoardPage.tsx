@@ -1,10 +1,10 @@
-import React, {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import React, {Profiler, useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {Container} from "@mantine/core";
 import CollaborativeMouseTracker from "@trz/wrappers/CollaborativeMouseTracker";
 import {useNavigate, useParams} from "react-router-dom";
 import {useSocket} from "@trz/contexts/socket-context";
 import CreateList from "@trz/components/CreateList";
-import {Board, BoardHeader, BoardId, Card, CardHeader, CardId, List, ListId, UID} from "@mosaiq/terrazzo-common/types";
+import {BoardHeader, BoardId, CardId, ListId, UID} from "@mosaiq/terrazzo-common/types";
 import {NoteType, notify} from "@trz/util/notifications";
 import SortableList from "@trz/components/DragAndDrop/SortableList";
 import {
@@ -24,10 +24,8 @@ import {
 	horizontalListSortingStrategy,
 	SortableContext,
 	sortableKeyboardCoordinates,
-	verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { DragAbortEvent, DragCancelEvent, DragOverEvent } from "@dnd-kit/core/dist/types";
-import SortableCard from "@trz/components/DragAndDrop/SortableCard";
 import { createPortal } from "react-dom";
 import {boardDropAnimation, horizontalCollisionDetection, renderContainerDragOverlay, renderSortableItemDragOverlay} from "@trz/util/dragAndDropUtils";
 import CardDetails from "@trz/components/CardDetails";
@@ -36,7 +34,7 @@ import { useTRZ } from "@trz/contexts/TRZ-context";
 import { RoomType, ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
 import { createList, emitMoveCard, emitMoveList, getBoardData } from "@trz/emitters/all";
 import { useSocketListener } from "@trz/hooks/useSocketListener";
-import { arrayMove, arrayMoveInPlace, updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
+import { arrayMoveInPlace, updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
 import { useRoom } from "@trz/hooks/useRoom";
 import { useMap } from "@trz/hooks/useMap";
 
@@ -170,17 +168,13 @@ const BoardPage = (): React.JSX.Element => {
 		})
 	});
 
-	const sortableLists: React.JSX.Element[] = useMemo(()=>{ return listKeys.map((listId) => {
-		console.log("Memo render", listKeys.join())
-		return (
-			<SortableList
-				key={listId}
-				listId={listId}
-				boardCode={boardData?.boardCode ?? ""}
-				onClickCard={openModal}
-			/>
-		);
-	})}, [listKeys.join(), boardData?.boardCode])
+
+	
+
+	const memoizedSortableLists = useMemo(() => {
+        return listKeys.map((id)=><MemoRenderSortableList boardCode={boardData?.boardCode??""} listId={id} key={id} />);
+    }, [listKeys.join(), boardData?.boardCode]);
+
 
 	const isSortingList = !!(activeObject && listToCardsMap.has(activeObject))
 
@@ -229,35 +223,6 @@ const BoardPage = (): React.JSX.Element => {
 		listToCardsMap.set(currentListId, currentListCardsRemoved);
 		cardToListMap.set(cardId, toList);
 	};
-	
-	// setBoardData((prevBoard)=>{
-	// 	if(!prevBoard)return prevBoard;
-	// 	let currentListIndex: number = -1;
-	// 	let currentCardIndexInCurrentList = -1;
-	// 	let card: CardHeader | null = null;
-	// 	let newListIndex: number = -1;
-	// 	prevBoard.lists.forEach((l, li)=>{
-	// 		if(l.id === toList)
-	// 			newListIndex = li;
-	// 		l.cards.forEach((c, ci)=>{
-	// 			if(c.id === cardId){
-	// 				card = c;
-	// 				currentListIndex = li;
-	// 				currentCardIndexInCurrentList = ci;
-	// 			}
-	// 		})
-	// 	})
-	// 	if(currentListIndex === newListIndex){
-	// 		return prevBoard;
-	// 	}
-	// 	if(currentListIndex < 0 || newListIndex < 0 || currentCardIndexInCurrentList < 0 || card === null){
-	// 		console.error("Error moving card to list, list or card not found");
-	// 		return prevBoard;
-	// 	}
-	// 	prevBoard.lists[currentListIndex].cards.splice(currentCardIndexInCurrentList, 1);
-	// 	prevBoard.lists[newListIndex].cards.splice(position ?? prevBoard.lists[newListIndex].cards.length, 0, card);
-	// 	return {...prevBoard};
-	// });
 
 	const moveList = async (listId: ListId, position: number): Promise<void> => {
 		moveListToPos(listId, position);
@@ -423,8 +388,12 @@ const BoardPage = (): React.JSX.Element => {
 		return <NotFound itemType="Board" error={PageErrors.NOT_FOUND}/>
 	}
 
-
+	const onRender:React.ProfilerOnRenderCallback = (id, phase, actualDuration, baseDuration, startTime, commitTime) => {
+		console.log("Rendered", id, "in", phase, "for", actualDuration+"ms", "from", startTime+"ms", "to", commitTime+"ms");
+	}
+	
 	return (
+		<Profiler onRender={onRender} id={"board"}>
 		<Container 
 			h={`calc(100vh - ${trz.navbarHeight}px)`} 
 			fluid 
@@ -466,7 +435,7 @@ const BoardPage = (): React.JSX.Element => {
 						items={listKeys}
 						strategy={horizontalListSortingStrategy}
 					>
-						{sortableLists}
+						{memoizedSortableLists}
 					</SortableContext>
 					{createPortal(
 						<DragOverlay dropAnimation={boardDropAnimation}>
@@ -499,7 +468,28 @@ const BoardPage = (): React.JSX.Element => {
 				}	
 			</CollaborativeMouseTracker>
 		</Container>
+		</Profiler>
 	);
 };
 
 export default BoardPage;
+
+
+interface RenderSortableListProps {
+	listId: ListId;
+	boardCode: string;
+}
+const RenderSortableList = (props:RenderSortableListProps) => {
+	return (
+		<SortableList
+			key={props.listId}
+			listId={props.listId}
+			boardCode={props.boardCode}
+			onClickCard={()=>{}}
+		/>
+	);
+}
+
+const MemoRenderSortableList = React.memo(RenderSortableList, (prev, next)=>{
+	return prev.boardCode===next.boardCode && prev.listId===next.listId;
+});

@@ -24,7 +24,7 @@ const CardElement = (props: CardElementProps) => {
 	const [card, setCard] = useState<Card | undefined>(undefined);
 	const textColor = "#ffffff";
 	const {ref: viewportRef, inViewport} = useInViewport();
-	console.log("card", props.cardId)
+	
 	useEffect(()=>{
 		let strictIgnore = false;
 		const fetchCardData = async () => {
@@ -35,7 +35,6 @@ const CardElement = (props: CardElementProps) => {
 			if(inViewport && card && card.id === props.cardId){
 				return;
 			}
-			console.log("fetching", props.cardId)
 			try{
 				const cardRes = await getCardData(sockCtx, props.cardId);
 				setCard(cardRes);

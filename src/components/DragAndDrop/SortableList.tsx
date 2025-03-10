@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import ListElement from "@trz/components/ListElement"
 import {CSS, Transform} from '@dnd-kit/utilities';
 import {useSortable} from '@dnd-kit/sortable';
-import { Card, CardId, ListId } from "@mosaiq/terrazzo-common/types";
+import {CardId, ListId } from "@mosaiq/terrazzo-common/types";
 import { useSocket } from "@trz/contexts/socket-context";
-import { useDroppable } from "@dnd-kit/core";
-import { useInViewport } from "@mantine/hooks";
+import { DraggableAttributes, useDroppable } from "@dnd-kit/core";
+import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 
 
 interface SortableListProps {
@@ -65,16 +65,52 @@ function SortableList(props: SortableListProps): React.JSX.Element {
                 zIndex: (isDragging || !!otherDraggingPos) ? 100 : undefined,
             }}
         >
-            <ListElement
-                listId={props.listId}
-                dragging={isDragging || !!otherDraggingPos}
-                handleProps={{ref: setActivatorNodeRef, ...listeners, ...attributes}}
-                droppableSetNodeRef={droppableSetNodeRef}
-                isOverlay={!!otherDraggingPos}
-                onClickCard={props.onClickCard}
+            <MemoRenderList 
                 boardCode={props.boardCode}
+                listId={props.listId}
+                isDragging={isDragging}
+                setActivatorNodeRef={setActivatorNodeRef}
+                listeners={listeners}
+                attributes={attributes}
+                otherDraggingPos={otherDraggingPos}
+                droppableSetNodeRef={droppableSetNodeRef}
+                onClickCard={props.onClickCard}
             />
         </div>
     );
 }
 export default SortableList;
+
+
+interface RenderListProps {
+    listId: ListId;
+    boardCode: string;
+    isDragging: boolean;
+    setActivatorNodeRef: (element: HTMLElement | null) => void;
+    listeners: SyntheticListenerMap | undefined;
+    attributes: DraggableAttributes;
+    otherDraggingPos: any;
+    droppableSetNodeRef: (element: HTMLElement | null) => void;
+    onClickCard: (card:CardId)=>void;
+}
+const RenderList = (props:RenderListProps) => {
+    return (
+        <ListElement
+                listId={props.listId}
+                dragging={props.isDragging || !!props.otherDraggingPos}
+                handleProps={{ref: props.setActivatorNodeRef, ...props.listeners, ...props.attributes}}
+                droppableSetNodeRef={props.droppableSetNodeRef}
+                isOverlay={!!props.otherDraggingPos}
+                onClickCard={props.onClickCard}
+                boardCode={props.boardCode}
+            />
+    );
+}
+
+const MemoRenderList = React.memo(RenderList, (prev, next)=>{
+    return (
+           prev.boardCode===next.boardCode
+        && prev.listId===next.listId
+        && prev.isDragging===next.isDragging
+    );
+});

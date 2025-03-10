@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import {CSS} from '@dnd-kit/utilities';
 import {useSortable} from '@dnd-kit/sortable';
-import { Card, CardId } from "@mosaiq/terrazzo-common/types";
+import {  CardId } from "@mosaiq/terrazzo-common/types";
 import { useSocket } from "@trz/contexts/socket-context";
 import CardElement from "@trz/components/CardElement";
 import { createPortal } from "react-dom";
@@ -59,8 +59,35 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
                 zIndex: isDragging ? 101 : undefined,
             }}
         >
-            <CardElement cardId={props.cardId} dragging={isDragging} isOverlay={false} boardCode={props.boardCode} onClick={props.onClick}/>
+            <MemoRenderCard cardId={props.cardId} isDragging={isDragging} boardCode={props.boardCode} onClick={props.onClick}/>
         </div>
     );
 }
 export default SortableCard;
+
+
+interface RenderCardProps {
+    cardId: CardId;
+    boardCode: string;
+    onClick: ()=>void;
+    isDragging: boolean;
+}
+const RenderCard = (props:RenderCardProps) => {
+    return (
+        <CardElement
+            cardId={props.cardId}
+            dragging={props.isDragging}
+            isOverlay={false}
+            boardCode={props.boardCode}
+            onClick={props.onClick}
+        />
+    );
+}
+
+const MemoRenderCard = React.memo(RenderCard, (prev, next)=>{
+    return (
+           prev.boardCode===next.boardCode
+        && prev.cardId===next.cardId
+        && prev.isDragging===next.isDragging
+    );
+});
