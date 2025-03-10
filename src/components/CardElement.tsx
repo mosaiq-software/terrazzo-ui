@@ -4,6 +4,8 @@ import {CardHeader} from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from "@trz/components/AvatarRow";
 import { useTRZ } from "@trz/util/TRZ-context";
 import {priorityColors} from "@trz/components/PriorityButtons";
+import {useSocket} from "@trz/util/socket-context";
+import {getSprintFromId} from "@trz/util/stringUtils";
 
 interface CardElementProps {
 	cardHeader: CardHeader;
@@ -13,7 +15,9 @@ interface CardElementProps {
 }
 const CardElement = (props: CardElementProps): React.JSX.Element => {
 	const trzCtx = useTRZ();
+	const sockCtx = useSocket();
 	const [title, setTitle] = React.useState(props.cardHeader.name || "Card Title");
+	const [spintName, setSprintName] = React.useState("");
 	const textColor = "#ffffff";
 
 	useEffect(() => {
@@ -31,6 +35,10 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 		}
 		trzCtx.setOpenedCardModal(props.cardHeader.id);
 	}
+
+	useEffect(() => {
+		setSprintName(getSprintFromId(props.cardHeader.sprintId, sockCtx));
+	}, [props.cardHeader.sprintId]);
 
 	return (
 		<Paper
@@ -70,7 +78,14 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 					textWrap: "wrap"
 				}}
 			>{title}</Title>
-			<Text size='xs' c="#878787">{props.boardCode} - {props.cardHeader.cardNumber}</Text>
+			<Group
+				justify='space-between'
+				pb="5"
+			>
+				<Text size='xs' c="#878787">{props.boardCode} - {props.cardHeader.cardNumber}</Text>
+				<Text size='xs' c="#878787">{spintName}</Text>
+			</Group>
+
 			<Group justify='space-between' style={{flexDirection: "row-reverse"}}>
 				{/* icons for info abt the card */}
                 {props.cardHeader.assignees != undefined && props.cardHeader.assignees.length > 0 &&

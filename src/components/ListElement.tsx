@@ -1,6 +1,18 @@
 import React, {useEffect, useState} from "react";
 import EditableTextbox from "@trz/components/EditableTextbox";
-import {Button, Group, Paper, Stack, CloseButton, TextInput, Flex, FocusTrap, Menu, Tooltip} from "@mantine/core";
+import {
+    Button,
+    Group,
+    Paper,
+    Stack,
+    CloseButton,
+    TextInput,
+    Flex,
+    FocusTrap,
+    Menu,
+    Tooltip,
+    Text
+} from "@mantine/core";
 import {useClickOutside, getHotkeyHandler, useInViewport} from "@mantine/hooks";
 import {List} from "@mosaiq/terrazzo-common/types";
 import {useSocket} from "@trz/util/socket-context";
@@ -9,7 +21,7 @@ import { captureDraggableEvents, captureEvent, forAllClickEvents } from "@trz/ut
 import {FaArchive, FaCalendarCheck} from "react-icons/fa";
 import {HiDotsVertical} from "react-icons/hi";
 import {ListType} from "../../../terrazzo-common/dist/constants";
-import {getMonthName} from "@trz/util/dateUtils";
+import {getMonthName} from "@trz/util/stringUtils";
 
 
 interface ListElementProps {
@@ -21,8 +33,10 @@ interface ListElementProps {
     isOverlay: boolean;
 }
 function ListElement(props: ListElementProps): React.JSX.Element {
-    const [listTitle, setListTitle] = React.useState(props.listType.name || "List Title");
-    const [dateTitle, setDateTitle] = React.useState("");
+    const [listTitle, setListTitle] = useState(props.listType.name || "List Title");
+    const [dateTitle, setDateTitle] = useState("");
+    const [tooltip, setTooltip] = useState<string|null>(null);
+    const [sprintDisabled, setSprintDisabled] = useState<boolean>(false);
     const [visible, setVisible] = useState(false);
     const [error, setError] = useState("");
     const [cardTitle, setCardTitle] = useState("");
@@ -81,6 +95,19 @@ function ListElement(props: ListElementProps): React.JSX.Element {
         }
     })
 
+    useEffect(() => {
+        if(props.listType.type != ListType.NORMAL){
+            setTooltip("Can't End Sprint on special lists")
+            setSprintDisabled(true);
+        }else if(props.listType.cards.length != 0){
+            setTooltip("Can't End Sprint with cards in the list")
+            setSprintDisabled(true);
+        }else{
+            setSprintDisabled(false);
+            setTooltip(null)
+        }
+    }, [props.listType.cards.length]);
+
     function onBlur(){
         setCardTitle("");
         setError("");
@@ -127,17 +154,26 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     height: "3rem",
                 }}
             >
-                <EditableTextbox
-                    value={listTitle}
-                    onChange={onTitleChange}
-                    subText={dateTitle}
-                    placeholder="Click to edit!"
-                    type="title"
-                    titleProps={{order: 6, c: "#ffffff"}}
-                    style={{
-                        width: "100%",
-                    }}
-                />
+                <Stack
+                    gap="0"
+                >
+                    <EditableTextbox
+                        value={listTitle}
+                        onChange={onTitleChange}
+                        placeholder="Click to edit!"
+                        type="title"
+                        titleProps={{order: 6, c: "#ffffff"}}
+                        style={{
+                            width: "100%",
+                        }}
+                    />
+                    <Text
+                        size="xs"
+                        c='#b8b8b8'
+                    >
+                        {dateTitle}
+                    </Text>
+                </Stack>
 
                 <Menu
                     shadow="md"
@@ -167,7 +203,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                         }
                         <Menu.Label>Settings</Menu.Label>
                         <Tooltip
-                            label="Can't End Sprint on special lists"
+                            label={tooltip}
                             position="right-start"
                             offset={12}
                             withArrow
@@ -175,14 +211,14 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                             arrowOffset={24}
                             arrowSize={5}
                             events={{
-                                hover:props.listType.type !== ListType.NORMAL,
-                                focus:props.listType.type !== ListType.NORMAL,
-                                touch:props.listType.type !== ListType.NORMAL
+                                hover:sprintDisabled,
+                                focus:sprintDisabled,
+                                touch:sprintDisabled
                             }}
                         >
                             <Menu.Item
                                 onClick={onEndSprint}
-                                disabled={props.listType.type !== ListType.NORMAL}
+                                disabled={sprintDisabled}
                                 leftSection={<FaCalendarCheck />}
                             >
                                 End Sprint

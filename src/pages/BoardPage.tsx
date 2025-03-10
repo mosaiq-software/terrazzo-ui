@@ -116,7 +116,7 @@ const BoardPage = (): React.JSX.Element => {
 				}
 				const injectPos = newList.cards.findIndex(c=>c.id === overId);
 				const newIndex = injectPos >= 0 ? injectPos : newList.cards.length + 1;
-				sockCtx.moveCardToListAndPos(activeId, newList.id, newIndex);
+				sockCtx.moveCardToListAndPos(activeId, newList.id, undefined, newIndex);
 			}
 		}
 	}
@@ -145,6 +145,8 @@ const BoardPage = (): React.JSX.Element => {
 			if(list?.id !== cardsList?.id) {
 				if(list?.type === ListType.NORMAL){
 					sockCtx.moveCard(activeId, overId, overId);
+				}else if(list?.type === ListType.BACKLOG){
+					sockCtx.moveCard(activeId, overId, null);
 				}else{
 					sockCtx.moveCard(activeId, overId, undefined);
 				}
@@ -160,9 +162,11 @@ const BoardPage = (): React.JSX.Element => {
 		const injectPos = newList.cards.findIndex(c=>c.id === overId);
 		const newIndex = injectPos >= 0 ? injectPos : newList.cards.length + 1;
 		if(newList.type === ListType.NORMAL){
-			sockCtx.moveCard(activeId, newList.id, newList.id, newIndex);
-		}else{
-			sockCtx.moveCard(activeId, newList.id, undefined, newIndex);
+			sockCtx.moveCard(activeId, newList.id, newList.id, new Date(), newIndex);
+		}else if(newList.type === ListType.BACKLOG){
+			sockCtx.moveCard(activeId, newList.id, null, new Date(), newIndex);
+		} else{
+			sockCtx.moveCard(activeId, newList.id, undefined, new Date(), newIndex);
 		}
 	}
 

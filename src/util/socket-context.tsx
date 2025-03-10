@@ -42,7 +42,7 @@ import {
 import {executeTextBlockEvent} from '@mosaiq/terrazzo-common/utils/textUtils';
 import {arrayMove, updateBaseFromPartial} from '@mosaiq/terrazzo-common/utils/arrayUtils';
 
-type SocketContextType = {
+export type SocketContextType = {
     sid?: SocketId;
     connected: boolean;
     room: RoomId | null;
@@ -63,10 +63,10 @@ type SocketContextType = {
     receiveCollabTextEvent: (event: TextBlockEvent, element: HTMLTextAreaElement | undefined, emit: boolean) => void;
     syncCaretPosition: (element: HTMLTextAreaElement | undefined) => void;
     moveList: (listId: ListId, position: number) => Promise<void>;
-    moveCard: (cardId: CardId, toList: ListId, toSprint?: ListId, position?: number) => Promise<void>;
+    moveCard: (cardId: CardId, toList: ListId, toSprint?: ListId | null, position?: number) => Promise<void>;
     setDraggingObject: React.Dispatch<React.SetStateAction<{list?: ListId, card?: CardId}>>;
     moveListToPos: (listId: ListId, position: number) => void;
-    moveCardToListAndPos: (cardId: CardId, toList: ListId, position?: number) => void;
+    moveCardToListAndPos: (cardId: CardId, toList: ListId, toSprint?: ListId, position?: number) => void;
     getMyOrganizations: (userId: UserId) => Promise<ClientSEReplies[ClientSE.GET_USERS_ENTITIES] | undefined>;
     getOrganizationData: (orgId: OrganizationId) => Promise<Organization | undefined>;
     getProjectData: (projectId: ProjectId) => Promise<Project | undefined>;
@@ -302,7 +302,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         });
 
         sock.on(ServerSE.MOVE_CARD, (payload: ServerSEPayload[ServerSE.MOVE_CARD]) => {
-            moveCardToListAndPos(payload.cardId, payload.toList, payload.position);
+            moveCardToListAndPos(payload.cardId, payload.toList, payload.toSprint, payload.position);
             setRoomUsersState((prev)=>{
                 return prev.map((ru)=>{
                     if(ru.mouseRoomData?.draggingCard === payload.cardId){
@@ -515,8 +515,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         await emit<ClientSE.MOVE_LIST>(ClientSE.MOVE_LIST, {listId, position});
     }
 
-    const moveCard = async (cardId: CardId, toList: ListId, toSprint?: ListId, position?: number): Promise<void> => {
-        moveCardToListAndPos(cardId, toList, position);
+    const moveCard = async (cardId: CardId, toList: ListId, toSprint?: ListId | null, position?: number): Promise<void> => {
+        moveCardToListAndPos(cardId, toList,toSprint, position);
         await emit<ClientSE.MOVE_CARD>(ClientSE.MOVE_CARD, {cardId, toList, toSprint, position});
     }
 
@@ -538,7 +538,7 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         }
     });
 
-    const moveCardToListAndPos = (cardId: CardId, toList: ListId, position?: number) => setBoardData((prevBoard)=>{
+    const moveCardToListAndPos = (cardId: CardId, toList: ListId, toSprint?: ListId | null, position?: number) => setBoardData((prevBoard)=>{
         if(!prevBoard)return prevBoard;
         let currentListIndex: number = -1;
         let currentCardIndexInCurrentList = -1;
@@ -550,6 +550,9 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             l.cards.forEach((c, ci)=>{
                 if(c.id === cardId){
                     card = c;
+                    if(toSprint !== undefined){
+                        card.sprintId = toSprint;
+                    }
                     currentListIndex = li;
                     currentCardIndexInCurrentList = ci;
                 }
