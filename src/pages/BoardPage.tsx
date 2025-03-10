@@ -162,11 +162,11 @@ const BoardPage = (): React.JSX.Element => {
 		const injectPos = newList.cards.findIndex(c=>c.id === overId);
 		const newIndex = injectPos >= 0 ? injectPos : newList.cards.length + 1;
 		if(newList.type === ListType.NORMAL){
-			sockCtx.moveCard(activeId, newList.id, newList.id, new Date(), newIndex);
+			sockCtx.moveCard(activeId, newList.id, newList.id, newIndex);
 		}else if(newList.type === ListType.BACKLOG){
-			sockCtx.moveCard(activeId, newList.id, null, new Date(), newIndex);
+			sockCtx.moveCard(activeId, newList.id, null, newIndex);
 		} else{
-			sockCtx.moveCard(activeId, newList.id, undefined, new Date(), newIndex);
+			sockCtx.moveCard(activeId, newList.id, undefined, newIndex);
 		}
 	}
 
