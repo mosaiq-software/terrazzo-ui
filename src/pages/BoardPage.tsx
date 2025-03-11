@@ -71,7 +71,7 @@ const BoardPage = (): React.JSX.Element => {
 			coordinateGetter: sortableKeyboardCoordinates,
 		})
 	);
-	console.log("board")
+
 	useEffect(() => {
 		let strictIgnore = false;
 		const fetchBoardData = async () => {
@@ -194,7 +194,14 @@ const BoardPage = (): React.JSX.Element => {
 	},[]);
 
 	const memoizedSortableLists = useMemo(() => {
-        return listKeys.map((id)=><MemoRenderSortableList boardCode={boardData?.boardCode??""} listId={id} onClickCard={openModal} key={id} />);
+        return listKeys.map((id)=>
+			<MemoRenderSortableList
+				key={id}
+				boardCode={boardData?.boardCode??""}
+				listId={id}
+				onClickCard={openModal}
+			/>
+		);
     }, [listKeys.join(), boardData?.boardCode]);
 
 	const moveListToPos = useCallback((listId: ListId, position: number) => {

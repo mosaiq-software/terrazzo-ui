@@ -1,9 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import ListElement from "@trz/components/ListElement"
 import {CSS, Transform} from '@dnd-kit/utilities';
 import {useSortable} from '@dnd-kit/sortable';
 import {CardId, ListId } from "@mosaiq/terrazzo-common/types";
-import { useSocket } from "@trz/contexts/socket-context";
 import { DraggableAttributes, useDroppable } from "@dnd-kit/core";
 import { SyntheticListenerMap } from "@dnd-kit/core/dist/hooks/utilities";
 
@@ -14,7 +13,6 @@ interface SortableListProps {
     boardCode: string;
 }
 function SortableList(props: SortableListProps): React.JSX.Element {
-    const sockCtx = useSocket();
     const [initialPosition, setInitialPosition] = useState<DOMRect | undefined>(undefined);
     
     const {
