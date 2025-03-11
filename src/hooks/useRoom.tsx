@@ -1,13 +1,14 @@
-import { useEffect, useState } from "react";
-import {ClientSE, RoomType, ServerSE, UserData} from "@mosaiq/terrazzo-common/socketTypes"
+import { useEffect } from "react";
+import {ClientSE, RoomType, ServerSE, SocketId, UserData} from "@mosaiq/terrazzo-common/socketTypes"
 import {useSocketListener} from "@trz/hooks/useSocketListener";
 import { useSocket } from "@trz/contexts/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
 import { UID } from "@mosaiq/terrazzo-common/types";
 import { getRoomCode } from "@mosaiq/terrazzo-common/utils/socketUtils";
+import { useMap } from "./useMap";
 
-export function useRoom(roomType:RoomType, roomId: UID | null | undefined): [UserData[], React.Dispatch<React.SetStateAction<UserData[]>>] {
-    const [roomUsers, setRoomUsers] = useState<UserData[]>([]);
+export function useRoom(roomType:RoomType, roomId: UID | null | undefined, trackUsers:boolean): [Map<string, UserData>, (map: [string, UserData][] | Map<string, UserData>) => void] {
+    const [roomUsers, setRoomUsers] = useMap<SocketId, UserData>([]);
     const sockCtx = useSocket();
 
     useEffect(()=>{
@@ -15,9 +16,10 @@ export function useRoom(roomType:RoomType, roomId: UID | null | undefined): [Use
             return;
         }
         if(roomId){
-            sockCtx.emit<ClientSE.JOIN_ROOM>(ClientSE.JOIN_ROOM, getRoomCode(roomType, roomId)).then(res=>{
+            sockCtx.emit<ClientSE.JOIN_ROOM>(ClientSE.JOIN_ROOM, getRoomCode(roomType, roomId))
+            .then(res=>{
                 if(res) {
-                    setRoomUsers(res);
+                    setRoomUsers(res.map(r=>[r.sid, r]));
                 }
             }).catch((e)=>{
                 notify(NoteType.SOCKET_ROOM_ERROR, [roomId, e]);
@@ -26,11 +28,8 @@ export function useRoom(roomType:RoomType, roomId: UID | null | undefined): [Use
 
         return ()=>{
             if(roomId){
-                sockCtx.emit<ClientSE.LEAVE_ROOM>(ClientSE.LEAVE_ROOM, getRoomCode(roomType, roomId)).then(res=>{
-                    if(res) {
-                        setRoomUsers(res);
-                    }
-                }).catch((e)=>{
+                sockCtx.emit<ClientSE.LEAVE_ROOM>(ClientSE.LEAVE_ROOM, getRoomCode(roomType, roomId))
+                .catch((e)=>{
                     notify(NoteType.SOCKET_ROOM_ERROR, [roomId, e]);
                 })
             }
@@ -39,16 +38,20 @@ export function useRoom(roomType:RoomType, roomId: UID | null | undefined): [Use
     }, [roomId, sockCtx.connected, sockCtx.sid])
 
     useSocketListener<ServerSE.CLIENT_JOINED_ROOM>(ServerSE.CLIENT_JOINED_ROOM, (payload) => {
-        setRoomUsers(prev => prev.filter(user => {
-            return user.sid !== payload.sid;
-        }).concat(payload));
+        if(trackUsers){
+            roomUsers.set(payload.sid, payload);
+        }
     })
 
     useSocketListener<ServerSE.CLIENT_LEFT_ROOM>(ServerSE.CLIENT_LEFT_ROOM, (payload) => {
-        setRoomUsers(prev => prev.filter(user => {
-            return user.sid !== payload;
-        }));
+        if(trackUsers){
+            roomUsers.delete(payload);
+        }
     })
 
-    return [roomUsers, setRoomUsers];
+    if(trackUsers){
+        return [roomUsers, setRoomUsers];
+    } else {
+        return [new Map(), ()=>{}]
+    }
 }

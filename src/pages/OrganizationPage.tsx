@@ -29,7 +29,7 @@ const OrganizationPage = (): React.JSX.Element => {
     const orgId = params.orgId as OrganizationId | undefined;
     const tabId = params.tabId;
     const myMembershipRecord = userDash?.organizations.find(o=>o.id===orgId)?.myMembershipRecord;
-    useRoom(RoomType.DATA, orgId);
+    useRoom(RoomType.DATA, orgId, false);
 
 	useEffect(() => {
         let strictIgnore = false;

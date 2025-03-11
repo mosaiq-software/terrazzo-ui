@@ -1,4 +1,4 @@
-import React, { MouseEventHandler, useEffect, useRef } from 'react';
+import React, { MouseEventHandler, useCallback, useEffect, useRef } from 'react';
 import { useSocket } from "@trz/contexts/socket-context";
 import UserCursor from "@trz/components/UserCursor";
 import { ClientSE, Position, RoomType, ServerSE} from '@mosaiq/terrazzo-common/socketTypes';
@@ -22,27 +22,28 @@ interface CollaborativeMouseTrackerProps {
 const CollaborativeMouseTracker = (props: CollaborativeMouseTrackerProps) => {
     const ref = useRef<HTMLDivElement | null>(null);
     const sockCtx = useSocket();
-    const [roomUsers, setRoomUsersState] = useRoom(RoomType.MOUSE, props.boardId);
+    const [roomUsers, setRoomUsersState] = useRoom(RoomType.MOUSE, props.boardId, true);
     
     useSocketListener<ServerSE.MOUSE_MOVE>(ServerSE.MOUSE_MOVE, (payload)=>{
-        setRoomUsersState(prev => prev.map(user => {
-            if(user.sid === payload.sid) {
-                return {
-                    ...user,
-                    mouseRoomData: payload.data
-                };
-            }
-            return user;
-        }));
+        const user = roomUsers.get(payload.sid);
+        if(!user){
+            return;
+        }
+        roomUsers.set(payload.sid, {
+            ...user,
+            mouseRoomData: payload.data
+        });
     });
 
     useSocketListener<ServerSE.USER_IDLE>(ServerSE.USER_IDLE, (payload)=>{
-        setRoomUsersState(prev => prev.map(user => {
-            if(user.sid === payload.sid) {
-                return { ...user, idle: payload.idle };
-            }
-            return user;
-        }));
+        const user = roomUsers.get(payload.sid);
+        if(!user){
+            return;
+        }
+        roomUsers.set(payload.sid, {
+            ...user,
+            idle: payload.idle
+        });
     });
 
     const idle = useIdle(IDLE_TIMEOUT_MS);
@@ -52,19 +53,19 @@ const CollaborativeMouseTracker = (props: CollaborativeMouseTrackerProps) => {
         sockCtx.volatileEmit<ClientSE.MOUSE_MOVE>(ClientSE.MOUSE_MOVE, {pos, draggingList: props.draggingObject.list, draggingCard: props.draggingObject.card});
     }, MOUSE_UPDATE_THROTTLE_MS);
 
-    const setIdle = (idle: boolean) => {
+    const setIdle = useCallback((idle: boolean) => {
         sockCtx.emit<ClientSE.USER_IDLE>(ClientSE.USER_IDLE, idle);
-    }
+    }, [sockCtx]);
 
-    const handleMoveMouse: MouseEventHandler<HTMLDivElement> = (event) => {
-        if(!ref.current || roomUsers.length === 0){
+    const handleMoveMouse: MouseEventHandler<HTMLDivElement> = useCallback((event) => {
+        if(!ref.current || Array.from(roomUsers.keys()).length === 0){
             return;
         }
         const rect = event.currentTarget.getBoundingClientRect();
         const x = Math.max(0, Math.round(event.pageX - rect.left - (window.pageXOffset || window.scrollX)));
         const y = Math.max(0, Math.round(event.pageY - rect.top - (window.pageYOffset || window.scrollY)));
         moveMouse({ x: x, y: y });
-    }
+    }, [sockCtx, ref.current]);
 
     return (
         <Box
@@ -74,11 +75,11 @@ const CollaborativeMouseTracker = (props: CollaborativeMouseTrackerProps) => {
         >
             {props.children}
             {
-                roomUsers.map((user) => {
-                    if (user.sid === sockCtx.sid || !user.mouseRoomData) { return null; }
+                Array.from(roomUsers.entries()).map(([sid, user]) => {
+                    if (sid === sockCtx.sid || !user.mouseRoomData) { return null; }
                     return (
                         <UserCursor
-                            key={user.sid}
+                            key={sid}
                             position={{
                                 x: user.mouseRoomData.pos.x + (ref.current?.getBoundingClientRect().left ?? 0),
                                 y: user.mouseRoomData.pos.y + (ref.current?.getBoundingClientRect().top ?? 0)

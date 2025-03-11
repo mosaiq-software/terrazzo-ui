@@ -3,7 +3,7 @@ import {Box, Group, Paper, Pill, Text, Title} from "@mantine/core";
 import {Card, CardId} from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from "@trz/components/AvatarRow";
 import {priorityColors} from "@trz/components/PriorityButtons";
-import { getCardNumber } from "@trz/util/boardUtils";
+import { CARD_CACHE_PREFIX, getCardNumber } from "@trz/util/boardUtils";
 import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
 import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
@@ -36,16 +36,16 @@ const CardElement = (props: CardElementProps) => {
 				return;
 			}
 			try{
-				const cachedCardRes = sessionStorage.getItem(`card:${props.cardId}`);
-				if((props.isOverlay) && cachedCardRes){
+				const cachedCardRes = sessionStorage.getItem(`${CARD_CACHE_PREFIX}${props.cardId}`);
+				if((props.dragging || props.isOverlay) && cachedCardRes){
 					setCard(JSON.parse(cachedCardRes));
 				} else {
 					const cardRes = await getCardData(sockCtx, props.cardId);
 					setCard(cardRes);
 					if(cardRes){
-						sessionStorage.setItem(`card:${props.cardId}`, JSON.stringify(cardRes))
+						sessionStorage.setItem(`${CARD_CACHE_PREFIX}${props.cardId}`, JSON.stringify(cardRes))
 					} else {
-						sessionStorage.removeItem(`card:${props.cardId}`);
+						sessionStorage.removeItem(`${CARD_CACHE_PREFIX}${props.cardId}`);
 					}
 				}
 			} catch(err) {
@@ -109,7 +109,7 @@ const CardElement = (props: CardElementProps) => {
 			}}
 			onClick={onOpenCardModal}
 		>
-			<Text fz="6pt">{props.cardId}</Text>
+			{process.env.DEBUG==="true" && <Text fz="6pt">{props.cardId}</Text>}
 			{card && inViewport && <React.Fragment>
 				<Pill.Group>
 					<Pill

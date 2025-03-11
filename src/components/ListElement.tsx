@@ -15,6 +15,7 @@ import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
 import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
 import { BoardContext } from "@trz/pages/BoardPage";
+import { LIST_CACHE_PREFIX } from "@trz/util/boardUtils";
 
 interface ListElementProps {
     listId: ListId;
@@ -38,13 +39,25 @@ function ListElement(props: ListElementProps): React.JSX.Element {
         let strictIgnore = false;
         const fetchListData = async () => {
             await new Promise((resolve)=>setTimeout(resolve, 0));
-            if(strictIgnore || !props.listId || !sockCtx.connected || props.isOverlay){
+            if(strictIgnore || !props.listId || !sockCtx.connected){
                 return;
             }
             try{
-                const listRes = await getListData(sockCtx, props.listId);
-                setList(listRes);
-                setListTitle(listRes?.name || "");
+                const cachedListRes = sessionStorage.getItem(`${LIST_CACHE_PREFIX}${props.listId}`);
+                if((props.dragging || props.isOverlay) && cachedListRes){
+                    const listRes = JSON.parse(cachedListRes);
+                    setList(listRes);
+                    setListTitle(listRes?.name || "");
+                } else {
+                    const listRes = await getListData(sockCtx, props.listId);
+                    setList(listRes);
+                    setListTitle(listRes?.name || "");
+                    if(listRes){
+                        sessionStorage.setItem(`${LIST_CACHE_PREFIX}${props.listId}`, JSON.stringify(listRes))
+                    } else {
+                        sessionStorage.removeItem(`${LIST_CACHE_PREFIX}${props.listId}`);
+                    }
+                }
             } catch(err) {
                 notify(NoteType.LIST_DATA_ERROR, err);
                 return;
@@ -142,6 +155,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
             } : undefined)
             }}
         >
+            { process.env.DEBUG==="true" && <Text fz="6pt">{props.listId}</Text>}
             <Group
                 {...props.handleProps}
                 justify="space-between"
@@ -155,7 +169,6 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     height: "3rem",
                 }}
             >
-                <Text fz="6pt">{props.listId}</Text>
                 <EditableTextbox 
                     value={listTitle}
                     onChange={onTitleChange}

@@ -28,7 +28,7 @@ const ProjectPage = (): React.JSX.Element => {
     const [projectData, setProjectData] = useState<Project | undefined>();
     const projectId = params.projectId as ProjectId | undefined;
     const tabId = params.tabId;
-    useRoom(RoomType.DATA, projectId);
+    useRoom(RoomType.DATA, projectId, false);
 
 	useEffect(() => {
         let strictIgnore = false;

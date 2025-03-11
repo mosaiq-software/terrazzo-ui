@@ -37,6 +37,7 @@ import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { arrayMoveInPlace, updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
 import { useRoom } from "@trz/hooks/useRoom";
 import { useMap } from "@trz/hooks/useMap";
+import { CARD_CACHE_PREFIX, LIST_CACHE_PREFIX } from "@trz/util/boardUtils";
 
 interface BoardContextType {
 	listToCardsMap: Map<ListId, CardId[]>;
@@ -55,12 +56,10 @@ const BoardPage = (): React.JSX.Element => {
 	const sockCtx = useSocket();
 	const trz = useTRZ();
 	const navigate = useNavigate();
-	const [roomUsers, setRoomUsers] = useRoom(RoomType.DATA, boardId);
 	const [listToCardsMap, setListMap] = useMap<ListId, CardId[]>();
 	const [cardToListMap, setCardMap] = useMap<CardId, ListId>();
-
-	const listEntries = Array.from(listToCardsMap.entries());
 	const listKeys = Array.from(listToCardsMap.keys());
+	useRoom(RoomType.DATA, boardId, false);
 
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
@@ -72,7 +71,7 @@ const BoardPage = (): React.JSX.Element => {
 			coordinateGetter: sortableKeyboardCoordinates,
 		})
 	);
-
+	console.log("board")
 	useEffect(() => {
 		let strictIgnore = false;
 		const fetchBoardData = async () => {
@@ -96,6 +95,18 @@ const BoardPage = (): React.JSX.Element => {
 					}
 					setListMap(tempListMap);
 					setCardMap(tempCardMap);
+
+					// clear the previous cached boards
+					const toRemove:string[] = [];
+					for(let i=0; i<sessionStorage.length; i++) {
+						const key = sessionStorage.key(i);
+						if(key?.startsWith(CARD_CACHE_PREFIX) || key?.startsWith(LIST_CACHE_PREFIX)){
+							toRemove.push(key);
+						}
+					}
+					for(const key of toRemove){
+						sessionStorage.removeItem(key);
+					}
 				}
 			} catch(err) {
 				notify(NoteType.BOARD_DATA_ERROR, err);
@@ -138,40 +149,40 @@ const BoardPage = (): React.JSX.Element => {
 
 	useSocketListener<ServerSE.MOVE_LIST>(ServerSE.MOVE_LIST, (payload)=>{
 		moveListToPos(payload.listId, payload.position)
-		setRoomUsers((prev)=>{
-			return prev.map((ru)=>{
-				if(ru.mouseRoomData?.draggingList === payload.listId){
-					return {
-						...ru,
-						mouseRoomData: {
-							...ru.mouseRoomData,
-							draggingList: undefined,
-						}
-					}
-				}else{
-					return ru;
-				}
-			})
-		})
+		// setRoomUsers((prev)=>{
+		// 	return prev.map((ru)=>{
+		// 		if(ru.mouseRoomData?.draggingList === payload.listId){
+		// 			return {
+		// 				...ru,
+		// 				mouseRoomData: {
+		// 					...ru.mouseRoomData,
+		// 					draggingList: undefined,
+		// 				}
+		// 			}
+		// 		}else{
+		// 			return ru;
+		// 		}
+		// 	})
+		// })
 	});
 
 	useSocketListener<ServerSE.MOVE_CARD>(ServerSE.MOVE_CARD, (payload)=>{
 		moveCardToListAndPos(payload.cardId, payload.toList, payload.position);
-		setRoomUsers((prev)=>{
-			return prev.map((ru)=>{
-				if(ru.mouseRoomData?.draggingCard === payload.cardId){
-					return {
-						...ru,
-						mouseRoomData: {
-							...ru.mouseRoomData,
-							draggingList: undefined,
-						}
-					}
-				}else{
-					return ru;
-				}
-			})
-		})
+		// setRoomUsers((prev)=>{
+		// 	return prev.map((ru)=>{
+		// 		if(ru.mouseRoomData?.draggingCard === payload.cardId){
+		// 			return {
+		// 				...ru,
+		// 				mouseRoomData: {
+		// 					...ru.mouseRoomData,
+		// 					draggingList: undefined,
+		// 				}
+		// 			}
+		// 		}else{
+		// 			return ru;
+		// 		}
+		// 	})
+		// })
 	});
 
 	const openModal = useCallback((card: CardId) => {
@@ -186,7 +197,7 @@ const BoardPage = (): React.JSX.Element => {
         return listKeys.map((id)=><MemoRenderSortableList boardCode={boardData?.boardCode??""} listId={id} onClickCard={openModal} key={id} />);
     }, [listKeys.join(), boardData?.boardCode]);
 
-	const moveListToPos = (listId: ListId, position: number) => {
+	const moveListToPos = useCallback((listId: ListId, position: number) => {
 		const list = listToCardsMap.get(listId);
 		if(!list){
 			console.error("List not found", listId);
@@ -201,10 +212,9 @@ const BoardPage = (): React.JSX.Element => {
 		}
 		arrayMoveInPlace(entries, index, position);
 		setListMap(entries);
-	}
+	}, []);
 
-	const moveCardToListAndPos = (cardId: CardId, toList: ListId, position?: number) => {
-		console.log(cardId.substring(0,3), toList.substring(0,3), position)
+	const moveCardToListAndPos = useCallback((cardId: CardId, toList: ListId, position?: number) => {
 		const currentListId = cardToListMap.get(cardId);
 		if(!currentListId){
 			throw new Error("a Card not in any list");
@@ -231,9 +241,9 @@ const BoardPage = (): React.JSX.Element => {
 		listToCardsMap.set(toList, newListCards);
 		listToCardsMap.set(currentListId, currentListCards);
 		cardToListMap.set(cardId, toList);
-	};
+	}, []);
 
-	function handleDragStart(event: DragStartEvent) {
+	const handleDragStart = useCallback((event: DragStartEvent) => {
 		const activeId = event.active.id.toString() as UID;
 		if(listToCardsMap.has(activeId)) {
 			// is dragging list
@@ -244,9 +254,9 @@ const BoardPage = (): React.JSX.Element => {
 			setActiveObject(activeId);
 			setDraggingObject({card: activeId});
 		}
-	}
+	}, []);
 
-	function handleDragOver(event: DragOverEvent) {
+	const handleDragOver = useCallback((event: DragOverEvent) => {
 		const {active, over} = event;
 		const activeId = active.id.toString() as UID;
 		const overId = over?.id.toString() as UID;
@@ -263,7 +273,6 @@ const BoardPage = (): React.JSX.Element => {
 		// is dragging card
 		if(listToCardsMap.has(overId)) {
 			// is over a list - put that card into the list
-			const cards = listToCardsMap.get(overId);
 			const currentListId = cardToListMap.get(activeId);
 			if(overId !== currentListId) {
 				moveCardToListAndPos(activeId, overId);
@@ -291,20 +300,20 @@ const BoardPage = (): React.JSX.Element => {
 		}
 		
 		moveCardToListAndPos(activeId, newListId, injectPos);
-	}
+	}, []);
 
-	function handleDragEnd(event: DragEndEvent) {
+	const handleDragEnd = useCallback((event: DragEndEvent) => {
 		const {active, over} = event;
 		const activeId = active.id.toString() as UID;
 		const overId = over?.id.toString() as UID;
 		setDraggingObject({});
 		setActiveObject(null);
-		if (listToCardsMap.size === 0 || !over) {
+		if (!over) {
 			return;
 		}
 		// is dropping list
 		if(listToCardsMap.has(activeId)){
-			const newIndex = listEntries.findIndex((v)=>v[0] === overId);
+			const newIndex = Array.from(listToCardsMap.keys()).findIndex((v)=>v === overId);
 			if(newIndex > -1){
 				moveListToPos(activeId, newIndex);
 				emitMoveList(sockCtx, activeId, newIndex);
@@ -313,7 +322,6 @@ const BoardPage = (): React.JSX.Element => {
 		}
 		// is dropping card over a list
 		if(listToCardsMap.has(overId)) {
-			const list = listToCardsMap.get(overId);
 			const cardsListId = cardToListMap.get(activeId);
 			if(overId !== cardsListId) {
 				moveCardToListAndPos(activeId, overId);
@@ -338,20 +346,20 @@ const BoardPage = (): React.JSX.Element => {
 		const newIndex = injectPos >= 0 ? injectPos : newList.length + 1;
 		moveCardToListAndPos(activeId, newListId, newIndex);
 		emitMoveCard(sockCtx, activeId, newListId, newIndex);
-	}
+	}, [sockCtx.connected]);
 
-	function handleDragAbort(event: DragAbortEvent) {
+	const handleDragAbort = useCallback((event: DragAbortEvent) => {
 		setActiveObject(null);
 		setActiveObject(null);
 		setDraggingObject({});
-	}
+	}, []);
 
-	function handleDragCancel(event: DragCancelEvent) {
+	const handleDragCancel = useCallback((event: DragCancelEvent) => {
 		setActiveObject(null);
 		setDraggingObject({});
-	}
+	}, []);
 
-	const collisionDetectionStrategy: CollisionDetection = (args) => {
+	const collisionDetectionStrategy: CollisionDetection = useCallback((args) => {
 		// Get the closest list horizontally
 		const onlyListArgs = {...args, droppableContainers: args.droppableContainers.filter((container) => listToCardsMap.has(container.id.toString() as UID))};
 		let intersectingId = horizontalCollisionDetection(onlyListArgs) as UID;
@@ -387,7 +395,7 @@ const BoardPage = (): React.JSX.Element => {
 			return lastOverId.current ? [{ id: lastOverId.current }] : [];
 		}
 		return [];
-	};
+	}, []);
 
 	if (!boardId || ! boardData) {
 		return <NotFound itemType="Board" error={PageErrors.NOT_FOUND}/>
