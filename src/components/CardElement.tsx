@@ -10,7 +10,7 @@ import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils"
 import { useSocket } from "@trz/contexts/socket-context";
 import { getCardData } from "@trz/emitters/all";
 import { NoteType, notify } from "@trz/util/notifications";
-import { useInViewport } from "@mantine/hooks";
+import { useInViewport, useSessionStorage } from "@mantine/hooks";
 
 interface CardElementProps {
 	cardId: CardId;
@@ -36,8 +36,18 @@ const CardElement = (props: CardElementProps) => {
 				return;
 			}
 			try{
-				const cardRes = await getCardData(sockCtx, props.cardId);
-				setCard(cardRes);
+				const cachedCardRes = sessionStorage.getItem(`card:${props.cardId}`);
+				if((props.isOverlay) && cachedCardRes){
+					setCard(JSON.parse(cachedCardRes));
+				} else {
+					const cardRes = await getCardData(sockCtx, props.cardId);
+					setCard(cardRes);
+					if(cardRes){
+						sessionStorage.setItem(`card:${props.cardId}`, JSON.stringify(cardRes))
+					} else {
+						sessionStorage.removeItem(`card:${props.cardId}`);
+					}
+				}
 			} catch(err) {
 				notify(NoteType.CARD_DATA_ERROR, err);
 				return;
@@ -71,7 +81,7 @@ const CardElement = (props: CardElementProps) => {
 		}
 		props.onClick();
 	}
-
+	
 	return (
 		<Paper
 			ref={viewportRef}
@@ -99,6 +109,7 @@ const CardElement = (props: CardElementProps) => {
 			}}
 			onClick={onOpenCardModal}
 		>
+			<Text fz="6pt">{props.cardId}</Text>
 			{card && inViewport && <React.Fragment>
 				<Pill.Group>
 					<Pill

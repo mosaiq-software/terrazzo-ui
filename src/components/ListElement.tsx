@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import EditableTextbox from "@trz/components/EditableTextbox";
 import {Button, Group, Paper, Stack, CloseButton, TextInput, Flex, FocusTrap, Menu, Text} from "@mantine/core";
 import {useClickOutside, getHotkeyHandler} from "@mantine/hooks";
@@ -14,7 +14,7 @@ import SortableCard from "./DragAndDrop/SortableCard";
 import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
 import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
-
+import { BoardContext } from "@trz/pages/BoardPage";
 
 interface ListElementProps {
     listId: ListId;
@@ -33,7 +33,6 @@ function ListElement(props: ListElementProps): React.JSX.Element {
     const [cardTitle, setCardTitle] = useState("");
     const clickOutsideRef = useClickOutside(() => onBlur());
     const sockCtx = useSocket();
-    const [cardIds, setCardIds] = useState<CardId[]>([]);
     
     useEffect(()=>{
         let strictIgnore = false;
@@ -45,7 +44,6 @@ function ListElement(props: ListElementProps): React.JSX.Element {
             try{
                 const listRes = await getListData(sockCtx, props.listId);
                 setList(listRes);
-                setCardIds(listRes?.cardIds ?? []);
                 setListTitle(listRes?.name || "");
             } catch(err) {
                 notify(NoteType.LIST_DATA_ERROR, err);
@@ -72,15 +70,6 @@ function ListElement(props: ListElementProps): React.JSX.Element {
             }
             return updated;
         });
-    });
-
-    useSocketListener<ServerSE.ADD_CARD>(ServerSE.ADD_CARD, (payload)=>{
-        if(payload.listId !== props.listId){
-            return;
-        }
-        const ids = cardIds;
-        ids.push()
-        setCardIds([...cardIds, ])
     });
     
     async function onSubmit() {
@@ -221,22 +210,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     overflowX: "hidden"
                 }}
             >
-                <SortableContext 
-                    items={cardIds}
-                    strategy={verticalListSortingStrategy}
-                >{
-                    cardIds.map((cardId, cardIndex) => {
-                        return (
-                            <SortableCard
-                                key={cardId}
-                                cardId={cardId}
-                                disabled={false}
-                                boardCode={props.boardCode ?? "#"}
-                                onClick={()=>props.onClickCard(cardId)}
-                            />
-                        );
-                    })
-                }</SortableContext>
+                <ListCardStack {...props} />
                 <Group>
                     {visible &&
                         <Paper 
@@ -298,3 +272,26 @@ function ListElement(props: ListElementProps): React.JSX.Element {
 }
 
 export default ListElement;
+
+const ListCardStack = (props:ListElementProps)=>{
+    const boardContext = useContext(BoardContext);
+    const cardIds = boardContext?.listToCardsMap.get(props.listId) ?? [];
+    return (
+        <SortableContext 
+            items={cardIds}
+            strategy={verticalListSortingStrategy}
+        >{
+            cardIds.map((cardId) => {
+                return (
+                    <SortableCard
+                        key={cardId}
+                        cardId={cardId}
+                        listDragging={props.isOverlay || props.dragging}
+                        boardCode={props.boardCode ?? "#"}
+                        onClick={()=>props.onClickCard(cardId)}
+                    />
+                );
+            })
+        }</SortableContext>
+    )
+}

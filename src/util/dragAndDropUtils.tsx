@@ -33,7 +33,7 @@ export const boardDropAnimation: DropAnimation = {
 	}),
 };
 
-export function renderContainerDragOverlay(listId: ListId, boardCode: string) {
+export function renderListDragOverlay(listId: ListId, boardCode: string) {
 	return (
 		<ListElement
 			listId={listId}
@@ -45,7 +45,7 @@ export function renderContainerDragOverlay(listId: ListId, boardCode: string) {
 	);
 }
 
-export function renderSortableItemDragOverlay(cardId: CardId, boardCode: string) {
+export function renderCardDragOverlay(cardId: CardId, boardCode: string) {
 	return (
 		<CardElement
 			cardId={cardId}

@@ -1,6 +1,6 @@
 import { EntityType, Role } from "@mosaiq/terrazzo-common/constants";
 import { ClientSE } from "@mosaiq/terrazzo-common/socketTypes";
-import { Board, BoardHeader, BoardId, BoardRes, Card, CardHeader, CardId, EntityId, Invite, InviteId, List, ListHeader, ListId, ListRes, MembershipRecord, MembershipRecordId, Organization, OrganizationHeader, OrganizationId, Project, ProjectHeader, ProjectId, UID, UserDash, UserId } from "@mosaiq/terrazzo-common/types";
+import { Board, BoardHeader, BoardId, BoardRes, Card, CardHeader, CardId, EntityId, Invite, InviteId, List, ListHeader, ListId, MembershipRecord, MembershipRecordId, Organization, OrganizationHeader, OrganizationId, Project, ProjectHeader, ProjectId, UID, UserDash, UserId } from "@mosaiq/terrazzo-common/types";
 import { SocketContextType } from "@trz/contexts/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
 
@@ -44,7 +44,7 @@ export const getBoardData = async (sockCtx:SocketContextType, boardId: BoardId):
     }
 }
 
-export const getListData = async (sockCtx:SocketContextType, listId: BoardId): Promise<ListRes | undefined> => {
+export const getListData = async (sockCtx:SocketContextType, listId: BoardId): Promise<ListHeader | undefined> => {
     try {
         const list = await sockCtx.emit<ClientSE.GET_LIST>(ClientSE.GET_LIST, listId);
         return list;

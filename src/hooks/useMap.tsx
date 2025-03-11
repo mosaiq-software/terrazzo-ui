@@ -25,7 +25,32 @@ export function useMap<T, V>(initialState?: [T, V][]): [Map<T, V>, (map: Map<T, 
         
         return res;
     };
-    
+
+    mapRef.current.get = (...args) => {
+        const res = Map.prototype.get.apply(mapRef.current, args);
+        return res;
+    };
+
+    mapRef.current.has = (...args) => {
+        const res = Map.prototype.has.apply(mapRef.current, args);
+        return res;
+    };
+
+    mapRef.current.entries = (...args) => {
+        const res = Map.prototype.entries.apply(mapRef.current, args);
+        return res;
+    };
+
+    mapRef.current.keys = (...args) => {
+        const res = Map.prototype.keys.apply(mapRef.current, args);
+        return res;
+    };
+
+    mapRef.current.values = (...args) => {
+        const res = Map.prototype.values.apply(mapRef.current, args);
+        return res;
+    };
+
     const setMap = ((map: Map<T, V> | [T, V][]) => {
         mapRef.current = new Map(map);
         forceUpdate();

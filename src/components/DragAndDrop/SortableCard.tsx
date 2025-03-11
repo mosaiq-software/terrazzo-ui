@@ -8,7 +8,7 @@ import { createPortal } from "react-dom";
 
 interface SortableCardProps {
 	cardId: CardId;
-    disabled: boolean;
+    listDragging: boolean;
     boardCode: string;
     onClick: ()=>void;
 }
@@ -51,7 +51,7 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
 
     return (
         <div
-            ref={props.disabled ? undefined : setNodeRef} 
+            ref={props.listDragging ? undefined : setNodeRef} 
             {...attributes} 
             {...listeners}
             style={{
@@ -59,7 +59,7 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
                 zIndex: isDragging ? 101 : undefined,
             }}
         >
-            <MemoRenderCard cardId={props.cardId} isDragging={isDragging} boardCode={props.boardCode} onClick={props.onClick}/>
+            <MemoRenderCard cardId={props.cardId} isDragging={isDragging} isOverlay={props.listDragging} boardCode={props.boardCode} onClick={props.onClick}/>
         </div>
     );
 }
@@ -71,13 +71,14 @@ interface RenderCardProps {
     boardCode: string;
     onClick: ()=>void;
     isDragging: boolean;
+    isOverlay: boolean;
 }
 const RenderCard = (props:RenderCardProps) => {
     return (
         <CardElement
             cardId={props.cardId}
             dragging={props.isDragging}
-            isOverlay={false}
+            isOverlay={props.isOverlay}
             boardCode={props.boardCode}
             onClick={props.onClick}
         />
