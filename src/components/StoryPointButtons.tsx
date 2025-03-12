@@ -13,7 +13,6 @@ const StoryPointButton = (props: StoryPointProps):React.JSX.Element => {
         switch(props.buttonText){
             case "0":
                 storyPoint = StoryPoints.ZERO;
-                console.log(storyPoint);
                 break
             case "1":
                 storyPoint = StoryPoints.XXS;

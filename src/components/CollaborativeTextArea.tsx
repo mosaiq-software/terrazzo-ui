@@ -205,7 +205,6 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
         
         const start:number = textRef.current?.selectionStart ?? 0;
         const end:number = textRef.current?.selectionEnd ?? 0;
-        console.log(textRef.current?.selectionStart, textRef.current?.selectionEnd, collaborativeTextObject.caret)
         const tbEvent: TextBlockEvent = {
             id: props.textBlockId,
             start: start,
