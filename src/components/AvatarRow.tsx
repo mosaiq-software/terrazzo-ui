@@ -17,12 +17,12 @@ export const AvatarRow = (props: AvatarRowProps) => {
             return;
         }
         // TODO test this out when assignees are a thing
-        Promise.all(props.users.map(async (uid)=>{
-            return (typeof uid === "string") ? (await sockCtx.lookupUser(uid as UserId)) : (uid as UserHeader);
-        }))
-        .then((users)=>users.filter(u=>!!u))
-        .then((users)=>setUsers(users))
-        .catch(e=>{console.error("Error in avatar row "+e)});
+        // Promise.all(props.users.map(async (uid)=>{
+        //     return (typeof uid === "string") ? (await sockCtx.lookupUser(uid as UserId)) : (uid as UserHeader);
+        // }))
+        // .then((users)=>users.filter(u=>!!u))
+        // .then((users)=>setUsers(users))
+        // .catch(e=>{console.error("Error in avatar row "+e)});
     }, [props.users])
 
     return (

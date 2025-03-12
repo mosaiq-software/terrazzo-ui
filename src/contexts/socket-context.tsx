@@ -142,14 +142,14 @@ const SocketProvider: React.FC<any> = ({ children }) => {
 
     // EVENT EMITTERS
 
-    const lookupUser = async (userId:UserId):Promise<UserHeader | undefined> => {
-        const cached = userLookup[userId];
-        if(cached){
-            return cached;
-        }
-        const fetched = await getUserHeader(userId);
-        return fetched;
-    }
+    // const lookupUser = async (userId:UserId):Promise<UserHeader | undefined> => {
+    //     const cached = userLookup[userId];
+    //     if(cached){
+    //         return cached;
+    //     }
+    //     const fetched = await getUserHeader(userId);
+    //     return fetched;
+    // }
 
     return (
         <SocketContext.Provider value={{
