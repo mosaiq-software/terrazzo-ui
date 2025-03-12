@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Box, Button, Combobox, Grid, Group, Menu, Modal, Pill, Stack, Text, useCombobox} from "@mantine/core";
+import {Box, Button, Center, Combobox, Grid, Group, Loader, Menu, Modal, Pill, Stack, Text, useCombobox} from "@mantine/core";
 import {CollaborativeTextArea} from "@trz/components/CollaborativeTextArea";
 import {AvatarRow} from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
@@ -15,22 +15,66 @@ import {StoryPointButtons} from "@trz/components/StoryPointButtons";
 import { Card, CardId, UserId } from "@mosaiq/terrazzo-common/types";
 import { useUser } from "@trz/contexts/user-context";
 import { getRoomCode } from "@mosaiq/terrazzo-common/utils/socketUtils";
-import { RoomType } from "@mosaiq/terrazzo-common/socketTypes";
+import { RoomType, ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
 import {MarkdownTextarea} from "@trz/components/MarkdownTextarea";
-import { updateCardField } from "@trz/emitters/all";
+import { getCardData, updateCardField } from "@trz/emitters/all";
+import { TextObject } from "@trz/util/textUtils";
+import { initializeTextBlockData } from "@trz/emitters/text";
+import { useSocketListener } from "@trz/hooks/useSocketListener";
+import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
 interface CardDetailsProps {
 	cardId: CardId;
 	boardCode: string;
 	onClose: ()=>void;
 }
 const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
-	const [card, setCard] = useState<Card | null>(null);
+	const [card, setCard] = useState<Card | undefined>(undefined);
 	const trzCtx = useTRZ();
 	const sockCtx = useSocket();
 	const usr = useUser();
-	const [editingDescription, setEditingDescription] = useState<boolean>(false);
 	const combobox = useCombobox({
 	  onDropdownClose: () => combobox.resetSelectedOption(),
+	});
+
+	useEffect(()=>{
+		let strictIgnore = false;
+		const fetchCardData = async () => {
+			await new Promise((resolve)=>setTimeout(resolve, 0));
+			if(strictIgnore || !props.cardId || !sockCtx.connected){
+				return;
+			}
+			try{
+				const cardRes = await getCardData(sockCtx, props.cardId);
+				if(!cardRes) {
+					notify(NoteType.CARD_DATA_ERROR, "Not found");
+					props.onClose();
+				}
+				setCard(cardRes);
+			} catch(err) {
+				notify(NoteType.CARD_DATA_ERROR, err);
+				return;
+			}
+		};
+		fetchCardData();
+		return ()=>{
+			strictIgnore = true;
+		}
+	}, [props.cardId, sockCtx.connected]);
+	
+	useSocketListener<ServerSE.UPDATE_CARD_FIELD>(ServerSE.UPDATE_CARD_FIELD, (payload)=>{
+		if(payload.id !== props.cardId){
+			return;
+		}
+		setCard((prev)=>{
+			if(!prev){
+				return prev;
+			}
+			return {...updateBaseFromPartial<Card>(prev, payload)};
+		});
+	});
+
+	useSocketListener<ServerSE.UPDATE_CARD_ASSIGNEE>(ServerSE.UPDATE_CARD_ASSIGNEE, (payload)=>{
+
 	});
 
 	const bgColor = "#323a40";
@@ -40,10 +84,6 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 	const closeColor = "#9fadbc";
 
 	const onCloseModal = () => {
-		if(editingDescription){
-			setEditingDescription(false);
-			return;
-		}
 		props.onClose();
 	}
 
@@ -89,13 +129,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 		return null;
 	}
 
-	if(!card) {
-		console.error("No card found when opening card details modal");
-		onCloseModal();
-		return null;
-	}
-
-	const joinedCard = !!usr.userData && card.assignees.includes(usr.userData.id)
+	const joinedCard = !!usr.userData && card?.assignees.includes(usr.userData.id)
 
 	return (
 		<Modal.Root
@@ -131,7 +165,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 								gap="xs"
 							>
 								{
-									card.archived &&
+									card?.archived &&
 									<Box
 										bg="yellow"
 										p="sm"
@@ -143,7 +177,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 										</Group>
 									</Box>
 								}
-								<Stack
+								{card && <Stack
 									gap="xs"
 									align="flex-start"
 									justify="flex-start"
@@ -169,7 +203,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 										}}
 									/>
 									<Text fz="sm">{getCardNumber(props.boardCode, card.cardNumber)}</Text>
-								</Stack>
+								</Stack>}
 							</Stack>
 						</Group>
 						<Modal.CloseButton
@@ -188,7 +222,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 				<Modal.Body
 					p={20}
 				>
-					<Group 
+					{card &&<Group 
 						grow 
 						preventGrowOverflow={false}
 						wrap='nowrap'
@@ -250,51 +284,14 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 									</Pill.Group>
 								</Grid.Col>
 							</Grid>
-							<Box>
-								{
-									editingDescription &&
-									<CollaborativeTextArea
-										textBlockId={card.descriptionTextBlockId}
-										maxLineLength={60}
-										textColor={textColor}
-										backgroundColor={bgDarkColor}
-										onClose={()=>{
-											setEditingDescription(false);
-										}}
-									/>
-								}
-								{
-									!editingDescription && !!sockCtx.collaborativeTextObject?.text?.length &&
-									<MarkdownTextarea
-										style={{ cursor: 'text' }}
-										onDoubleClick={()=>{
-											setEditingDescription(true);
-										}}
-									>
-										{sockCtx.collaborativeTextObject.text}
-									</MarkdownTextarea>
-								}
-								{
-									!editingDescription && !sockCtx.collaborativeTextObject?.text?.length &&
-									<MarkdownTextarea
-										style={{ cursor: 'text', color:"#aaa"}}
-										onDoubleClick={()=>{
-											setEditingDescription(true);
-										}}
-									>
-										{"**Double Click** to add a description"}
-									</MarkdownTextarea>
-								}
-								<Button
-									key={editingDescription ? "Done" : "Edit"}
-									mt="1rem"
-									onClick={()=>{
-										setEditingDescription(!editingDescription);
-									}}
-								>
-									{editingDescription ? "Done" : "Edit"}
-								</Button>
-							</Box>
+							<CollaborativeTextArea
+								textBlockId={card.descriptionTextBlockId}
+								maxLineLength={60}
+								textColor={textColor}
+								backgroundColor={bgDarkColor}
+								placeholder="Double click to edit!"
+								markdown
+							/>
 						</Stack>
 						<Stack justify='flex-start' align='stretch' pt="md" maw="140px">
 							<Button bg={buttonColor}
@@ -388,7 +385,15 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 								>{card.archived ? "Unarchive" : "Archive"} card</Button>
 							}
 						</Stack>
-					</Group>
+					</Group>}
+					{!card &&
+						<Center>
+							<Stack align="center">
+								<Loader type="bars"/>
+								<Text ta="center">Loading...</Text>
+							</Stack>
+						</Center>
+					}
 				</Modal.Body>
 			</Modal.Content>
 		</Modal.Root>

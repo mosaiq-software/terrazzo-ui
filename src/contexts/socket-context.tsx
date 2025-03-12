@@ -5,32 +5,13 @@ import {
     ClientSEPayload,
     ClientSEReplies,
     ClientSocketIOEvent,
-    Position,
     ServerSE,
     ServerSEPayload,
     SocketHandshakeAuth,
     SocketId,
-    UserData
 } from '@mosaiq/terrazzo-common/socketTypes';
-import {
-    Card,
-    CardHeader,
-    CardId,
-    List,
-    ListId,
-    TextBlockEvent,
-    TextBlockId,
-    UserHeader, UserId
-} from '@mosaiq/terrazzo-common/types';
+import {UserHeader, UserId} from '@mosaiq/terrazzo-common/types';
 import {NoteType, notify} from '@trz/util/notifications';
-import { useThrottledCallback} from '@mantine/hooks';
-import {
-    getCaretCoordinates,
-    MOUSE_UPDATE_THROTTLE_MS,
-    TEXT_EVENT_EMIT_THROTTLE_MS,
-} from '@trz/util/textUtils';
-import {executeTextBlockEvent, fullName} from '@mosaiq/terrazzo-common/utils/textUtils';
-import {arrayMove, updateBaseFromPartial} from '@mosaiq/terrazzo-common/utils/arrayUtils';
 import { useUser } from './user-context';
 
 export type SocketContextType = {
@@ -47,8 +28,8 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const usr = useUser();
     const [socket, setSocketState] = useState<Socket | null>(null);
     const [connected, setConnected] = useState<boolean>(false);
-    // const [collaborativeTextObject, setCollaborativeTextObject] = useState<TextObject>({text: '', caret: undefined, relative: undefined, queue:[]});
     // const [userLookup, setUserLookup] = useState<{[userId:UserId]:UserHeader}>({});
+    
 
     useEffect(() => {
         if (!process.env.SOCKET_URL) {
@@ -110,54 +91,6 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             setConnected(true);
         });
 
-        
-
-
-
-        sock.on(ServerSE.UPDATE_TEXT_BLOCK, (payload: ServerSEPayload[ServerSE.UPDATE_TEXT_BLOCK]) => {
-            if (!payload) {
-                return;
-            }
-            for (const event of payload.events){
-                receiveCollabTextEvent(event, undefined, false);
-            }
-        });
-
-        sock.on(ServerSE.TEXT_CARET, (payload: ServerSEPayload[ServerSE.TEXT_CARET]) => {
-            setRoomUsersState(prev => prev.map(user => {
-                if(user.sid === payload.sid) {
-                    return {
-                        ...user,
-                        textRoomData: {caret: payload.caret}
-                    } as UserData;
-                }
-                return user;
-            }));
-        });
-
-        
-
-        sock.on(ServerSE.RECEIVE_INVITE, (payload: ServerSEPayload[ServerSE.RECEIVE_INVITE]) => {
-            notify(NoteType.INVITE_RECEIVED, [fullName(payload.fromUser), payload.entity.name],{
-                primary: async ()=>{
-                    try {
-                        acceptInvitation(payload);
-                    } catch (e) {
-                        notify(NoteType.GENERIC_ERROR, e);
-                    }
-                },
-                secondary: ()=>{
-                    try {
-                        replyInvite(payload.id, false);
-                    } catch (e) {
-                        notify(NoteType.GENERIC_ERROR, e);
-                    }
-                }
-            });
-            syncUserDash();
-        });
-        
-
         return () => {
             setConnected(false);
             console.warn("Effect closed")
@@ -208,97 +141,6 @@ const SocketProvider: React.FC<any> = ({ children }) => {
 
 
     // EVENT EMITTERS
-
-
-    const initializeTextBlockData = async (textBlockId:TextBlockId): Promise<void> => {
-        try {
-            const text = await emit<ClientSE.GET_TEXT_BLOCK>(ClientSE.GET_TEXT_BLOCK, textBlockId);
-            setCollaborativeTextObject({ text: text?.text ?? '', caret: undefined, relative: undefined, queue: [] });
-        } catch (e:any) {
-            notify(NoteType.TEXT_BLOCK_INIT_ERROR, e);
-        }
-    };
-
-    const emitTextBlockEvents = async (textBlockEvents:TextBlockEvent[]): Promise<string | undefined> => {
-        try{
-            const res = await emit<ClientSE.UPDATE_TEXT_BLOCK>(ClientSE.UPDATE_TEXT_BLOCK, textBlockEvents);
-            return res;
-        } catch (e) {
-            notify(NoteType.TEXT_EVENT_WARN, e)
-        }
-    };
-
-    const syncUpdatedCaret = useThrottledCallback((pos?: Position) => {
-        volatileEmit<ClientSE.TEXT_CARET>(ClientSE.TEXT_CARET, pos);
-    }, MOUSE_UPDATE_THROTTLE_MS);
-
-    
-
-
-
-    // HELPERS
-    const receiveCollabTextEvent = (event: TextBlockEvent, element: HTMLTextAreaElement | undefined, emit: boolean) => {
-        setCollaborativeTextObject((prev)=>{
-            const {updated, selectionStart} = executeTextBlockEvent(prev.text, event, prev.caret);
-            const a = {
-                text: updated,
-                caret: selectionStart,
-                relative: prev.relative,
-                queue: [...(prev.queue), event],
-            };
-            const tick = async ()=>{
-                await new Promise((resolve)=>setTimeout(resolve, 0));
-                throttledEmitTextEvents();
-            }
-            if(emit){
-                tick();
-            }
-            return a;
-        });
-        updateCaretPosition(element, true);
-    }
-
-    const syncCaretPosition = (element: HTMLTextAreaElement | undefined) => {
-        updateCaretPosition(element);
-    }
-
-    const updateCaretPosition = async (element: HTMLTextAreaElement | undefined, useKnownPosition?: boolean): Promise<void> => {
-        await new Promise((resolve)=>setTimeout(resolve, 0));
-        if(!element){ 
-            return;
-        }
-        setCollaborativeTextObject((prev)=>{
-            if(prev.caret !== undefined && useKnownPosition) {
-                element.selectionStart = prev.caret;
-                element.selectionEnd = prev.caret;
-            }
-            const width = element.getBoundingClientRect().width;
-            const height = element.getBoundingClientRect().height;
-            const coordinates = getCaretCoordinates(element, element.selectionStart);
-            const relativeCoords = {x: coordinates.left/width, y: coordinates.top/height}
-    
-            const a = {
-                ...prev,
-                caret: element.selectionStart,
-                relative: relativeCoords,
-            };
-            syncUpdatedCaret(relativeCoords);
-            return a;
-        });
-    }
-
-    const throttledEmitTextEvents = useThrottledCallback(()=>{
-        emitTextBlockEvents(collaborativeTextObject.queue);
-        setCollaborativeTextObject((prev) => {
-            return {
-                ...prev,
-                queue: []
-            }
-        });
-    }, TEXT_EVENT_EMIT_THROTTLE_MS);
-
-
-
 
     const lookupUser = async (userId:UserId):Promise<UserHeader | undefined> => {
         const cached = userLookup[userId];

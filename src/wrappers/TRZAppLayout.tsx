@@ -11,6 +11,8 @@ import { useTRZ } from "@trz/contexts/TRZ-context";
 import { fullName } from "@mosaiq/terrazzo-common/utils/textUtils";
 import { replyInvite} from "@trz/emitters/all"
 import {useDashboard} from "@trz/contexts/dashboard-context";
+import { useSocketListener } from "@trz/hooks/useSocketListener";
+import { ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
 
 interface TRZAppLayoutProps {
     children: any;
@@ -28,6 +30,25 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
         ['[', ()=>{setSidebarCollapsed(!sidebarCollapsed)}],
         ['/', ()=>{}]
     ]);
+
+    useSocketListener<ServerSE.RECEIVE_INVITE>(ServerSE.RECEIVE_INVITE, (payload)=>{
+        notify(NoteType.INVITE_RECEIVED, [fullName(payload.fromUser), payload.entity.name],{
+            primary: async ()=>{
+                try {
+                    replyInvite(sockCtx, payload.id, true);
+                } catch (e) {
+                    notify(NoteType.GENERIC_ERROR, e);
+                }
+            },
+            secondary: ()=>{
+                try {
+                    replyInvite(sockCtx, payload.id, false);
+                } catch (e) {
+                    notify(NoteType.GENERIC_ERROR, e);
+                }
+            }
+        });
+    });
 
     return (
         <AppShell

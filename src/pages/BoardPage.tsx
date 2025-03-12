@@ -149,40 +149,10 @@ const BoardPage = (): React.JSX.Element => {
 
 	useSocketListener<ServerSE.MOVE_LIST>(ServerSE.MOVE_LIST, (payload)=>{
 		moveListToPos(payload.listId, payload.position)
-		// setRoomUsers((prev)=>{
-		// 	return prev.map((ru)=>{
-		// 		if(ru.mouseRoomData?.draggingList === payload.listId){
-		// 			return {
-		// 				...ru,
-		// 				mouseRoomData: {
-		// 					...ru.mouseRoomData,
-		// 					draggingList: undefined,
-		// 				}
-		// 			}
-		// 		}else{
-		// 			return ru;
-		// 		}
-		// 	})
-		// })
 	});
 
 	useSocketListener<ServerSE.MOVE_CARD>(ServerSE.MOVE_CARD, (payload)=>{
 		moveCardToListAndPos(payload.cardId, payload.toList, payload.position);
-		// setRoomUsers((prev)=>{
-		// 	return prev.map((ru)=>{
-		// 		if(ru.mouseRoomData?.draggingCard === payload.cardId){
-		// 			return {
-		// 				...ru,
-		// 				mouseRoomData: {
-		// 					...ru.mouseRoomData,
-		// 					draggingList: undefined,
-		// 				}
-		// 			}
-		// 		}else{
-		// 			return ru;
-		// 		}
-		// 	})
-		// })
 	});
 
 	const openModal = useCallback((card: CardId) => {
