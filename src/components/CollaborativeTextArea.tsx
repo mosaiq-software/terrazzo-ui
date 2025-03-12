@@ -75,11 +75,11 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
     const receiveCollabTextEvent = (event: TextBlockEvent, element: HTMLTextAreaElement | undefined, emit: boolean) => {
         setCollaborativeTextObject((prev)=>{
             const {updated, selectionStart} = executeTextBlockEvent(prev.text, event, prev.caret);
-            const a = {
+            const updatedTextObject = {
                 text: updated,
                 caret: selectionStart,
                 relative: prev.relative,
-                queue: [...(prev.queue), event],
+                queue: [...prev.queue, event],
             };
             const tick = async ()=>{
                 await new Promise((resolve)=>setTimeout(resolve, 0));
@@ -88,7 +88,7 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
             if(emit){
                 tick();
             }
-            return a;
+            return updatedTextObject;
         });
         updateCaretPosition(element, true);
     }
@@ -107,7 +107,7 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
             const height = element.getBoundingClientRect().height;
             const coordinates = getCaretCoordinates(element, element.selectionStart);
             const relativeCoords = {x: coordinates.left/width, y: coordinates.top/height}
-    
+
             const a = {
                 ...prev,
                 caret: element.selectionStart,
@@ -203,16 +203,16 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
             return;
         }
         
-        const useCaret = collaborativeTextObject.caret !== undefined && textRef.current?.selectionStart !== collaborativeTextObject.caret && textRef.current?.selectionStart === textRef.current?.selectionEnd
+        const start:number = textRef.current?.selectionStart ?? 0;
+        const end:number = textRef.current?.selectionEnd ?? 0;
+        console.log(textRef.current?.selectionStart, textRef.current?.selectionEnd, collaborativeTextObject.caret)
         const tbEvent: TextBlockEvent = {
             id: props.textBlockId,
-            start: (useCaret ? collaborativeTextObject.caret : textRef.current?.selectionStart) ?? 0,
-            end: (useCaret ? collaborativeTextObject.caret : textRef.current?.selectionEnd) ?? 0,
+            start: start,
+            end: end,
             inserted: '',
         };
         
-        
-
         switch (e.key) {
             case 'Delete':
                 e.preventDefault();
@@ -227,11 +227,11 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
                 handleTextEvent(tbEvent);
                 return;
             case 'Enter':
-                case 'Return':
-                    e.preventDefault();
-                    tbEvent.inserted = '\n';
-                    handleTextEvent(tbEvent);
-                    return;
+            case 'Return':
+                e.preventDefault();
+                tbEvent.inserted = '\n';
+                handleTextEvent(tbEvent);
+                return;
             case 'Tab':
                 e.preventDefault();
                 tbEvent.inserted = TAB_CHAR;
@@ -253,7 +253,6 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
     }
 
     return (
-
         <Box>
         {
             editingMode &&
