@@ -18,7 +18,10 @@ export const PendingInviteRow = (props: PendingInviteRowProps) => {
             borderBottom:"1px solid #ffffff10",
         }}>
             <Grid.Col span={1}>
-                <Avatar src={props.invite.toUser.profilePicture} />
+                <Avatar
+                    src={props.invite.toUser.profilePicture}
+                    visibleFrom="sm"
+                />
             </Grid.Col>
             <Grid.Col span={7}>
                 <Text c="#fff">{fullName(props.invite.fromUser)} invited <Text span fw="700">{fullName(props.invite.toUser)}</Text> as a {RoleNames[props.invite.userRole]} on {date.toLocaleString()}</Text>
