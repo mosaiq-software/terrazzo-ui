@@ -1,15 +1,13 @@
 import React from "react";
 import { Menu } from "@mantine/core";
 import {Priority} from "@mosaiq/terrazzo-common/constants";
-import {useSocket} from "@trz/contexts/socket-context";
-import {useTRZ} from "@trz/contexts/TRZ-context";
 import {NoteType, notify} from "@trz/util/notifications";
 import { CardId } from "@mosaiq/terrazzo-common/types";
 
 interface PriorityButtonProps {
-    Color: string;
+    color: string;
     buttonText: string;
-    cardId: CardId;
+    onClick: (priority:Priority|null)=>void;
 }
 export const priorityColors: string[] = [
     "#4A82C7",
@@ -20,9 +18,6 @@ export const priorityColors: string[] = [
 ]
 
 const PriorityButton = (props: PriorityButtonProps): React.JSX.Element => {
-    const sockCtx = useSocket();
-    const trzCtx = useTRZ();
-
     async function onClick(){
         let priority;
         switch(props.buttonText){
@@ -45,26 +40,14 @@ const PriorityButton = (props: PriorityButtonProps): React.JSX.Element => {
                 priority = null;
                 break
         }
-
-        if(!props.cardId){
-            notify(NoteType.CARD_UPDATE_ERROR);
-            return;
-        }
-        try{
-            await sockCtx.updateCardField(props.cardId, {priority: priority});
-        }catch (e){
-            notify(NoteType.CARD_UPDATE_ERROR);
-            return;
-        }
     }
-
     return (
-            <Menu.Item bg={props.Color} ta='center' c='white' onClick={onClick}>{props.buttonText}</Menu.Item>
+        <Menu.Item bg={props.color} ta='center' c='white' onClick={onClick}>{props.buttonText}</Menu.Item>
     )
 }
 
 interface PriorityButtonsProps {
-    cardId: CardId;
+    onChange: (priority:Priority|null)=>void;
 }
 export const PriorityButtons = (props: PriorityButtonsProps): React.JSX.Element => {
     const priorityLength = Object.keys(Priority).length / 2;
@@ -74,11 +57,20 @@ export const PriorityButtons = (props: PriorityButtonsProps): React.JSX.Element 
             {
                 Array.from({length: priorityLength}).map((_, index) => {
                     return (
-                        <PriorityButton Color={priorityColors[index]} cardId={props.cardId} buttonText={`${index + 1}`} key={index}/>
+                        <PriorityButton
+                            color={priorityColors[index]}
+                            buttonText={`${index + 1}`}
+                            key={index}
+                            onClick={props.onChange}
+                        />
                     )
                 })
             }
-            <PriorityButton Color={"gray"} buttonText={"Remove Priority"} cardId={props.cardId}/>
+            <PriorityButton
+                color={"gray"}
+                buttonText={"Remove Priority"}
+                onClick={props.onChange}
+            />
         </>
     )
 }

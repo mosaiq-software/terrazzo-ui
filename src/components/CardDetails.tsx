@@ -350,7 +350,20 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
                                 </Menu.Target>
                                 <Menu.Dropdown ta='center'>
                                     <Menu.Label>Card Priority</Menu.Label>
-                                    <PriorityButtons cardId={card.id}/>
+                                    <PriorityButtons 
+										onChange={async (priority)=>{
+											if(!props.cardId){
+												notify(NoteType.CARD_UPDATE_ERROR);
+												return;
+											}
+											try{
+												await updateCardField(sockCtx, props.cardId, {priority: priority});
+											}catch (e){
+												notify(NoteType.CARD_UPDATE_ERROR);
+												return;
+											}
+										}}
+									/>
                                 </Menu.Dropdown>
                             </Menu>
 							<Menu
