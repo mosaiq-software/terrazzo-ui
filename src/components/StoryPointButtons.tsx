@@ -1,22 +1,15 @@
 import React from "react";
 import {Menu} from "@mantine/core"
 import {StoryPoints} from "@mosaiq/terrazzo-common/constants";
-import {useSocket} from "@trz/contexts/socket-context";
-import {useTRZ} from "@trz/contexts/TRZ-context";
-import {NoteType, notify} from "@trz/util/notifications";
-import { CardId } from "@mosaiq/terrazzo-common/types";
 
 interface StoryPointProps{
     buttonText: string;
-    cardId: CardId;
+    onClick: (sp:StoryPoints|null)=>void;
 }
 
 const StoryPointButton = (props: StoryPointProps):React.JSX.Element => {
-    const sockCtx = useSocket();
-    const trzCtx = useTRZ();
-
     async function onClick(){
-        let storyPoint;
+        let storyPoint: StoryPoints|null = null;
         switch(props.buttonText){
             case "0":
                 storyPoint = StoryPoints.ZERO;
@@ -47,18 +40,7 @@ const StoryPointButton = (props: StoryPointProps):React.JSX.Element => {
                 storyPoint = null;
                 break
         }
-
-        if(!props.cardId){
-            notify(NoteType.CARD_UPDATE_ERROR);
-            return;
-        }
-        try{
-            console.log("this is the story" + storyPoint);
-            await sockCtx.updateCardField(props.cardId, {storyPoints: storyPoint});
-        }catch (e){
-            notify(NoteType.CARD_UPDATE_ERROR);
-            return;
-        }
+        props.onClick(storyPoint);
     }
 
     return (
@@ -67,7 +49,7 @@ const StoryPointButton = (props: StoryPointProps):React.JSX.Element => {
 }
 
 interface StoryPointButtonsProps {
-    cardId: CardId;
+    onChange: (sp:StoryPoints|null)=>void;
 }
 export const StoryPointButtons =  (props: StoryPointButtonsProps):React.JSX.Element => {
     const storyPointsArray = Object.values(StoryPoints).filter(value => typeof value === 'number');
@@ -75,9 +57,9 @@ export const StoryPointButtons =  (props: StoryPointButtonsProps):React.JSX.Elem
     return(
         <>
             {storyPointsArray.map((point, index) => (
-                <StoryPointButton buttonText={`${point}`} key={index} cardId={props.cardId} />
+                <StoryPointButton buttonText={`${point}`} key={index} onClick={props.onChange}/>
             ))}
-            <StoryPointButton buttonText={"Remove Story Point"} cardId={props.cardId}/>
+            <StoryPointButton buttonText={"Remove Story Point"} onClick={props.onChange}/>
         </>
     )
 }

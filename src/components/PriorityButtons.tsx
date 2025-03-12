@@ -19,7 +19,7 @@ export const priorityColors: string[] = [
 
 const PriorityButton = (props: PriorityButtonProps): React.JSX.Element => {
     async function onClick(){
-        let priority;
+        let priority: Priority|null = null;
         switch(props.buttonText){
             case "1":
                 priority = Priority.LOWEST;
@@ -40,7 +40,9 @@ const PriorityButton = (props: PriorityButtonProps): React.JSX.Element => {
                 priority = null;
                 break
         }
+        props.onClick(priority);
     }
+
     return (
         <Menu.Item bg={props.color} ta='center' c='white' onClick={onClick}>{props.buttonText}</Menu.Item>
     )
