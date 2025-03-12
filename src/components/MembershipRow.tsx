@@ -19,7 +19,10 @@ export const MembershipRow = (props: MembershipRowProps) => {
             borderBottom:"1px solid #ffffff10",
         }}>
             <Grid.Col span={1}>
-                <Avatar src={props.user.profilePicture} />
+                <Avatar
+                    src={props.user.profilePicture}
+                    visibleFrom="sm"
+                />
             </Grid.Col>
             <Grid.Col span={4}>
                 <Title order={5} c="#fff">{props.user.firstName} {props.user.lastName}</Title>
@@ -27,7 +30,7 @@ export const MembershipRow = (props: MembershipRowProps) => {
             <Grid.Col span={4}>
                 <Title order={6} c="#ddd">@{props.user.username}</Title>
             </Grid.Col>
-            <Grid.Col span={2}>
+            <Grid.Col span={2} miw="95px">
                 {
                     props.record.userRole < Role.OWNER &&
                     <Select
