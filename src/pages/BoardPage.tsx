@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
-import {Container} from "@mantine/core";
+import {Container, Paper, Title} from "@mantine/core";
 import CollaborativeMouseTracker from "@trz/wrappers/CollaborativeMouseTracker";
 import {useNavigate, useParams} from "react-router-dom";
 import {useSocket} from "@trz/util/socket-context";
@@ -218,93 +218,114 @@ const BoardPage = (): React.JSX.Element => {
 	}
 
 	return (
-		<Container 
-			h="100%" 
-			fluid 
-			maw="100%" 
-			p="lg" 
+		<Container
+			h="100%"
+			maw="100%"
+			p="0"
+			m="0"
 			bg="#1d2022"
-			style={{
-				overflowX: "scroll"
-			}}
 		>
-			<CollaborativeMouseTracker
-				boardId={params.boardId as BoardId}
+			<Paper
+				bg="#17191b"
+				p="0"
+				m="0"
+			>
+				<Title
+					order={3}
+					p="xs"
+					m="0"
+				>
+					{sockCtx.boardData.name}
+				</Title>
+			</Paper>
+			<Container
+				h="100%"
+				fluid
+				maw="100%"
+				p="lg"
+				bg="#1d2022"
 				style={{
-					height: "95%",
-					width: "fit-content",
-					display: "flex",
-					gap: "20px",
-					alignItems: "flex-start",
-					justifyContent: "flex-start",
-					flexWrap: "nowrap",
+					overflowX: "scroll"
 				}}
 			>
-				<DndContext
-					sensors={sensors}
-					collisionDetection={collisionDetectionStrategy}
-					onDragEnd={handleDragEnd}
-					onDragOver={handleDragOver}
-					onDragStart={handleDragStart}
-					onDragAbort={handleDragAbort}
-					onDragCancel={handleDragCancel}
-					measuring={{
-						droppable: {
-							strategy: MeasuringStrategy.Always,
-						},
+				<CollaborativeMouseTracker
+					boardId={params.boardId as BoardId}
+					style={{
+						height: "95%",
+						width: "fit-content",
+						display: "flex",
+						gap: "20px",
+						alignItems: "flex-start",
+						justifyContent: "flex-start",
+						flexWrap: "nowrap",
 					}}
 				>
-					<SortableContext 
-						items={sockCtx.boardData?.lists ?? []}
-						strategy={horizontalListSortingStrategy}
-					>{
-						sockCtx.boardData?.lists
-							?.filter((list: List) => !list.archived)
-							.map((list: List, listIndex: number) => {
-							if(list.archived){
-								return null;
-							}
-							return (
-								<SortableList
-									key={list.id + " : " + list.cards.map(c=>c.id).join(" ")}
-									listType={list}
-									index={listIndex}
-								>
-									<SortableContext 
-										items={list.cards}
-										strategy={verticalListSortingStrategy}
-									>{
-										list.cards
-											.filter((card: CardHeader) => !card.archived)
-											.map((card: CardHeader, cardIndex: number) => {
-											return (
-												<SortableCard
-													key={card.id + "i"+cardIndex}
-													cardHeader={card}
-													disabled={isSortingList}
-													boardCode={sockCtx.boardData?.boardCode ?? "#"}
-												/>
-											);
-										})
-									}</SortableContext>
-								</SortableList>
-							);
-						})
-					}</SortableContext>
-					{createPortal(
-						<DragOverlay dropAnimation={boardDropAnimation}>
-						{activeObject
-							? allListIds.includes(activeObject.id.toString() as UID)
-							? renderContainerDragOverlay(activeObject as List, sockCtx.boardData?.boardCode ?? "#")
-							: renderSortableItemDragOverlay(activeObject as Card, sockCtx.boardData?.boardCode ?? "#")
-							: null}
-						</DragOverlay>,
-						document.body
-					)}
-				</DndContext>
-				<CreateList/>
-				<CardDetails/>
-			</CollaborativeMouseTracker>
+					<DndContext
+						sensors={sensors}
+						collisionDetection={collisionDetectionStrategy}
+						onDragEnd={handleDragEnd}
+						onDragOver={handleDragOver}
+						onDragStart={handleDragStart}
+						onDragAbort={handleDragAbort}
+						onDragCancel={handleDragCancel}
+						measuring={{
+							droppable: {
+								strategy: MeasuringStrategy.Always,
+							},
+						}}
+					>
+						<SortableContext
+							items={sockCtx.boardData?.lists ?? []}
+							strategy={horizontalListSortingStrategy}
+						>{
+							sockCtx.boardData?.lists
+								?.filter((list: List) => !list.archived)
+								.map((list: List, listIndex: number) => {
+									if(list.archived){
+										return null;
+									}
+									return (
+										<SortableList
+											key={list.id + " : " + list.cards.map(c=>c.id).join(" ")}
+											listType={list}
+											index={listIndex}
+										>
+											<SortableContext
+												items={list.cards}
+												strategy={verticalListSortingStrategy}
+											>{
+												list.cards
+													.filter((card: CardHeader) => !card.archived)
+													.map((card: CardHeader, cardIndex: number) => {
+														return (
+															<SortableCard
+																key={card.id + "i"+cardIndex}
+																cardHeader={card}
+																disabled={isSortingList}
+																boardCode={sockCtx.boardData?.boardCode ?? "#"}
+															/>
+														);
+													})
+											}</SortableContext>
+										</SortableList>
+									);
+								})
+						}</SortableContext>
+						{createPortal(
+							<DragOverlay dropAnimation={boardDropAnimation}>
+								{activeObject
+									? allListIds.includes(activeObject.id.toString() as UID)
+										? renderContainerDragOverlay(activeObject as List, sockCtx.boardData?.boardCode ?? "#")
+										: renderSortableItemDragOverlay(activeObject as Card, sockCtx.boardData?.boardCode ?? "#")
+									: null}
+							</DragOverlay>,
+							document.body
+						)}
+					</DndContext>
+					<CreateList/>
+					<CardDetails/>
+				</CollaborativeMouseTracker>
+			</Container>
 		</Container>
 	);
 };
