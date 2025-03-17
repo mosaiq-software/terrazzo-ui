@@ -1,16 +1,17 @@
 import React from "react";
 import {AuthWrapper} from "@trz/wrappers/AuthWrapper";
-import Navbar from "@trz/components/Navbar";
 import { Outlet } from "react-router";
-
+import TRZAppLayout from "@trz/wrappers/TRZAppLayout";
+import {DashboardProvider} from '@trz/contexts/dashboard-context';
 const ContentPageWrapper = () => {
     return (
-        <>
-            <Navbar />
-            <AuthWrapper>
-                <Outlet />
-            </AuthWrapper>
-        </>
+        <AuthWrapper>
+            <DashboardProvider>
+                <TRZAppLayout>
+                    <Outlet/>
+                </TRZAppLayout>
+            </DashboardProvider>
+        </AuthWrapper>
     )
 }
 

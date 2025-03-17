@@ -1,4 +1,4 @@
-import { NoteType, notify } from "./notifications";
+import {RestMethods, RestRequestBody, RestRequestMethod, RestRequestParams, RestResponse, RestRoutes} from "@mosaiq/terrazzo-common/apiTypes";
 
 export const getApiUrl = () => {
     const apiUrl = process.env.API_URL;
@@ -11,34 +11,45 @@ export const getApiUrl = () => {
     return `${apiUrl}:${apiPort}`;
 };
 
-export const callTrzApi = async (endpoint: string, method: string, body?: any) => {
-    if (endpoint[0] === "/") {
-        endpoint = endpoint.slice(1);
-    }
+export async function callTrzApi<T extends RestRoutes> (endpoint:T, params:RestRequestParams[T], body:RestRequestBody[T],): Promise<RestResponse<T>> {
     try {
-        const response = await fetch(`${getApiUrl()}/${endpoint}`, {
+        const epString = replaceParams(endpoint, params);
+        const method = RestRequestMethod[endpoint];
+        const noBody = method === RestMethods.GET || method === RestMethods.DELETE;
+        const fetchResponse:Response = await fetch(`${getApiUrl()}${epString}`, {
             method,
-            body,
-        });
-        if (!response) {
+            body: noBody ?  undefined : JSON.stringify(body ?? {}),
+            headers: noBody ? {
+
+            } : {
+                'Content-Type': 'application/json',
+            },
+        }) ;
+        if (!fetchResponse) {
             console.error(`Error calling ${endpoint} with method ${method}`);
-            return {
-                status: 500,
-                json: undefined
-            }
+            throw new Error(`Error calling ${endpoint} with method ${method}`);
         }
-        let json:any = await response.text();
+        if (!fetchResponse.ok){
+            throw new Error("Server responded "+fetchResponse.status);
+        }
+        const textRes:string = await fetchResponse.text();
+        let response:RestResponse<T> = "";
         try {
-            json = JSON.parse(json);
+            response = JSON.parse(textRes);
         } catch (error: any){
-            notify(NoteType.API_ERROR, error);
+            response = textRes;
         }
-        return {
-            status: response.status,
-            json: json,
-        }
+        return response;
     } catch (error) {
-        console.error(`Error calling ${endpoint} with method ${method}`, error);
+        console.error(`Error calling ${endpoint} with`, error);
         throw error;
     }
+}
+
+export const replaceParams = (ep:string, params:{[key:string]: string}):string => {
+    let updated = ep;
+    for(const p in params) {
+        updated = updated.replace(":"+p, params[p]);
+    }
+    return updated;
 }

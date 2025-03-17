@@ -1,7 +1,7 @@
 import React from "react";
 import CardElement from "@trz/components/CardElement";
 import ListElement from "@trz/components/ListElement";
-import {List, Card, CardHeader, UID} from "@mosaiq/terrazzo-common/types";
+import {UID, CardId, ListId} from "@mosaiq/terrazzo-common/types";
 import { defaultDropAnimationSideEffects, DropAnimation } from "@dnd-kit/core";
 
 export const horizontalCollisionDetection = (args): string | null => {
@@ -33,37 +33,26 @@ export const boardDropAnimation: DropAnimation = {
 	}),
 };
 
-export function renderContainerDragOverlay(list: List, boardCode: string) {
+export function renderListDragOverlay(listId: ListId, boardCode: string) {
 	return (
 		<ListElement
-			listType={list}
+			listId={listId}
 			dragging
 			isOverlay={true}
-		>
-			{
-				list.cards.map((card: CardHeader, cardIndex: number) => {
-					return (
-						<CardElement
-							key={cardIndex}
-							cardHeader={card}
-							dragging={false}
-							isOverlay={false}
-							boardCode={boardCode}
-						/>
-					);
-				})
-			}
-		</ListElement>
+			boardCode={boardCode} 
+			onClickCard={()=>{}}
+		/>
 	);
 }
 
-export function renderSortableItemDragOverlay(card: Card, boardCode: string) {
+export function renderCardDragOverlay(cardId: CardId, boardCode: string) {
 	return (
 		<CardElement
-			cardHeader={card}
+			cardId={cardId}
 			dragging={true}
 			isOverlay={true}
 			boardCode={boardCode}
+			onClick={()=>{}}
 		/>
 	);
 }

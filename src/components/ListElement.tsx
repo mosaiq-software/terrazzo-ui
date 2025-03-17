@@ -1,30 +1,89 @@
-import React, {useEffect, useState} from "react";
+import React, {useContext, useEffect, useState} from "react";
 import EditableTextbox from "@trz/components/EditableTextbox";
-import {Button, Group, Paper, Stack, CloseButton, TextInput, Flex, FocusTrap, Menu} from "@mantine/core";
-import {useClickOutside, getHotkeyHandler, useInViewport} from "@mantine/hooks";
-import {List} from "@mosaiq/terrazzo-common/types";
-import {useSocket} from "@trz/util/socket-context";
+import {Button, Group, Paper, Stack, CloseButton, TextInput, Flex, FocusTrap, Menu, Text} from "@mantine/core";
+import {useClickOutside, getHotkeyHandler} from "@mantine/hooks";
+import {CardId, ListHeader, ListId} from "@mosaiq/terrazzo-common/types";
+import {useSocket} from "@trz/contexts/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
 import { captureDraggableEvents, captureEvent, forAllClickEvents } from "@trz/util/eventUtils";
 import {FaArchive} from "react-icons/fa";
 import {HiDotsVertical} from "react-icons/hi";
-
+import { createCard, getListData, updateListField } from "@trz/emitters/all";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import SortableCard from "./DragAndDrop/SortableCard";
+import { useSocketListener } from "@trz/hooks/useSocketListener";
+import { ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
+import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
+import { BoardContext } from "@trz/pages/BoardPage";
+import { LIST_CACHE_PREFIX } from "@trz/util/boardUtils";
 
 interface ListElementProps {
-    listType: List;
-    children?: React.ReactNode;
+    listId: ListId;
     dragging: boolean;
     droppableSetNodeRef?: (element: HTMLElement | null) => void;
     handleProps?: any;
     isOverlay: boolean;
+    boardCode: string;
+    onClickCard: (card:CardId)=>void;
 }
 function ListElement(props: ListElementProps): React.JSX.Element {
-    const [listTitle, setListTitle] = React.useState(props.listType.name || "List Title");
+    const [list, setList] = useState<ListHeader | undefined>(undefined);
+    const [listTitle, setListTitle] = useState("");
     const [visible, setVisible] = useState(false);
     const [error, setError] = useState("");
     const [cardTitle, setCardTitle] = useState("");
     const clickOutsideRef = useClickOutside(() => onBlur());
     const sockCtx = useSocket();
+    
+    useEffect(()=>{
+        let strictIgnore = false;
+        const fetchListData = async () => {
+            await new Promise((resolve)=>setTimeout(resolve, 0));
+            if(strictIgnore || !props.listId || !sockCtx.connected){
+                return;
+            }
+            try{
+                const cachedListRes = sessionStorage.getItem(`${LIST_CACHE_PREFIX}${props.listId}`);
+                if((props.dragging || props.isOverlay) && cachedListRes){
+                    const listRes = JSON.parse(cachedListRes);
+                    setList(listRes);
+                    setListTitle(listRes?.name || "");
+                } else {
+                    const listRes = await getListData(sockCtx, props.listId);
+                    setList(listRes);
+                    setListTitle(listRes?.name || "");
+                    if(listRes){
+                        sessionStorage.setItem(`${LIST_CACHE_PREFIX}${props.listId}`, JSON.stringify(listRes))
+                    } else {
+                        sessionStorage.removeItem(`${LIST_CACHE_PREFIX}${props.listId}`);
+                    }
+                }
+            } catch(err) {
+                notify(NoteType.LIST_DATA_ERROR, err);
+                return;
+            }
+        };
+        fetchListData();
+        return ()=>{
+            strictIgnore = true;
+        }
+    }, [props.listId, sockCtx.connected]);
+
+    useSocketListener<ServerSE.UPDATE_LIST_FIELD>(ServerSE.UPDATE_LIST_FIELD, (payload)=>{
+        if(props.listId !== payload.id){
+            return;
+        }
+        setList((prev)=>{
+            if(!prev){
+                return prev;
+            }
+            const updated = updateBaseFromPartial<ListHeader>(prev, payload);
+            if(payload.name){
+                setListTitle(payload.name);
+            }
+            return updated;
+        });
+    });
     
     async function onSubmit() {
         setError("")
@@ -41,7 +100,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
         }
 
         try{
-            await sockCtx.createCard(props.listType.id, cardTitle)
+            await createCard(sockCtx, props.listId, cardTitle)
         } catch (e) {
             notify(NoteType.CARD_CREATION_ERROR, e);
             return;
@@ -49,10 +108,10 @@ function ListElement(props: ListElementProps): React.JSX.Element {
         setVisible(false);
     }
 
-    function onTitleChange(value: string) {
+    async function onTitleChange(value: string) {
         setListTitle(value);
         try {
-            sockCtx.updateListField(props.listType.id, {name: value})
+            await updateListField(sockCtx, props.listId, {name: value})
         } catch (e: any){
             notify(NoteType.LIST_UPDATE_ERROR, e);
             return;
@@ -60,12 +119,8 @@ function ListElement(props: ListElementProps): React.JSX.Element {
     }
 
     async function onArchive() {
-        await sockCtx.updateListField(props.listType.id, {archived: true, order: -1});
+       await updateListField(sockCtx, props.listId, {archived: true, order: -1});
     }
-
-    useEffect(() => {
-        setListTitle(props.listType.name || "List Title");
-    })
 
     function onBlur(){
         setCardTitle("");
@@ -100,6 +155,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
             } : undefined)
             }}
         >
+            { process.env.DEBUG==="true" && <Text fz="6pt">{props.listId}</Text>}
             <Group
                 {...props.handleProps}
                 justify="space-between"
@@ -167,7 +223,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     overflowX: "hidden"
                 }}
             >
-                { props.children }
+                <ListCardStack {...props} />
             </Stack>
 
             <Group>
@@ -234,3 +290,26 @@ function ListElement(props: ListElementProps): React.JSX.Element {
 }
 
 export default ListElement;
+
+const ListCardStack = (props:ListElementProps)=>{
+    const boardContext = useContext(BoardContext);
+    const cardIds = boardContext?.listToCardsMap.get(props.listId) ?? [];
+    return (
+        <SortableContext 
+            items={cardIds}
+            strategy={verticalListSortingStrategy}
+        >{
+            cardIds.map((cardId) => {
+                return (
+                    <SortableCard
+                        key={cardId}
+                        cardId={cardId}
+                        listDragging={props.isOverlay || props.dragging}
+                        boardCode={props.boardCode ?? "#"}
+                        onClick={()=>props.onClickCard(cardId)}
+                    />
+                );
+            })
+        }</SortableContext>
+    )
+}

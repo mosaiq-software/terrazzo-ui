@@ -1,15 +1,15 @@
 import React, {useState} from "react";
 import {Button, CloseButton, Paper, TextInput, Flex, FocusTrap} from "@mantine/core";
 import {useClickOutside, getHotkeyHandler} from "@mantine/hooks";
-import {useSocket} from "@trz/util/socket-context";
-import {NoteType, notify} from "@trz/util/notifications";
 
-const CreateList = (): React.JSX.Element => {
+interface CreateListProps {
+    onCreateList:(title:string)=>void;
+}
+const CreateList = (props:CreateListProps): React.JSX.Element => {
     const [visible, setVisible] = useState(false);
     const [error, setError] = useState("");
     const [title, setTitle] = useState("");
     const ref = useClickOutside(() => onBlur());
-    const sockCtx = useSocket();
 
     async function onSubmit(){
         setError("")
@@ -23,12 +23,7 @@ const CreateList = (): React.JSX.Element => {
             setError("Max 50 characters")
             return;
         }
-        try {
-            await sockCtx.createList(sockCtx.boardData!.id, title)
-        } catch (e) {
-            notify(NoteType.LIST_CREATION_ERROR, e);
-            return;
-        } 
+        props.onCreateList(title);
         setVisible(false);
     }
 

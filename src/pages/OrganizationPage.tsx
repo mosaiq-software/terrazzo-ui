@@ -1,28 +1,46 @@
-import React, { useEffect, useState } from "react";
-import { Box, Avatar, Group, Flex, Title, Text, Tabs, Select, Divider, Button, ScrollArea, Center, Loader, Stack} from "@mantine/core";
-import {BoardListCard} from "@trz/components/BoardListCards";
+import React, { useEffect, useState} from "react";
+import { Box, Avatar, Group, Flex, Title, Text, Tabs, ScrollArea, Center, Stack, Button} from "@mantine/core";
 import {AvatarRow} from "@trz/components/AvatarRow";
-import {Organization, OrganizationId, UserHeader} from "@mosaiq/terrazzo-common/types";
+import {Organization, OrganizationId} from "@mosaiq/terrazzo-common/types";
 import { useNavigate, useParams } from "react-router-dom";
-import { useSocket } from "@trz/util/socket-context";
+import { useSocket } from "@trz/contexts/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
-import {modals} from "@mantine/modals";
-import {NotFound} from "@trz/components/NotFound";
+import {NotFound, PageErrors} from "@trz/components/NotFound";
+import {Role } from "@mosaiq/terrazzo-common/constants";
+import { useTRZ } from "@trz/contexts/TRZ-context";
+import { RoomType, ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
+import {OrgTabCards} from "@trz/components/OrganizationTabs/OrgTabCards";
+import {OrgTabSettings} from "@trz/components/OrganizationTabs/OrgTabSettings";
+import {OrgTabMembers} from "@trz/components/OrganizationTabs/OrgTabMembers";
+import { getOrganizationData, updateOrgField } from "@trz/emitters/all";
+import { useRoom } from "@trz/hooks/useRoom";
+import { useDashboard } from "@trz/contexts/dashboard-context";
+import { modals } from "@mantine/modals";
+import { useSocketListener } from "@trz/hooks/useSocketListener";
+import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
 
 const OrganizationPage = (): React.JSX.Element => {
-    const [orgData, setOrgData] = useState<Organization | undefined>();
     const params = useParams();
 	const sockCtx = useSocket();
+    const trz = useTRZ();
 	const navigate = useNavigate();
+    const [orgData, setOrgData] = useState<Organization | undefined>();
+    const {userDash, updateUserDash} = useDashboard()
+    const orgId = params.orgId as OrganizationId | undefined;
+    const tabId = params.tabId;
+    const myMembershipRecord = userDash?.organizations.find(o=>o.id===orgId)?.myMembershipRecord;
+    useRoom(RoomType.DATA, orgId, false);
 
 	useEffect(() => {
+        let strictIgnore = false;
 		const fetchOrgData = async () => {
-			if (!params.orgId) {
-				return;
-			}
+            await new Promise((resolve)=>setTimeout(resolve, 0));
+            if(strictIgnore || !orgId || !sockCtx.connected){
+                return;
+            }
             try{
-                const data = await sockCtx.getOrganizationData(params.orgId as OrganizationId)
-                setOrgData(data);
+                const org = await getOrganizationData(sockCtx, orgId);
+                setOrgData(org);
             } catch(err) {
                 notify(NoteType.ORG_DATA_ERROR, err);
                 navigate("/dashboard");
@@ -30,124 +48,125 @@ const OrganizationPage = (): React.JSX.Element => {
 			}
 		};
 		fetchOrgData();
-	}, [params.orgId, sockCtx.connected]);
+        return ()=>{
+            strictIgnore = true;
+        }
+	}, [orgId, sockCtx.connected]);
 
+    useSocketListener<ServerSE.UPDATE_ORG_FIELD>(ServerSE.UPDATE_ORG_FIELD, (payload)=>{
+        setOrgData(prev => {
+            if(!prev) {return prev;}
+            return updateBaseFromPartial<Organization>(prev, payload);
+        });
+    });
 
-    const testUsers:UserHeader[] = Array.from({ length: 5 }).map(() => ({
-        id: `h-h-h-h-h`,
-        username: "johndoe",
-        firstName: "John",
-        lastName: "Doe",
-        profilePicture: "https://avatars.githubusercontent.com/u/47070087?v=4",
-        githubUserId: "",
-    }))
+    if(!orgData || !orgId){
+        return <NotFound itemType="Organization" error={PageErrors.NOT_FOUND}/>
+    }
+    if(!myMembershipRecord){
+        return <NotFound itemType="Organization" error={PageErrors.FORBIDDEN}/>
+    }
 
-    if(!orgData){
-        return <NotFound itemType="Organization"/>
+    const tabs: any = {
+        "Projects":
+            <OrgTabCards
+                projects={orgData.projects}
+                onClickCreate={()=>{
+                    modals.openContextModal({
+                        modal: 'project',
+                        title: 'Create Project',
+                        innerProps: {orgId},
+                    })
+                }}
+                onClickProject={(projectId)=>{
+                    navigate(`/project/${projectId}`);
+                }}
+            />,
+        "Members":
+            <OrgTabMembers
+                myMembershipRecord={myMembershipRecord}
+                orgData={orgData}
+            />,
+        "Settings":
+            <OrgTabSettings
+                myMembershipRecord={myMembershipRecord}
+                orgData={orgData}
+            />,
+    }
+    
+    const onChangeTab = (tab: string|null) => {
+        if(tab === Object.keys(tabs)[0])
+            tab = '';
+        navigate(`/org/${orgId}/${tab}`)
+    }
+    const getTab = () => {
+        return (tabId && tabId in tabs) ? tabId : Object.keys(tabs)[0];
     }
 
     return (
-        <ScrollArea h='100vh'>
+        <ScrollArea h={`calc(100vh - ${trz.navbarHeight}px)`}>
             <Stack bg='#15161A' mih='100vh' pb='10vh' align="center">
                 <Box py='25' w='80%'>
                     <Group gap='xl' pl='50'>
-                        <Avatar size='75' radius='lg'/>
+                        <Avatar
+                            src={orgData.logoUrl ?? undefined}
+                            name={orgData.name}
+                            color={'initials'}
+                            size={"75"}
+                            radius={'lg'}
+                        />
                         <Flex direction='column'>
                             <Title c='white'>{orgData.name}</Title>
-                            <Text c='#6C6C6C'>The Description of Organization</Text>
+                            <Text c='#6C6C6C'>{orgData.description}</Text>
                         </Flex>
                     </Group>
-                    <Tabs defaultValue='Projects' pt='30' onChange={(e)=>console.log(e)}>
+                    <Tabs value={getTab()} pt='30' onChange={onChangeTab} color='#F2187E' variant="default">
                         <Tabs.List>
-                            <Tabs.Tab value='Projects' color='#F2187E'><Text c='white' fw='bold'>Projects</Text></Tabs.Tab>
-                            <Tabs.Tab value='Members' color='#F2187E'><Text c='white' fw='bold'>Members</Text></Tabs.Tab>
-                            <Tabs.Tab value='Settings' color='#F2187E'><Text c='white' fw='bold'>Settings</Text></Tabs.Tab>
+                            {
+                                Object.keys(tabs).map((t)=>{
+                                    return (
+                                    <Tabs.Tab 
+                                        value={t}
+                                        
+                                        key={t}
+                                    >
+                                        <Text c='white' fw='bold'>{t}</Text>
+                                    </Tabs.Tab>)
+                                })
+                            }
                             <Flex ml='auto' align='center'>
-                                <AvatarRow users={testUsers} maxUsers={5}/>
+                                <AvatarRow users={orgData.members.map(m=>m.user)} maxUsers={5}/>
                             </Flex>
                         </Tabs.List>
                     </Tabs>
                 </Box>
-                <Box style={{
-                    width: "80%",
-                    display: "flex",
-                    flexDirection: 'column',
-                    flexWrap: 'nowrap',
-                    alignItems: 'flex-start',
-                    justifyContent: 'flex-start',
-                }}>
-                    <Title c='white' pb='20' order={2} maw='200'>Projects</Title>
-                    {/* 
-                    //TODO implement project sorting
-                    <Group maw='40%'>
-                        <Select data={['Sort by: Alphabetical A-Z', 'Date', 'Creator']}
-                                defaultValue='Sort by: Alphabetical A-Z'
-                                size='xs'
-                                styles={{
-                                    input: {
-                                        backgroundColor: '#27292E',
-                                        color: 'white',
-                                        borderColor: '#1d2022',
-                                    },
-                                    dropdown: {
-                                        backgroundColor: '#27292E',
-                                        color: 'white',
-                                    },
-                                    option: {
-                                        backgroundColor: '#27292E',
-                                        color: 'white',
-                                    }
-                                }}
-                        />
-                        <Divider orientation='vertical' color='#868e96'/>
-                        <Button size='compact-sm' color='#27292E' fw='500'>Grid</Button>
-                        <Button size='compact-sm' color='#27292E' fw='500'>List</Button>
-                    </Group> */}
-                    <Box style={{
-                        width: "100%",
-                        display: "flex",
-                        justifyContent: "center"
-                    }}>
-                        <Box style={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(auto-fill, 360px)",
-                            maxWidth: "100%"
-                        }}>
-                            {
-                                orgData.projects.map((project) => (
-                                    <BoardListCard 
-                                        key={project.id}
-                                        bgColor={'#121314'}
-                                        color="white"
-                                        title={project.name}
-                                        onClick={()=>{
-                                            navigate("/project/"+project.id);
-                                        }}
-                                    />
-                                ))
-                            }
-                            {
-                                (!orgData) && 
-                                <Center w="100%" h="100%">
-                                    <Loader type="bars"/>
-                                </Center>
-                            }
-                            <BoardListCard 
-                                centered
-                                title="+ Add Project"
-                                bgColor={'#121314'}
-                                color="white"
-                                onClick={() =>
-                                    modals.openContextModal({
-                                        modal: 'project',
-                                        title: 'Create Project',
-                                        innerProps: {orgId: orgData.id},
-                                    })
+                {
+                    !orgData.archived && tabs[getTab()]
+                }
+                {
+                    orgData.archived && 
+                    <Center><Stack>
+                        <Title c="#fff" ta="center" order={3}>This Organization is archived</Title>
+                        <Button
+                            variant="default"
+                            disabled={myMembershipRecord.userRole < Role.OWNER}
+                            onClick={async ()=>{
+                                if(myMembershipRecord.userRole < Role.OWNER){
+                                    notify(NoteType.UNAUTHORIZED);
+                                    return;
                                 }
-                            />
-                        </Box>
-                    </Box>
-                </Box>
+                                try {
+                                    updateOrgField(sockCtx, orgId, {archived: false});
+                                    notify(NoteType.CHANGES_SAVED);
+                                } catch (e) {
+                                    notify(NoteType.ORG_DATA_ERROR, e);
+                                }
+                            }}
+                        >
+                            Unarchive Organization
+                        </Button>
+                    </Stack></Center>
+                }
             </Stack>
         </ScrollArea>
     )

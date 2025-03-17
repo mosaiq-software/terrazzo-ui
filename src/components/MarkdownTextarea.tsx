@@ -1,46 +1,17 @@
 import React from 'react';
-import { Button, Container, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder } from '@mantine/core';
+import { Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder } from '@mantine/core';
 
-interface MarkdownTextareaProps {
-    value: string;
-    onChange(value: string): void;
+interface MarkdownTextareaProps extends ContainerProps{
+    children: string;
 }
 
 export const MarkdownTextarea = (props:MarkdownTextareaProps) => {
-    const [editing, setEditing] = React.useState(false);
-    const [editedValue, setEditedValue] = React.useState(props.value);
-
-    const onCancelEdit = () => {
-        setEditing(false);
-        setEditedValue(props.value);
+    if(typeof props.children !== "string") {
+        return <Text>Markdown Error: Value is not a string</Text>
     }
-
-    const onSaveEdit = () => {
-        setEditing(false);
-        props.onChange(editedValue);
-    }
-
-    if (editing) {
-        return (
-            <Container>
-                <Textarea
-                    value={editedValue}
-                    onChange={(event) => setEditedValue(event.currentTarget.value)}
-                    autosize
-                    minRows={10}
-                    maxRows={30}
-                />
-                <Group>
-                    <Button variant='outline' onClick={onCancelEdit}>Cancel</Button>
-                    <Button variant='light' onClick={onSaveEdit}>Save</Button>
-                </Group>
-            </Container>
-        );
-    }
-
     return (
-        <Container onClick={() => setEditing(true)} style={{ cursor: 'text' }}>
-            {renderMarkdown(props.value)}
+        <Container {...props}>
+            {renderMarkdown(props.children)}
         </Container>
     );
 }

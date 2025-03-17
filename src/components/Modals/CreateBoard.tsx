@@ -2,10 +2,11 @@ import React, {useState} from "react";
 import {TextInput, Container, Flex, Button} from "@mantine/core";
 import {getHotkeyHandler} from "@mantine/hooks";
 import {ContextModalProps} from "@mantine/modals";
-import {useSocket} from "@trz/util/socket-context";
+import {useSocket} from "@trz/contexts/socket-context";
 import {useNavigate} from "react-router-dom";
 import {NoteType, notify} from "@trz/util/notifications";
 import { ProjectId } from "@mosaiq/terrazzo-common/types";
+import { createBoard } from "@trz/emitters/all";
 
 const CreateBoard = (props: ContextModalProps<{ modalBody: string, projectId: ProjectId }>): React.JSX.Element => {
     const [boardName, setBoardName] = React.useState("");
@@ -39,7 +40,7 @@ const CreateBoard = (props: ContextModalProps<{ modalBody: string, projectId: Pr
             return;
         }
         try {
-            const board = await sockCtx.createBoard(boardName, boardAbbreviation, props.innerProps.projectId);
+            const board = await createBoard(sockCtx, boardName, boardAbbreviation, props.innerProps.projectId);
             navigate(`/board/${board}`);
         } catch (e) {
             notify(NoteType.BOARD_CREATION_ERROR, e);

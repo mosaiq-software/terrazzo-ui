@@ -1,21 +1,14 @@
 import React, { useEffect } from "react";
 import queryString from "query-string";
-import { DEFAULT_NO_AUTH_ROUTE, useTRZ } from "@trz/util/TRZ-context";
 import { useNavigate } from 'react-router-dom';
-import { NoteType, notify } from "@trz/util/notifications";
 import {Center, Container, Paper, Stack, Title, Text, Loader} from "@mantine/core";
-import {useUser} from "@trz/contexts/user-context";
-import {useSocket} from "@trz/util/socket-context";
+import {useUser, DEFAULT_NO_AUTH_ROUTE} from "@trz/contexts/user-context";
+import { NoteType, notify } from "@trz/util/notifications";
 
 /*
 This page will only show as the callback fro github login. It should take the code from the string, save it, and then go to another page with the new data.
 */
-
-
 export const GithubAuth = () => {
-
-    const trz = useTRZ();
-    const sockCtx = useSocket();
     const usr = useUser();
     const navigate = useNavigate();
     const urlParams = queryString.parse(window.location.search);
@@ -24,20 +17,16 @@ export const GithubAuth = () => {
     useEffect(() => {
         let strictIgnore = false;
         const fetchData = async (code: any) => {
-            await new Promise((resolve)=>setTimeout(resolve, 50));
+            await new Promise((resolve)=>setTimeout(resolve, 100));
             if(strictIgnore){
                 return;
             }
             if(!code || typeof code !== "string"){
+                notify(NoteType.GITHUB_AUTH_ERROR, "Invalid github code!");
                 navigate(DEFAULT_NO_AUTH_ROUTE);
                 return;
             }
-            const {route, success} = await trz.githubLogin(code);
-            if(!success) {
-                notify(NoteType.GITHUB_AUTH_ERROR);
-            }
-            navigate(route);
-
+            await usr.githubLogin(code);
         };
         fetchData(code);
         return ()=>{

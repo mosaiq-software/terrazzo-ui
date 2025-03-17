@@ -2,10 +2,11 @@ import React, {useState} from "react";
 import {TextInput, Container, Flex, Button} from "@mantine/core";
 import {getHotkeyHandler} from "@mantine/hooks";
 import {ContextModalProps} from "@mantine/modals";
-import {useSocket} from "@trz/util/socket-context";
+import {useSocket} from "@trz/contexts/socket-context";
 import {useNavigate, useParams} from "react-router-dom";
 import {NoteType, notify} from "@trz/util/notifications";
 import { OrganizationId } from "@mosaiq/terrazzo-common/types";
+import { createProject } from "@trz/emitters/all";
 
 const CreateProject = (props: ContextModalProps<{ modalBody: string, orgId: OrganizationId}>): React.JSX.Element => {
     const [projectName, setProjectName] = React.useState("");
@@ -26,7 +27,7 @@ const CreateProject = (props: ContextModalProps<{ modalBody: string, orgId: Orga
             return;
         }
         try {
-            const projectId = await sockCtx.createProject(projectName, props.innerProps.orgId);
+            const projectId = await createProject(sockCtx, projectName, props.innerProps.orgId);
             navigate(`/project/${projectId}`);
         } catch (e) {
             notify(NoteType.PROJECT_CREATION_ERROR, e);

@@ -1,44 +1,96 @@
-import React, {useEffect} from "react";
+import React, { useEffect, useState } from "react";
 import {Box, Group, Paper, Pill, Text, Title} from "@mantine/core";
-import {CardHeader} from "@mosaiq/terrazzo-common/types";
+import {Card, CardId} from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from "@trz/components/AvatarRow";
-import { useTRZ } from "@trz/util/TRZ-context";
 import {priorityColors} from "@trz/components/PriorityButtons";
+import { CARD_CACHE_PREFIX, getCardNumber } from "@trz/util/boardUtils";
+import { useSocketListener } from "@trz/hooks/useSocketListener";
+import { ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
+import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
+import { useSocket } from "@trz/contexts/socket-context";
+import { getCardData } from "@trz/emitters/all";
+import { NoteType, notify } from "@trz/util/notifications";
+import { useInViewport, useSessionStorage } from "@mantine/hooks";
 
 interface CardElementProps {
-	cardHeader: CardHeader;
+	cardId: CardId;
 	dragging: boolean;
 	isOverlay: boolean;
 	boardCode: string;
+	onClick: ()=>void;
 }
-const CardElement = (props: CardElementProps): React.JSX.Element => {
-	const trzCtx = useTRZ();
-	const [title, setTitle] = React.useState(props.cardHeader.name || "Card Title");
+const CardElement = (props: CardElementProps) => {
+	const sockCtx = useSocket();
+	const [card, setCard] = useState<Card | undefined>(undefined);
 	const textColor = "#ffffff";
-
-	useEffect(() => {
-		setTitle(props.cardHeader.name);
-	}, [props.cardHeader.name, props.cardHeader.priority]);
-
-	const testUsers = Array.from({ length: 1 }).map((_, index) => ({
-		name: "John Doe",
-		url: "https://avatars.githubusercontent.com/u/47070087?v=4"
-	}))
-
-	const onOpenCardModal = () => {
-		if(props.dragging || props.isOverlay){
+	const {ref: viewportRef, inViewport} = useInViewport();
+	
+	useEffect(()=>{
+		let strictIgnore = false;
+		const fetchCardData = async () => {
+			await new Promise((resolve)=>setTimeout(resolve, 0));
+			if(strictIgnore || !props.cardId || !sockCtx.connected || !inViewport){
+				return;
+			}
+			if(inViewport && card && card.id === props.cardId){
+				return;
+			}
+			try{
+				const cachedCardRes = sessionStorage.getItem(`${CARD_CACHE_PREFIX}${props.cardId}`);
+				if((props.dragging || props.isOverlay) && cachedCardRes){
+					setCard(JSON.parse(cachedCardRes));
+				} else {
+					const cardRes = await getCardData(sockCtx, props.cardId);
+					setCard(cardRes);
+					if(cardRes){
+						sessionStorage.setItem(`${CARD_CACHE_PREFIX}${props.cardId}`, JSON.stringify(cardRes))
+					} else {
+						sessionStorage.removeItem(`${CARD_CACHE_PREFIX}${props.cardId}`);
+					}
+				}
+			} catch(err) {
+				notify(NoteType.CARD_DATA_ERROR, err);
+				return;
+			}
+		};
+		fetchCardData();
+		return ()=>{
+			strictIgnore = true;
+		}
+	}, [props.cardId, sockCtx.connected, inViewport]);
+	
+	useSocketListener<ServerSE.UPDATE_CARD_FIELD>(ServerSE.UPDATE_CARD_FIELD, (payload)=>{
+		if(payload.id !== props.cardId){
 			return;
 		}
-		trzCtx.setOpenedCardModal(props.cardHeader.id);
-	}
+		setCard((prev)=>{
+			if(!prev){
+				return prev;
+			}
+			return {...updateBaseFromPartial<Card>(prev, payload)};
+		});
+	});
 
+	useSocketListener<ServerSE.UPDATE_CARD_ASSIGNEE>(ServerSE.UPDATE_CARD_ASSIGNEE, (payload)=>{
+
+	});
+	
+	const onOpenCardModal = () => {
+		if(!card || props.dragging || props.isOverlay){
+			return;
+		}
+		props.onClick();
+	}
+	
 	return (
 		<Paper
+			ref={viewportRef}
 			bg="#17191b"
 			radius="md"
 			p="sm"
 			shadow="lg"
 			bd="1px solid #757575"
+			mih="85px"
 			style={{
 				cursor: "pointer",
 				marginInline: "5px",
@@ -57,37 +109,60 @@ const CardElement = (props: CardElementProps): React.JSX.Element => {
 			}}
 			onClick={onOpenCardModal}
 		>
-			<Pill.Group>
-				<Pill size="xs" bg='#87cefa' c={textColor}>To Do</Pill>
-				<Pill size="xs" bg='#ff474c' c={textColor}>In Progress</Pill>
-			</Pill.Group>
-			<Title 
-				order={5} 
-				lineClamp={7} 
-				c="#ffffff"
-				style={{
-					wordWrap: "break-word",
-					textWrap: "wrap"
-				}}
-			>{title}</Title>
-			<Text size='xs' c="#878787">{props.boardCode} - {props.cardHeader.cardNumber}</Text>
-			<Group justify='space-between' style={{flexDirection: "row-reverse"}}>
-				{/* icons for info abt the card */}
-                {props.cardHeader.assignees != undefined && props.cardHeader.assignees.length > 0 &&
-                    <AvatarRow users={props.cardHeader.assignees} maxUsers={3}/>
-                }
-                {props.cardHeader.priority &&
-                    <Box w='20' bg={priorityColors[props.cardHeader.priority - 1]}  style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
-                        <Text c="white" ta='center'>{props.cardHeader.priority}</Text>
-                    </Box>
-                }
-				{props.cardHeader.storyPoints &&
-					<Box bg='#f2bb6e' w='20' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
-						<Text c='white' ta='center'>{props.cardHeader.storyPoints}</Text>
-					</Box>
-				}
-			</Group>
-
+			{process.env.DEBUG==="true" && <Text fz="6pt">{props.cardId}</Text>}
+			{card && inViewport && <React.Fragment>
+				<Pill.Group>
+					<Pill
+						size="xs"
+						bg='#87cefa'
+						c={textColor}
+						style={{
+							userSelect: "none",
+						}}
+					>To Do</Pill>
+					<Pill
+						size="xs"
+						bg='#ff474c'
+						c={textColor}
+						style={{
+							userSelect: "none",
+						}}
+					>In Progress</Pill>
+				</Pill.Group>
+				<Title 
+					order={5} 
+					lineClamp={7} 
+					c="#ffffff"
+					style={{
+						wordWrap: "break-word",
+						textWrap: "wrap",
+						userSelect: "none",
+					}}
+				>{card.name}</Title>
+				<Text
+					size='xs'
+					c="#878787"
+					style={{
+						userSelect: "none",
+					}}
+				>{getCardNumber(props.boardCode, card.cardNumber)}</Text>
+				<Group justify='space-between' style={{flexDirection: "row-reverse"}}>
+					{/* icons for info abt the card */}
+					{card.assignees != undefined && card.assignees.length > 0 &&
+						<AvatarRow users={card.assignees} maxUsers={3}/>
+					}
+					{card.priority &&
+						<Box w='20' bg={priorityColors[card.priority - 1]}  style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
+							<Text c="white" ta='center'>{card.priority}</Text>
+						</Box>
+					}
+					{card.storyPoints &&
+						<Box bg='#f2bb6e' w='20' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
+							<Text c='white' ta='center'>{card.storyPoints}</Text>
+						</Box>
+					}
+				</Group>
+			</React.Fragment>}
 		</Paper>
 	);
 };

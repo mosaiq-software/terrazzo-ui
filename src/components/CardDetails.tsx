@@ -1,26 +1,81 @@
-import React, {useEffect} from "react";
-import {Box, Button, Grid, Group, Menu, Modal, Pill, Stack, Text} from "@mantine/core";
+import React, {useEffect, useState} from "react";
+import {Box, Button, Center, Combobox, Grid, Group, Loader, Menu, Modal, Pill, Stack, Text, useCombobox} from "@mantine/core";
 import {CollaborativeTextArea} from "@trz/components/CollaborativeTextArea";
 import {AvatarRow} from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
-import {useSocket} from "@trz/util/socket-context";
+import {useSocket} from "@trz/contexts/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
-import { useTRZ } from "@trz/util/TRZ-context";
-import { getCard } from "@trz/util/boardUtils";
+import { useTRZ } from "@trz/contexts/TRZ-context";
+import { getCardNumber } from "@trz/util/boardUtils";
 import {FaArchive, FaUserPlus} from "react-icons/fa";
 import {MdLabel, MdOutlinePriorityHigh} from "react-icons/md";
 import {PriorityButtons, priorityColors} from "@trz/components/PriorityButtons";
 import {Priority} from "@mosaiq/terrazzo-common/constants";
-import {FaUserGroup} from "react-icons/fa6";
 import {StoryPointButtons} from "@trz/components/StoryPointButtons";
-
-const CardDetails = (): React.JSX.Element | null => {
+import { Card, CardId, UserId } from "@mosaiq/terrazzo-common/types";
+import { useUser } from "@trz/contexts/user-context";
+import { getRoomCode } from "@mosaiq/terrazzo-common/utils/socketUtils";
+import { RoomType, ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
+import {MarkdownTextarea} from "@trz/components/MarkdownTextarea";
+import { getCardData, updateCardField } from "@trz/emitters/all";
+import { TextObject } from "@trz/util/textUtils";
+import { initializeTextBlockData } from "@trz/emitters/text";
+import { useSocketListener } from "@trz/hooks/useSocketListener";
+import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
+interface CardDetailsProps {
+	cardId: CardId;
+	boardCode: string;
+	onClose: ()=>void;
+}
+const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
+	const [card, setCard] = useState<Card | undefined>(undefined);
 	const trzCtx = useTRZ();
 	const sockCtx = useSocket();
-	const boardCode = sockCtx.boardData?.boardCode;
-	const card = getCard(trzCtx.openedCardModal, sockCtx.boardData?.lists);
-	const [title, setTitle] = React.useState<string>(card?.name || "Card Title");
-	const [priorityColor, setPriorityColor] = React.useState<string>("");
+	const usr = useUser();
+	const combobox = useCombobox({
+	  onDropdownClose: () => combobox.resetSelectedOption(),
+	});
+
+	useEffect(()=>{
+		let strictIgnore = false;
+		const fetchCardData = async () => {
+			await new Promise((resolve)=>setTimeout(resolve, 0));
+			if(strictIgnore || !props.cardId || !sockCtx.connected){
+				return;
+			}
+			try{
+				const cardRes = await getCardData(sockCtx, props.cardId);
+				if(!cardRes) {
+					notify(NoteType.CARD_DATA_ERROR, "Not found");
+					props.onClose();
+				}
+				setCard(cardRes);
+			} catch(err) {
+				notify(NoteType.CARD_DATA_ERROR, err);
+				return;
+			}
+		};
+		fetchCardData();
+		return ()=>{
+			strictIgnore = true;
+		}
+	}, [props.cardId, sockCtx.connected]);
+	
+	useSocketListener<ServerSE.UPDATE_CARD_FIELD>(ServerSE.UPDATE_CARD_FIELD, (payload)=>{
+		if(payload.id !== props.cardId){
+			return;
+		}
+		setCard((prev)=>{
+			if(!prev){
+				return prev;
+			}
+			return {...updateBaseFromPartial<Card>(prev, payload)};
+		});
+	});
+
+	useSocketListener<ServerSE.UPDATE_CARD_ASSIGNEE>(ServerSE.UPDATE_CARD_ASSIGNEE, (payload)=>{
+
+	});
 
 	const bgColor = "#323a40";
 	const bgDarkColor = "#22272b";
@@ -28,15 +83,8 @@ const CardDetails = (): React.JSX.Element | null => {
 	const buttonColor = "#3b454c";
 	const closeColor = "#9fadbc";
 
-	useEffect(() => {
-		setTitle(card?.name || "Card Title");
-		onPriorityChange(card?.priority || Priority.LOW);
-	}, [card]);
-
-	const isOpen = !!trzCtx.openedCardModal;
-
 	const onCloseModal = () => {
-		trzCtx.setOpenedCardModal(null);
+		props.onClose();
 	}
 
 	async function onTitleChange(value:string) {
@@ -45,16 +93,11 @@ const CardDetails = (): React.JSX.Element | null => {
 			return;
 		}
 		try{
-			await sockCtx.updateCardField(card.id, {name: value});
-			setTitle(value);
+			updateCardField(sockCtx, card.id, {name: value});
 		} catch (e) {
 			notify(NoteType.CARD_UPDATE_ERROR, e);
 			return;
 		}
-	}
-
-	const onPriorityChange = (value:Priority) => {
-		setPriorityColor(priorityColors[value - 1]);
 	}
 
 	async function onArchiveCard(archive: boolean) {
@@ -63,9 +106,9 @@ const CardDetails = (): React.JSX.Element | null => {
 			return;
 		}
 		if(archive){
-			await sockCtx.updateCardField(card.id, {archived: archive, order: -1});
+			await updateCardField(sockCtx, card.id, {archived: archive, order: -1});
 		}else {
-			await sockCtx.updateCardField(card.id, {archived: archive, order: 0});
+			await updateCardField(sockCtx, card.id, {archived: archive, order: 0});
 		}
 		onCloseModal();//this wont run ever due to sockCtx.boardData being updated
 	}
@@ -82,22 +125,19 @@ const CardDetails = (): React.JSX.Element | null => {
 		//TODO: Implement to show all card members and add members to card
 	}
 
-	if(!sockCtx.boardData || !trzCtx.openedCardModal){
+	if(!props.cardId){
 		return null;
 	}
 
-	if(!card) {
-		console.error("No card found when opening card details modal");
-		onCloseModal();
-		return null;
-	}
+	const joinedCard = !!usr.userData && card?.assignees.includes(usr.userData.id)
 
 	return (
 		<Modal.Root
-			opened={isOpen}
+			opened
+			closeOnClickOutside
 			onClose={onCloseModal}
 			centered
-			size={"auto"}
+			size={"800px"}
 		>
 			<Modal.Overlay
 				backgroundOpacity= {0.5}
@@ -125,7 +165,7 @@ const CardDetails = (): React.JSX.Element | null => {
 								gap="xs"
 							>
 								{
-									card.archived &&
+									card?.archived &&
 									<Box
 										bg="yellow"
 										p="sm"
@@ -137,7 +177,7 @@ const CardDetails = (): React.JSX.Element | null => {
 										</Group>
 									</Box>
 								}
-								<Stack
+								{card && <Stack
 									gap="xs"
 									align="flex-start"
 									justify="flex-start"
@@ -146,7 +186,7 @@ const CardDetails = (): React.JSX.Element | null => {
 									pr="lg"
 								>
 									<EditableTextbox
-										value={title}
+										value={card.name}
 										onChange={onTitleChange}
 										type="title"
 										placeholder="Card name.."
@@ -162,8 +202,8 @@ const CardDetails = (): React.JSX.Element | null => {
 											width: "95%",
 										}}
 									/>
-									<Text fz="sm">{boardCode} - {card.cardNumber}</Text>
-								</Stack>
+									<Text fz="sm">{getCardNumber(props.boardCode, card.cardNumber)}</Text>
+								</Stack>}
 							</Stack>
 						</Group>
 						<Modal.CloseButton
@@ -182,11 +222,12 @@ const CardDetails = (): React.JSX.Element | null => {
 				<Modal.Body
 					p={20}
 				>
-					<Group 
+					{card &&<Group 
 						grow 
 						preventGrowOverflow={false}
 						wrap='nowrap'
 						align="flex-start"
+						justify="space-between"
 					>
 						<Stack style={{
 						}}>
@@ -206,7 +247,7 @@ const CardDetails = (): React.JSX.Element | null => {
 									</Grid.Col>
 								}
 
-								{ card?.storyPoints !=null && card?.storyPoints >-1 &&
+								{ card.storyPoints !=null && card.storyPoints >-1 &&
 									<Grid.Col span={4}>
 										<Text fz="sm">Story Points</Text>
 										<Stack
@@ -214,21 +255,21 @@ const CardDetails = (): React.JSX.Element | null => {
 											pt="xs"
 										>
 											<Box bg='#f2bb6e' w='35' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
-												<Text c='white' ta='center'>{card?.storyPoints}</Text>
+												<Text c='white' ta='center'>{card.storyPoints}</Text>
 											</Box>
 										</Stack>
 									</Grid.Col>
 								}
 
-								{ card?.priority != null &&
+								{ card.priority != null &&
 									<Grid.Col span={4}>
 										<Text fz="sm">Priority</Text>
 										<Stack
 											align='left'
 											pt="xs"
 										>
-											<Box bg={priorityColor} w='35' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
-												<Text c='white' ta='center'>{card?.priority}</Text>
+											<Box bg={priorityColors[card.priority - 1]} w='35' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
+												<Text c='white' ta='center'>{card.priority}</Text>
 											</Box>
 										</Stack>
 									</Grid.Col>
@@ -245,22 +286,54 @@ const CardDetails = (): React.JSX.Element | null => {
 							</Grid>
 							<CollaborativeTextArea
 								textBlockId={card.descriptionTextBlockId}
-								maxLineLength={66}
+								maxLineLength={60}
 								textColor={textColor}
 								backgroundColor={bgDarkColor}
+								placeholder="Double click to edit!"
+								markdown
 							/>
 						</Stack>
-						<Stack justify='flex-start' align='stretch' pt="md" >
+						<Stack justify='flex-start' align='stretch' pt="md" maw="140px">
 							<Button bg={buttonColor}
 									leftSection={<FaUserPlus />}
 									justify={"flex-start"}
-									onClick={onJoinCard}
-							>Join Card</Button>
-							<Button bg={buttonColor}
-									leftSection={<FaUserGroup />}
-									justify={"flex-start"}
-									onClick={onAssignCard}
-							>Members</Button>
+									onClick={()=>{
+										if(usr.userData){
+											// updateCardAssignee(card.id, usr.userData.id, !joinedCard);
+										}
+									}}
+							>{joinedCard ? "Leave" : "Join"} Card</Button>
+							{/* <Combobox
+								store={combobox}
+								width={550}
+								position="bottom-start"
+								withArrow
+								withinPortal={false}
+								onOptionSubmit={async (val) => {
+									await sockCtx.updateCardAssignee(card.id, val as UserId, card.assignees.includes(card.id));
+								}}
+							>
+								<Combobox.Target>
+									<Button bg={buttonColor}
+										leftSection={<FaUserGroup />}
+										justify={"flex-start"}
+										onClick={()=>{
+											combobox.toggleDropdown();
+										}}
+									>Members</Button>
+								</Combobox.Target>
+
+								<Combobox.Dropdown>
+									<Combobox.Options>
+										
+											{sockCtx.orgData?.members.map(m=>(
+												<Combobox.Option value={m.user.id} key={m.user.id}>
+													{m.user.username}
+												</Combobox.Option>
+											))}
+									</Combobox.Options>
+								</Combobox.Dropdown>
+							</Combobox> */}
                             <Menu
 								position='right-start'
 								withArrow
@@ -277,7 +350,20 @@ const CardDetails = (): React.JSX.Element | null => {
                                 </Menu.Target>
                                 <Menu.Dropdown ta='center'>
                                     <Menu.Label>Card Priority</Menu.Label>
-                                    <PriorityButtons/>
+                                    <PriorityButtons 
+										onChange={async (priority)=>{
+											if(!props.cardId){
+												notify(NoteType.CARD_UPDATE_ERROR);
+												return;
+											}
+											try{
+												await updateCardField(sockCtx, props.cardId, {priority: priority});
+											}catch (e){
+												notify(NoteType.CARD_UPDATE_ERROR);
+												return;
+											}
+										}}
+									/>
                                 </Menu.Dropdown>
                             </Menu>
 							<Menu
@@ -295,7 +381,20 @@ const CardDetails = (): React.JSX.Element | null => {
 								</Menu.Target>
 								<Menu.Dropdown ta='center'>
 									<Menu.Label>Story Points</Menu.Label>
-									<StoryPointButtons/>
+									<StoryPointButtons 
+										onChange={async (sp)=>{
+											if(!props.cardId){
+												notify(NoteType.CARD_UPDATE_ERROR);
+												return;
+											}
+											try{
+												await updateCardField(sockCtx, props.cardId, {storyPoints: sp});
+											}catch (e){
+												notify(NoteType.CARD_UPDATE_ERROR);
+												return;
+											}
+										}}
+									/>
 								</Menu.Dropdown>
 							</Menu>
                             <Button bg={buttonColor}
@@ -304,23 +403,23 @@ const CardDetails = (): React.JSX.Element | null => {
 									onClick={onChangeLabels}
 							>Labels</Button>
 							{
-								!card.archived &&
-								<Button bg={buttonColor}
+								<Button key={card.archived ? "Unarchive" : "Archive"}
+										bg={buttonColor}
 										leftSection={<FaArchive />}
 										justify={"flex-start"}
-										onClick={() => onArchiveCard(true)}
-								>Archive card</Button>
-							}
-							{
-								card.archived &&
-								<Button bg={buttonColor}
-										leftSection={<FaArchive />}
-										justify={"flex-start"}
-										onClick={() => onArchiveCard(false)}
-								>Unarchived card</Button>
+										onClick={() => onArchiveCard(!card.archived)}
+								>{card.archived ? "Unarchive" : "Archive"} card</Button>
 							}
 						</Stack>
-					</Group>
+					</Group>}
+					{!card &&
+						<Center>
+							<Stack align="center">
+								<Loader type="bars"/>
+								<Text ta="center">Loading...</Text>
+							</Stack>
+						</Center>
+					}
 				</Modal.Body>
 			</Modal.Content>
 		</Modal.Root>

@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
 import {CSS} from '@dnd-kit/utilities';
 import {useSortable} from '@dnd-kit/sortable';
-import {  CardHeader } from "@mosaiq/terrazzo-common/types";
-import { useSocket } from "@trz/util/socket-context";
-import CardElement from "../CardElement";
+import {  CardId } from "@mosaiq/terrazzo-common/types";
+import { useSocket } from "@trz/contexts/socket-context";
+import CardElement from "@trz/components/CardElement";
 import { createPortal } from "react-dom";
 
 interface SortableCardProps {
-	cardHeader: CardHeader;
-    disabled: boolean;
+	cardId: CardId;
+    listDragging: boolean;
     boardCode: string;
+    onClick: ()=>void;
 }
 function SortableCard(props: SortableCardProps): React.JSX.Element {
     const sockCtx = useSocket();
@@ -23,7 +24,7 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
         transform,
         node,
     } = useSortable({
-        id: props.cardHeader.id,
+        id: props.cardId,
         data: { type: 'card' },
     });
 
@@ -33,16 +34,16 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
         }
     }, [node])
 
-    const otherDraggingPos = sockCtx.roomUsers.find((ru)=>ru.mouseRoomData?.draggingCard === props.cardHeader.id)?.mouseRoomData?.pos;
+    const otherDraggingPos = null;//sockCtx.roomUsers.find((ru)=>ru.mouseRoomData?.draggingCard === props.card.id)?.mouseRoomData?.pos;
     if(!!otherDraggingPos && initialPosition) {
         return createPortal(
             <div style={{
                 position: 'absolute',
-                left: otherDraggingPos.x,
-                top: otherDraggingPos.y,
+                // left: otherDraggingPos.x,
+                // top: otherDraggingPos.y,
                 zIndex: 101,
             }}>
-                <CardElement cardHeader={props.cardHeader} dragging={true} isOverlay={true} boardCode={props.boardCode}/>
+                <CardElement cardId={props.cardId} dragging={true} isOverlay={true} boardCode={props.boardCode} onClick={props.onClick}/>
             </div>,
             document.body
         );
@@ -50,7 +51,7 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
 
     return (
         <div
-            ref={props.disabled ? undefined : setNodeRef} 
+            ref={props.listDragging ? undefined : setNodeRef} 
             {...attributes} 
             {...listeners}
             style={{
@@ -58,8 +59,36 @@ function SortableCard(props: SortableCardProps): React.JSX.Element {
                 zIndex: isDragging ? 101 : undefined,
             }}
         >
-            <CardElement cardHeader={props.cardHeader} dragging={isDragging} isOverlay={false} boardCode={props.boardCode}/>
+            <MemoRenderCard cardId={props.cardId} isDragging={isDragging} isOverlay={props.listDragging} boardCode={props.boardCode} onClick={props.onClick}/>
         </div>
     );
 }
 export default SortableCard;
+
+
+interface RenderCardProps {
+    cardId: CardId;
+    boardCode: string;
+    onClick: ()=>void;
+    isDragging: boolean;
+    isOverlay: boolean;
+}
+const RenderCard = (props:RenderCardProps) => {
+    return (
+        <CardElement
+            cardId={props.cardId}
+            dragging={props.isDragging}
+            isOverlay={props.isOverlay}
+            boardCode={props.boardCode}
+            onClick={props.onClick}
+        />
+    );
+}
+
+const MemoRenderCard = React.memo(RenderCard, (prev, next)=>{
+    return (
+           prev.boardCode===next.boardCode
+        && prev.cardId===next.cardId
+        && prev.isDragging===next.isDragging
+    );
+});
