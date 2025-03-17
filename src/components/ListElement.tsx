@@ -224,7 +224,9 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                 }}
             >
                 <ListCardStack {...props} />
-                <Group>
+            </Stack>
+
+            <Group>
                     {visible &&
                         <Paper 
                             bg={"#121314"}
@@ -243,13 +245,17 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                                     p="5"
                                 />
                             </FocusTrap>
-                            <Flex p='5'>
+                            <Flex 
+                                p="5"
+                                pt="1"
+                                >
                                 <Button 
                                     w="150"
+                                    mr="auto"
                                     variant="light"
                                     onClick={onSubmit}
                                 >
-                                    Create Card
+                                    {"Create Card"}
                                 </Button>
                                 <CloseButton 
                                     onClick={onBlur}
@@ -259,7 +265,6 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                         </Paper>
                     }
                 </Group>
-            </Stack>
 
             {!visible &&
                 <Button 
