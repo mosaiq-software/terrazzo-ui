@@ -113,6 +113,15 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 		onCloseModal();//this wont run ever due to sockCtx.boardData being updated
 	}
 
+	async function onAddChecklist() {
+		console.log("onAddChecklist function called");
+
+		if(!card){
+			notify(NoteType.CARD_UPDATE_ERROR);
+			return;
+		}
+	}
+
 	async function onChangeLabels() {
 		//TODO: Implement Change label
 	}
@@ -404,9 +413,9 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 									onClick={onChangeLabels}
 							>Labels</Button>
 							<Button bg={buttonColor}
-									leftSection={<FaClipboardList />} 
+									leftSection={<FaClipboardList />}
 									justify={"flex-start"}
-									onClick={onAssignCard}
+									onClick={onAddChecklist}
 							>Checklist</Button>
 							{
 								<Button key={card.archived ? "Unarchive" : "Archive"}
