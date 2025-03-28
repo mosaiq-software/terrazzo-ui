@@ -7,7 +7,7 @@ import {useSocket} from "@trz/contexts/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
 import { useTRZ } from "@trz/contexts/TRZ-context";
 import { getCardNumber } from "@trz/util/boardUtils";
-import {FaArchive, FaUserPlus} from "react-icons/fa";
+import {FaArchive, FaClipboardList, FaUserPlus} from "react-icons/fa";
 import {MdLabel, MdOutlinePriorityHigh} from "react-icons/md";
 import {PriorityButtons, priorityColors} from "@trz/components/PriorityButtons";
 import {Priority} from "@mosaiq/terrazzo-common/constants";
@@ -292,6 +292,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 								placeholder="Double click to edit!"
 								markdown
 							/>
+							<p>Checklist Placeholder</p>
 						</Stack>
 						<Stack justify='flex-start' align='stretch' pt="md" maw="140px">
 							<Button bg={buttonColor}
@@ -402,6 +403,11 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 									justify={"flex-start"}
 									onClick={onChangeLabels}
 							>Labels</Button>
+							<Button bg={buttonColor}
+									leftSection={<FaClipboardList />} 
+									justify={"flex-start"}
+									onClick={onAssignCard}
+							>Checklist</Button>
 							{
 								<Button key={card.archived ? "Unarchive" : "Archive"}
 										bg={buttonColor}
