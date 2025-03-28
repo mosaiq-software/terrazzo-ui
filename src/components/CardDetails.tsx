@@ -22,6 +22,7 @@ import { TextObject } from "@trz/util/textUtils";
 import { initializeTextBlockData } from "@trz/emitters/text";
 import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
+import {Checklist} from "@trz/components/Checklist";
 interface CardDetailsProps {
 	cardId: CardId;
 	boardCode: string;
@@ -301,7 +302,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 								placeholder="Double click to edit!"
 								markdown
 							/>
-							<p>Checklist Placeholder</p>
+							<Checklist listName="Example Checklist" />
 						</Stack>
 						<Stack justify='flex-start' align='stretch' pt="md" maw="140px">
 							<Button bg={buttonColor}
