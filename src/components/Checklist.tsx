@@ -1,6 +1,7 @@
-import React from "react";
+import React, {useState} from "react";
+import {Checkbox} from "@mantine/core";
 
-class ChecklistItem {
+export class ChecklistItem {
     id: string;
     name: string;
     checked: boolean;
@@ -14,7 +15,8 @@ class ChecklistItem {
 
 interface ChecklistProps {
     listName: string,
-    listItems?: ChecklistItem[]
+    listItems?: ChecklistItem[],
+    onUpdateCheckbox?: (id: string, checked: boolean) => void
 }
 
 const dummyChecklistItems = [
@@ -24,8 +26,19 @@ const dummyChecklistItems = [
 ];
 
 export const Checklist = (props: ChecklistProps) => {
+    const [listItems, setListItems] = useState(props.listItems ?? dummyChecklistItems);
     // const listItems = props.listItems ?? [];
-    const listItems = dummyChecklistItems;
+    //const listItems = dummyChecklistItems;
+
+    const handleCheckboxChange = (id: string, checked: boolean) => {
+        const updatedItems = listItems.map(item =>
+            item.id === id ? { ...item, checked } : item
+        );
+        setListItems(updatedItems);
+        if (props.onUpdateCheckbox) {
+            props.onUpdateCheckbox(id, checked);
+        }
+    };
 
     return (
         <div>
@@ -34,8 +47,11 @@ export const Checklist = (props: ChecklistProps) => {
             <ul>
                 {listItems.map((item) => (
                     <li key={item.id}>
-                        <input type="checkbox" checked={item.checked} />
-                        {item.name}
+                        <Checkbox
+                            checked={item.checked}
+                            onChange={(event) => handleCheckboxChange(item.id, event.currentTarget.checked)}
+                            label={item.name}
+                        />
                     </li>
                 ))}
             </ul>
