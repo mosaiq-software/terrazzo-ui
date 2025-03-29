@@ -1,5 +1,20 @@
 import React, {useEffect, useState} from "react";
-import {Box, Button, Center, Combobox, Grid, Group, Loader, Menu, Modal, Pill, Stack, Text, useCombobox} from "@mantine/core";
+import {
+	Box,
+	Button,
+	Center,
+	Combobox,
+	Grid,
+	Group, Input,
+	Loader,
+	Menu,
+	Modal,
+	Pill,
+	Popover,
+	Stack,
+	Text,
+	useCombobox
+} from "@mantine/core";
 import {CollaborativeTextArea} from "@trz/components/CollaborativeTextArea";
 import {AvatarRow} from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
@@ -413,11 +428,18 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 									justify={"flex-start"}
 									onClick={onChangeLabels}
 							>Labels</Button>
-							<Button bg={buttonColor}
-									leftSection={<FaClipboardList />}
-									justify={"flex-start"}
-									onClick={onAddChecklist}
-							>Checklist</Button>
+							<Popover width={300} position="bottom" withArrow shadow="md">
+								<Popover.Target>
+									<Button bg={buttonColor}
+											leftSection={<FaClipboardList />}
+											justify={"flex-start"}
+									>Checklist</Button>
+								</Popover.Target>
+								<Popover.Dropdown>
+									<Input placeholder={"Name of Checklist here..."} maxLength={30}/>
+									<Button onClick={onAddChecklist}>Add Checklist</Button>
+								</Popover.Dropdown>
+							</Popover>
 							{
 								<Button key={card.archived ? "Unarchive" : "Archive"}
 										bg={buttonColor}
