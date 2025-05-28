@@ -383,7 +383,7 @@ const BoardPage = (): React.JSX.Element => {
 	}
 	
 	return (
-		<Profiler onRender={onRender} id={"board"}>
+		// <Profiler onRender={onRender} id={"board"}>
 		<Container 
 			h={`calc(100vh - ${trz.navbarHeight}px)`} 
 			fluid 
@@ -462,7 +462,7 @@ const BoardPage = (): React.JSX.Element => {
 				}	
 			</CollaborativeMouseTracker>
 		</Container>
-		</Profiler>
+		// </Profiler>
 	);
 };
 
