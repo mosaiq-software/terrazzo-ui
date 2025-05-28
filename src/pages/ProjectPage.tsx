@@ -1,5 +1,5 @@
 import React, { useEffect, useState} from "react";
-import { Box, Avatar, Group, Flex, Title, Text, Tabs, ScrollArea, Center, Stack, Button} from "@mantine/core";
+import { Box, Avatar, Group, Flex, Title, Text, Tabs, ScrollArea, Center, Stack, Button, Loader} from "@mantine/core";
 import {AvatarRow} from "@trz/components/AvatarRow";
 import {Project, ProjectId} from "@mosaiq/terrazzo-common/types";
 import { useNavigate, useParams } from "react-router-dom";
@@ -25,7 +25,7 @@ const ProjectPage = (): React.JSX.Element => {
     const trz = useTRZ();
 	const navigate = useNavigate();
     const {userDash, updateUserDash} = useDashboard();
-    const [projectData, setProjectData] = useState<Project | undefined>();
+    const [projectData, setProjectData] = useState<Project | undefined | null>();
     const projectId = params.projectId as ProjectId | undefined;
     const tabId = params.tabId;
     useRoom(RoomType.DATA, projectId, false);
@@ -40,7 +40,7 @@ const ProjectPage = (): React.JSX.Element => {
 
             try{
                 const prj = await getProjectData(sockCtx, projectId);
-                setProjectData(prj);
+                setProjectData(prj ?? null);
             } catch(err) {
                 notify(NoteType.PROJECT_DATA_ERROR, err);
                 navigate("/dashboard");
@@ -60,7 +60,11 @@ const ProjectPage = (): React.JSX.Element => {
         });
     });
 
-    if(!projectData || !projectId){
+    if(projectData === undefined){
+        return <Loader/>;
+    }
+
+    if(projectData === null || !projectId){
         return <NotFound itemType="Project" error={PageErrors.NOT_FOUND}/>
     }
 
