@@ -1,8 +1,10 @@
+import React from "react";
 import {Modal} from "@mantine/core";
 import {useTRZ} from "../../util/TRZ-context";
 import {useSocket} from "../../util/socket-context";
 
 const BurndownCharts = (): React.JSX.Element | null => {
+
     const trzCtx = useTRZ();
     const sockCtx = useSocket();
     const isOpen = !!trzCtx.openedCardModal;
