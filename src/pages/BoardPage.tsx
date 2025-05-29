@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useRef, useState} from "react";
-import {Container, Paper, Title} from "@mantine/core";
+import {Button, Container, Group, Paper, Title} from "@mantine/core";
 import CollaborativeMouseTracker from "@trz/wrappers/CollaborativeMouseTracker";
 import {useNavigate, useParams} from "react-router-dom";
 import {useSocket} from "@trz/util/socket-context";
@@ -230,13 +230,23 @@ const BoardPage = (): React.JSX.Element => {
 				p="0"
 				m="0"
 			>
-				<Title
-					order={3}
-					p="xs"
-					m="0"
+				<Group
+					justify="space-between"
+					gap="xs"
 				>
-					{sockCtx.boardData.name}
-				</Title>
+					<Title
+						order={3}
+						p="xs"
+						m="0"
+					>
+						[{sockCtx.boardData.boardCode}] {sockCtx.boardData.name}
+					</Title>
+					<Button
+						mr="sm"
+					>
+						See Burndown Charts
+					</Button>
+				</Group>
 			</Paper>
 			<Container
 				h="100%"
