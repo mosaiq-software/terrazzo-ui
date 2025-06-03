@@ -34,15 +34,12 @@ import {boardDropAnimation, horizontalCollisionDetection, renderContainerDragOve
 import CardDetails from "@trz/components/CardDetails";
 import { NotFound } from "@trz/components/NotFound";
 import {ListType} from "../../../terrazzo-common/dist/constants";
-import {useTRZ} from "@trz/util/TRZ-context";
-import SprintReportDetails from "@trz/components/SprintReportDetails";
 
 const BoardPage = (): React.JSX.Element => {
 	const [activeObject, setActiveObject] = useState<List | Card | null>(null);
 	const lastOverId = useRef<string | null>(null);
 	const params = useParams();
 	const sockCtx = useSocket();
-	const trzCtx = useTRZ();
 	const navigate = useNavigate();
 
 	const sensors = useSensors(
@@ -239,18 +236,20 @@ const BoardPage = (): React.JSX.Element => {
 			>
 				<Group
 					justify="space-between"
+					gap="xs"
 				>
 					<Title
 						order={3}
 						p="xs"
 						m="0"
 					>
-						{sockCtx.boardData.name}
+						[{sockCtx.boardData.boardCode}] {sockCtx.boardData.name}
 					</Title>
 					<Button
-						onClick={onOpenedSprintReport}
+                        onClick={onOpenedSprintReport}
+						mr="sm"
 					>
-						Sprint Report
+						See Burndown Charts
 					</Button>
 				</Group>
 			</Paper>
@@ -340,7 +339,6 @@ const BoardPage = (): React.JSX.Element => {
 					</DndContext>
 					<CreateList/>
 					<CardDetails/>
-					<SprintReportDetails/>
 				</CollaborativeMouseTracker>
 			</Container>
 		</Container>
