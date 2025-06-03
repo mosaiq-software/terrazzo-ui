@@ -34,12 +34,14 @@ import {boardDropAnimation, horizontalCollisionDetection, renderContainerDragOve
 import CardDetails from "@trz/components/CardDetails";
 import { NotFound } from "@trz/components/NotFound";
 import {ListType} from "../../../terrazzo-common/dist/constants";
+import {useTRZ} from "@trz/util/TRZ-context";
 
 const BoardPage = (): React.JSX.Element => {
 	const [activeObject, setActiveObject] = useState<List | Card | null>(null);
 	const lastOverId = useRef<string | null>(null);
 	const params = useParams();
 	const sockCtx = useSocket();
+	const trzCtx = useTRZ();
 	const navigate = useNavigate();
 
 	const sensors = useSensors(
