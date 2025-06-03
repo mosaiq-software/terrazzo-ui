@@ -83,7 +83,6 @@ const BoardPage = (): React.JSX.Element => {
 			try {
 				const boardRes = await getBoardData(sockCtx, boardId);
 				setBoardData(boardRes);
-                console.log(boardRes);
 				if (boardRes) {
 					const tempListMap = new Map<ListId, CardId[]>();
 					const tempCardMap = new Map<CardId, ListId>();
