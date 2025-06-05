@@ -1,8 +1,8 @@
-import React, { useEffect, useState} from "react";
-import { NavLink, useNavigate, useLocation } from "react-router-dom"
+import React from "react";
+import { NavLink, useNavigate, useLocation, useParams } from "react-router-dom"
 import { useHotkeys, useLocalStorage} from "@mantine/hooks";
 import { AppShell, Burger, Group, Tooltip, Kbd, Divider, Input, Text, Box, Stack, Title, Avatar, Button, Image, UnstyledButton, Menu, Popover, Indicator, Notification, ScrollAreaAutosize } from "@mantine/core";
-import { MdHomeFilled, MdNotificationsNone, MdOutlineSearch} from 'react-icons/md';
+import { MdHomeFilled, MdNotificationsNone, MdOutlineSearch, MdOutlineSettings} from 'react-icons/md';
 import { useSocket } from "@trz/contexts/socket-context";
 import { useUser } from "@trz/contexts/user-context";
 import { notify, NoteType } from "@trz/util/notifications";
@@ -23,6 +23,8 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
     const usr = useUser();
     const navigate = useNavigate();
     const location = useLocation();
+    const params = useParams();
+	const boardId = params.boardId;
     const {userDash, updateUserDash} = useDashboard();
     const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorage<boolean>({ key: LocalStorageKey.SIDEBAR_COLLAPSED, defaultValue: false });
 
@@ -62,7 +64,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
             <AppShell.Header 
                 style={{
                     display: "flex",
-                    justifyContent: "flex-end",
+                    justifyContent: "space-between",
                     width: "100vw",
                     height: `${trz.navbarHeight}px`,
                     padding: "10px",
@@ -71,16 +73,35 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                 }}
             >
                 <Group>
+                    {
+                        boardId &&
+                        <>
+                            <Tooltip label="Board Settings" openDelay={500} withArrow>
+                                <Button 
+                                    variant="subtle" 
+                                    w="fit-content" 
+                                    onClick={()=>{
+                                        navigate(`/board/${boardId}/settings`)
+                                    }}
+                                >
+                                    <MdOutlineSettings size={"1.25rem"} color="white"/>
+                                </Button>
+                            </Tooltip>
+                            <Divider orientation="vertical" color="white" my="3px"/>
+                        </>
+                    }
                     <Popover
                         withArrow
                         arrowPosition="center"
                     >
                         <Popover.Target>
-                            <UnstyledButton variant="subtle" w="fit-content">
-                                <Indicator disabled={!(userDash?.invites.length)} label={userDash?.invites.length ?? undefined} size={16}>
-                                    <MdNotificationsNone size={"1.25rem"} color="white"/>
-                                </Indicator>
-                            </UnstyledButton>
+                             <Tooltip label="Notifications" openDelay={500} withArrow>
+                                <Button variant="subtle" w="fit-content">
+                                    <Indicator disabled={!(userDash?.invites.length)} label={userDash?.invites.length ?? undefined} size={16}>
+                                        <MdNotificationsNone size={"1.25rem"} color="white"/>
+                                    </Indicator>
+                                </Button>
+                            </Tooltip>
                         </Popover.Target>
                         <Popover.Dropdown>
                             <ScrollAreaAutosize mah="60vh">
