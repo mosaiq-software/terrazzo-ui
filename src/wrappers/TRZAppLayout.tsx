@@ -73,6 +73,9 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                 }}
             >
                 <Group>
+                    { trz.boardHeader &&
+                        <Text>{trz.boardHeader?.name}</Text>
+                    }
                     {
                         boardId &&
                         <>

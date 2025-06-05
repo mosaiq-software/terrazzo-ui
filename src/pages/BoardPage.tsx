@@ -1,5 +1,5 @@
 import React, {createContext, Profiler, useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {Container} from "@mantine/core";
+import {Button, Container} from "@mantine/core";
 import CollaborativeMouseTracker from "@trz/wrappers/CollaborativeMouseTracker";
 import {useNavigate, useParams} from "react-router-dom";
 import {useSocket} from "@trz/contexts/socket-context";
@@ -32,7 +32,7 @@ import CardDetails from "@trz/components/CardDetails";
 import { NotFound, PageErrors } from "@trz/components/NotFound";
 import { useTRZ } from "@trz/contexts/TRZ-context";
 import { RoomType, ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
-import { createList, emitMoveCard, emitMoveList, getBoardData } from "@trz/emitters/all";
+import { createList, emitMoveCard, emitMoveList, getBoardData, updateBoardField } from "@trz/emitters/all";
 import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { arrayMoveInPlace, updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
 import { useRoom } from "@trz/hooks/useRoom";
@@ -107,6 +107,9 @@ const BoardPage = (): React.JSX.Element => {
 					for(const key of toRemove){
 						sessionStorage.removeItem(key);
 					}
+
+					// set the board header in the TRZ context
+					trz.setBoardHeader(boardRes);
 				}
 			} catch(err) {
 				notify(NoteType.BOARD_DATA_ERROR, err);
@@ -117,6 +120,9 @@ const BoardPage = (): React.JSX.Element => {
 		fetchBoardData();
 		return ()=>{
 			strictIgnore = true;
+
+			// clear the board header when leaving the page
+			trz.setBoardHeader(undefined);
 		}
 	}, [boardId, sockCtx.connected]);
 
@@ -381,6 +387,17 @@ const BoardPage = (): React.JSX.Element => {
 	const onRender:React.ProfilerOnRenderCallback = (id, phase, actualDuration, baseDuration, startTime, commitTime) => {
 		// console.log("Rendered", id, "in", phase, "for", actualDuration+"ms", "from", startTime+"ms", "to", commitTime+"ms");
 	}
+
+	async function onArchiveBoardClick() {	
+		try {
+			if (params.boardId as BoardId) {
+				await updateBoardField(sockCtx, params.boardId as BoardId, { archived: true });
+				notify(NoteType.CHANGES_SAVED);
+			}
+		} catch (e) {
+			notify(NoteType.BOARD_DATA_ERROR, e);
+		}
+	}
 	
 	return (
 		// <Profiler onRender={onRender} id={"board"}>
@@ -394,6 +411,14 @@ const BoardPage = (): React.JSX.Element => {
 				overflowX: "scroll"
 			}}
 		>
+			<Button
+				variant="light"
+				color="read"
+				w="min-content"
+				onClick={onArchiveBoardClick}>
+				Archive Board
+			</Button>
+
 			<CollaborativeMouseTracker
 				boardId={boardId}
 				draggingObject={draggingObject}
