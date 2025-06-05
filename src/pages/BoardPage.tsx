@@ -107,6 +107,9 @@ const BoardPage = (): React.JSX.Element => {
 					for(const key of toRemove){
 						sessionStorage.removeItem(key);
 					}
+
+					// set the board header in the TRZ context
+					trz.setBoardHeader(boardRes);
 				}
 			} catch(err) {
 				notify(NoteType.BOARD_DATA_ERROR, err);
@@ -117,6 +120,9 @@ const BoardPage = (): React.JSX.Element => {
 		fetchBoardData();
 		return ()=>{
 			strictIgnore = true;
+
+			// clear the board header when leaving the page
+			trz.setBoardHeader(undefined);
 		}
 	}, [boardId, sockCtx.connected]);
 

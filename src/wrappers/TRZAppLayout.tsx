@@ -71,6 +71,9 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                 }}
             >
                 <Group>
+                    { trz.boardHeader &&
+                        <Text>{trz.boardHeader?.name}</Text>
+                    }
                     <Popover
                         withArrow
                         arrowPosition="center"
