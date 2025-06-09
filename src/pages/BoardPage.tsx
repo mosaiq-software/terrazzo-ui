@@ -32,7 +32,7 @@ import CardDetails from "@trz/components/CardDetails";
 import { NotFound, PageErrors } from "@trz/components/NotFound";
 import { useTRZ } from "@trz/contexts/TRZ-context";
 import { RoomType, ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
-import { createList, emitMoveCard, emitMoveList, getBoardData } from "@trz/emitters/all";
+import { createList, emitMoveCard, emitMoveList, getBoardData, getCardData, getListData } from "@trz/emitters/all";
 import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { arrayMoveInPlace, updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
 import { useRoom } from "@trz/hooks/useRoom";
@@ -53,7 +53,8 @@ const BoardPage = (): React.JSX.Element => {
 	const [openedCard, setOpenedCard] = useState<CardId | undefined>();
 	const lastOverId = useRef<string | null>(null);
 	const params = useParams();
-	const boardId = params.boardId as BoardId;
+	const [boardId, setBoardId] = useState<BoardId>(params.boardId as BoardId);
+	const cardId = params.cardId as CardId;
 	const sockCtx = useSocket();
 	const trz = useTRZ();
 	const navigate = useNavigate();
@@ -77,12 +78,23 @@ const BoardPage = (): React.JSX.Element => {
 		let strictIgnore = false;
 		const fetchBoardData = async () => {
 			await new Promise((resolve) => setTimeout(resolve, 0));
-			if (strictIgnore || !boardId || !sockCtx.connected) {
+			if (strictIgnore || (!boardId && !cardId) || !sockCtx.connected) {
 				return;
 			}
 			try {
+				if (!boardId) {
+					const cardRes = await getCardData(sockCtx, cardId);
+					if (!cardRes) { return; }
+
+					const listRes = await getListData(sockCtx, cardRes.listId);
+					if (!listRes) { return; }
+
+					setBoardId(listRes.boardId as BoardId);
+				}
+
 				const boardRes = await getBoardData(sockCtx, boardId);
 				setBoardData(boardRes);
+
 				if (boardRes) {
 					const tempListMap = new Map<ListId, CardId[]>();
 					const tempCardMap = new Map<CardId, ListId>();
@@ -93,7 +105,7 @@ const BoardPage = (): React.JSX.Element => {
 							cardIds.push(card);
 
 							// Opens corresponding card if url contains the cardId
-							if (params.cardId && card === params.cardId) {
+							if (cardId && card === cardId) {
 								setOpenedCard(card);
 							}
 						}
@@ -162,7 +174,6 @@ const BoardPage = (): React.JSX.Element => {
 	});
 
 	const openModal = useCallback((card: CardId) => {
-		// TODO(Thinh): Make it so that when refreshed, it navigates to the board page
 		window.history.replaceState(null, "", `/card/${card}`);
 		setOpenedCard(card);
 	}, []);
@@ -170,7 +181,7 @@ const BoardPage = (): React.JSX.Element => {
 	const closeModal = useCallback(() => {
 		window.history.replaceState(null, "", `/board/${boardId}`);
 		setOpenedCard(undefined);
-	}, []);
+	}, [boardId]);
 
 	const memoizedSortableLists = useMemo(() => {
 		return listKeys.map((id) =>
@@ -385,8 +396,14 @@ const BoardPage = (): React.JSX.Element => {
 		return [];
 	}, []);
 
-	if (!boardId || !boardData) {
+	if (!boardId && !cardId) {
+		// Error view when there is no boardId and cardId
 		return <NotFound itemType="Board" error={PageErrors.NOT_FOUND} />
+	}
+
+	if (!boardData) {
+		// TODO(ttph): some loading state
+		return <></>
 	}
 
 	const onRender: React.ProfilerOnRenderCallback = (id, phase, actualDuration, baseDuration, startTime, commitTime) => {

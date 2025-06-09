@@ -23,6 +23,7 @@ const Router = () => {
 				<Route path='/dashboard' element={<HomePage />} />
 				<Route path='/board/:boardId/:tabId?' element={<BoardPage />} />
 				<Route path='/board/:boardId/card/:cardId' element={<BoardPage />} />
+				<Route path='/card/:cardId' element={<BoardPage />} />
 				<Route path='/project/:projectId/:tabId?' element={<ProjectPage />} />
 				<Route path='/org/:orgId/:tabId?' element={<OrganizationPage />} />
 			</Route>
