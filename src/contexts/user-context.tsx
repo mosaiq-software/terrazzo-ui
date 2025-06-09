@@ -30,6 +30,7 @@ const UserProvider: React.FC<any> = ({ children }) => {
     const githubLogin = async (code: string | undefined): Promise<void> => {
         // check if user is already logged in - passthrough
         if(githubAuthToken && userData?.id){
+            navigate(DEFAULT_AUTHED_ROUTE);
             return;
         }
         
@@ -47,7 +48,7 @@ const UserProvider: React.FC<any> = ({ children }) => {
 
         if(!user.firstName?.length || !user.lastName?.length){
             //Account not set up yet
-            setLoginRouteDestination(window.location.pathname);
+            setLoginRouteDestination(DEFAULT_AUTHED_ROUTE);
             navigate(FINISH_ACCOUNT_CREATION_ROUTE);
             return;
         }
