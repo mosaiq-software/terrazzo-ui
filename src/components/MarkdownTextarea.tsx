@@ -26,7 +26,7 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         switch (line.type) {
-            case LineType.Table:
+            case LineType.Table: {
                 const tableLines: Line[] = [line];
                 for (; i < lines.length && lines[i].type == LineType.Table; i++) {
                     tableLines.push(lines[i])
@@ -43,7 +43,8 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
                     <Table key={i}>
                         <Table.Thead>
                             <Table.Tr>
-                                {tableHeader.map((cell, cellID) => <Table.Th key={cellID}>{renderLineContent(cell)}</Table.Th>)}
+                                {tableHeader.map((cell, cellID) => <Table.Th
+                                    key={cellID}>{renderLineContent(cell)}</Table.Th>)}
                             </Table.Tr>
                         </Table.Thead>
                         <Table.Tbody>
@@ -54,6 +55,7 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
                     </Table>
                 )
                 break;
+            }
             case LineType.Heading:
                 elements.push(
                     <Title key={i} style={{ marginLeft: `${line.indentLevel * 20}px`}} order={line.headingLevel as TitleOrder}>
