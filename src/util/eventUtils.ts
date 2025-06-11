@@ -202,3 +202,12 @@ export const forAllClickEvents = (cb:any) => {
         onTouchStart: cb,
     }
 }
+
+export const forAllReleaseEvents = (cb:any) => {
+    return {
+        onMouseUp: cb,
+        onMouseLeave: cb,
+        onPointerLeave: cb,
+        onPointerUp: cb,
+    }
+}
