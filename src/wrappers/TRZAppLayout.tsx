@@ -64,7 +64,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
             <AppShell.Header 
                 style={{
                     display: "flex",
-                    justifyContent: "space-between",
+                    justifyContent: "flex-end",
                     width: "100vw",
                     height: `${trz.navbarHeight}px`,
                     padding: "10px",
@@ -82,9 +82,13 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                             <Tooltip label="Board Settings" openDelay={500} withArrow>
                                 <Button 
                                     variant="subtle" 
-                                    w="fit-content" 
+                                    w="fit-content"
                                     onClick={()=>{
-                                        navigate(`/board/${boardId}/settings`)
+                                        if(location.pathname.endsWith("/settings")){
+                                            navigate(`/board/${boardId}`)
+                                        } else{
+                                            navigate(`/board/${boardId}/settings`)
+                                        }
                                     }}
                                 >
                                     <MdOutlineSettings size={"1.25rem"} color="white"/>
