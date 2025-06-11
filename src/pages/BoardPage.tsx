@@ -35,6 +35,7 @@ import CardDetails from "@trz/components/CardDetails";
 import { NotFound } from "@trz/components/NotFound";
 import {ListType} from "../../../terrazzo-common/dist/constants";
 import {useTRZ} from "@trz/util/TRZ-context";
+import SprintReportDetails from "@trz/components/SprintReportDetails";
 
 const BoardPage = (): React.JSX.Element => {
 	const [activeObject, setActiveObject] = useState<List | Card | null>(null);
@@ -341,6 +342,7 @@ const BoardPage = (): React.JSX.Element => {
 					</DndContext>
 					<CreateList/>
 					<CardDetails/>
+					<SprintReportDetails/>
 				</CollaborativeMouseTracker>
 			</Container>
 		</Container>

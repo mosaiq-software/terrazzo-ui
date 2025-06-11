@@ -10,6 +10,7 @@ const SprintReportDetails = (): React.JSX.Element | null => {
 
     const bgColor = "#323a40";
     const textColor = "#ffffff";
+    const closeColor = "#9fadbc";
 
     const isOpen = !!trzCtx.openedSprintReport;
 
@@ -34,6 +35,7 @@ const SprintReportDetails = (): React.JSX.Element | null => {
             />
             <Modal.Content
                 h={"90vh"}
+                w={"75vw"}
                 bg={bgColor}
                 c={textColor}
                 style={{
@@ -41,7 +43,16 @@ const SprintReportDetails = (): React.JSX.Element | null => {
                     overflowY: "scroll"
                 }}
             >
-                Test
+                <Modal.CloseButton
+                    variant="transparent"
+                    c={closeColor}
+                    style={{
+                        position: "absolute",
+                        top: "0.75rem",
+                        right: "0.75rem",
+                        hover: "green",
+                    }}
+                />
             </Modal.Content>
         </Modal.Root>
     )
