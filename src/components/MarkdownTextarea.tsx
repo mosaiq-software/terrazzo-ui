@@ -217,6 +217,7 @@ const extractLineData = (line: string): Line => {
         ['@@', LineContentStyle.Keyboard],
     ] as [string, LineContentStyle][];
 
+    // if table, format each individual cell (may refactor)
     if (lineObject.type == LineType.Table) {
         const rootContentses: LineContent[][] = lineText.split('|').map((td) => [{
             text: td,
