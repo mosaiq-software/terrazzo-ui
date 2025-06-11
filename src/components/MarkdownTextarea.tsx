@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder } from '@mantine/core';
+import { Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, TableData } from '@mantine/core';
 
 interface MarkdownTextareaProps extends ContainerProps{
     children: string;
@@ -26,6 +26,34 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         switch (line.type) {
+            case LineType.Table:
+                const tableLines: Line[] = [line];
+                for (; i < lines.length && lines[i].type == LineType.Table; i++) {
+                    tableLines.push(lines[i])
+                }
+                if (i < lines.length && lines[i].type != LineType.Table) {
+                    i--;
+                }
+                const tableContents = tableLines
+                    .filter((line, id) => !(id == 1 && /[-|]+/.test(line.line)))
+                    .map((x) => x.tableContent!)
+                const tableHeader = tableContents[0];
+                const tableBody = tableContents.filter((row, id) => id > 0);
+                elements.push(
+                    <Table key={i}>
+                        <Table.Thead>
+                            <Table.Tr>
+                                {tableHeader.map((cell, cellID) => <Table.Th key={cellID}>{renderLineContent(cell)}</Table.Th>)}
+                            </Table.Tr>
+                        </Table.Thead>
+                        <Table.Tbody>
+                            {tableBody.map((row, rowID) => <Table.Tr key={rowID}>
+                                {row.map((cell, cellID) => <Table.Td key={cellID}>{renderLineContent(cell)}</Table.Td>)}
+                            </Table.Tr>)}
+                        </Table.Tbody>
+                    </Table>
+                )
+                break;
             case LineType.Heading:
                 elements.push(
                     <Title key={i} style={{ marginLeft: `${line.indentLevel * 20}px`}} order={line.headingLevel as TitleOrder}>
@@ -136,6 +164,9 @@ const extractLineData = (line: string): Line => {
         lineObject.type = LineType.ListItem;
         const listContent = line.replace(/^- */, '');
         lineText = listContent;
+    } else if (line.startsWith('|') && line.endsWith('|') && line.length > 2) {
+        lineObject.type = LineType.Table;
+        lineText = line.replace(/^|/, '').replace(/|$/, '');
     }
 
     // INLINE FORMATTING
@@ -174,10 +205,6 @@ const extractLineData = (line: string): Line => {
         }
     }
 
-    const rootContents: LineContent[] = [{
-        text: lineText,
-        style: LineContentStyle.Text,
-    }];
     const delimiters = [
         ['`', LineContentStyle.InlineCode],
         ['**', LineContentStyle.Bold],
@@ -189,6 +216,25 @@ const extractLineData = (line: string): Line => {
         ['~', LineContentStyle.Subscript],
         ['@@', LineContentStyle.Keyboard],
     ] as [string, LineContentStyle][];
+
+    if (lineObject.type == LineType.Table) {
+        const rootContentses: LineContent[][] = lineText.split('|').map((td) => [{
+            text: td,
+            style: LineContentStyle.Text
+        }]);
+        const contentses = rootContentses;
+        contentses.forEach((td) => {
+            for (let i = 0; i < delimiters.length; i++) {
+                splitByDelimiter(td, delimiters[i][0], delimiters[i][1]);
+            }
+        })
+        lineObject.tableContent = contentses;
+    }
+
+    const rootContents: LineContent[] = [{
+        text: lineText,
+        style: LineContentStyle.Text,
+    }];
     const contents = rootContents;
     for (let i = 0; i < delimiters.length; i++) {
         splitByDelimiter(contents, delimiters[i][0], delimiters[i][1]);
@@ -208,6 +254,7 @@ enum LineType {
     HorizontalRule = 'horizontalRule',
     ListItem = 'listItem',
     LineBreak = 'lineBreak',
+    Table = 'table'
 }
 
 enum LineContentStyle {
@@ -227,6 +274,7 @@ interface Line {
     indentLevel: number;
     content: LineContent[];
     headingLevel?: number;
+    tableContent?: LineContent[][];
 }
 
 interface LineContent {
