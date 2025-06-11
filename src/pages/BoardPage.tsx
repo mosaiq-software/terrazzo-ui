@@ -387,17 +387,6 @@ const BoardPage = (): React.JSX.Element => {
 	const onRender:React.ProfilerOnRenderCallback = (id, phase, actualDuration, baseDuration, startTime, commitTime) => {
 		// console.log("Rendered", id, "in", phase, "for", actualDuration+"ms", "from", startTime+"ms", "to", commitTime+"ms");
 	}
-
-	async function onArchiveBoardClick() {	
-		try {
-			if (params.boardId as BoardId) {
-				await updateBoardField(sockCtx, params.boardId as BoardId, { archived: true });
-				notify(NoteType.CHANGES_SAVED);
-			}
-		} catch (e) {
-			notify(NoteType.BOARD_DATA_ERROR, e);
-		}
-	}
 	
 	return (
 		// <Profiler onRender={onRender} id={"board"}>
@@ -411,14 +400,6 @@ const BoardPage = (): React.JSX.Element => {
 				overflowX: "scroll"
 			}}
 		>
-			<Button
-				variant="light"
-				color="read"
-				w="min-content"
-				onClick={onArchiveBoardClick}>
-				Archive Board
-			</Button>
-
 			<CollaborativeMouseTracker
 				boardId={boardId}
 				draggingObject={draggingObject}
