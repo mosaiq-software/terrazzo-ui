@@ -34,7 +34,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
     const [cardTitle, setCardTitle] = useState("");
     const clickOutsideRef = useClickOutside(() => onBlur());
     const sockCtx = useSocket();
-    
+
     useEffect(()=>{
         let strictIgnore = false;
         const fetchListData = async () => {
@@ -84,8 +84,8 @@ function ListElement(props: ListElementProps): React.JSX.Element {
             return updated;
         });
     });
-    
-    async function onSubmit() {
+
+    async function onSubmit(usingHotkey: boolean) {
         setError("")
         setCardTitle("");
 
@@ -105,7 +105,8 @@ function ListElement(props: ListElementProps): React.JSX.Element {
             notify(NoteType.CARD_CREATION_ERROR, e);
             return;
         }
-        setVisible(false);
+
+        setVisible(usingHotkey);
     }
 
     async function onTitleChange(value: string) {
@@ -119,7 +120,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
     }
 
     async function onArchive() {
-       await updateListField(sockCtx, props.listId, {archived: true, order: -1});
+        await updateListField(sockCtx, props.listId, {archived: true, order: -1});
     }
 
     function onBlur(){
@@ -148,11 +149,11 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     boxShadow: "10px 8px 25px black",
                     border: "1px solid #14222e",
                     zIndex: 11,
-            } : {
+                } : {
                     filter: "grayscale(1) contrast(0) brightness(0) blur(6px)",
                     opacity: .4,
                     zIndex: 10,
-            } : undefined)
+                } : undefined)
             }}
         >
             { process.env.DEBUG==="true" && <Text fz="6pt">{props.listId}</Text>}
@@ -169,7 +170,7 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     height: "3rem",
                 }}
             >
-                <EditableTextbox 
+                <EditableTextbox
                     value={listTitle}
                     onChange={onTitleChange}
                     placeholder="Click to edit!"
@@ -227,47 +228,47 @@ function ListElement(props: ListElementProps): React.JSX.Element {
             </Stack>
 
             <Group>
-                    {visible &&
-                        <Paper 
-                            bg={"#121314"}
-                            w="250"
-                            radius="md"
-                            shadow="lg"
-                            ref={clickOutsideRef}
-                            onKeyDown={getHotkeyHandler([['Enter', onSubmit]])}
-                        >
-                            <FocusTrap>
-                                <TextInput
-                                    placeholder="Enter card title..."
-                                    value={cardTitle}
-                                    onChange={(event) => setCardTitle(event.currentTarget.value)}
-                                    error={error}
-                                    p="5"
-                                />
-                            </FocusTrap>
-                            <Flex 
+                {visible &&
+                    <Paper
+                        bg={"#121314"}
+                        w="250"
+                        radius="md"
+                        shadow="lg"
+                        ref={clickOutsideRef}
+                        onKeyDown={getHotkeyHandler([['Enter', () => onSubmit(true)]])}
+                    >
+                        <FocusTrap>
+                            <TextInput
+                                placeholder="Enter card title..."
+                                value={cardTitle}
+                                onChange={(event) => setCardTitle(event.currentTarget.value)}
+                                error={error}
                                 p="5"
-                                pt="1"
-                                >
-                                <Button 
-                                    w="150"
-                                    mr="auto"
-                                    variant="light"
-                                    onClick={onSubmit}
-                                >
-                                    {"Create Card"}
-                                </Button>
-                                <CloseButton 
-                                    onClick={onBlur}
-                                    size='lg'
-                                />
-                            </Flex>
-                        </Paper>
-                    }
-                </Group>
+                            />
+                        </FocusTrap>
+                        <Flex
+                            p="5"
+                            pt="1"
+                        >
+                            <Button
+                                w="150"
+                                mr="auto"
+                                variant="light"
+                                onClick={() => onSubmit(false)}
+                            >
+                                {"Create Card"}
+                            </Button>
+                            <CloseButton
+                                onClick={onBlur}
+                                size='lg'
+                            />
+                        </Flex>
+                    </Paper>
+                }
+            </Group>
 
             {!visible &&
-                <Button 
+                <Button
                     w="100%"
                     variant="light"
                     color="gray"
@@ -295,7 +296,7 @@ const ListCardStack = (props:ListElementProps)=>{
     const boardContext = useContext(BoardContext);
     const cardIds = boardContext?.listToCardsMap.get(props.listId) ?? [];
     return (
-        <SortableContext 
+        <SortableContext
             items={cardIds}
             strategy={verticalListSortingStrategy}
         >{
