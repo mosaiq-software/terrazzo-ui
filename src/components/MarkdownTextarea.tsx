@@ -34,7 +34,6 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
                 if (i < lines.length && lines[i].type != LineType.Table) {
                     i--;
                 }
-                console.log(tableLines)
                 const tableContents = tableLines
                     .filter((line, id) => !(id == 1 && /[-|:]+/.test(line.line)))
                     .map((line) => line.tableContent!
@@ -52,7 +51,6 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
                         });
                     }
                 }
-                console.log(tableLines[1].line, /[-|:]+/.test(tableLines[1].line));
                 const tableHeader = tableContents[0];
                 const tableBody = tableContents.filter((row, id) => id > 0);
                 elements.push(
