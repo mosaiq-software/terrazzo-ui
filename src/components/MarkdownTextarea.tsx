@@ -28,28 +28,52 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
         switch (line.type) {
             case LineType.Table: {
                 const tableLines: Line[] = [line];
-                for (; i < lines.length && lines[i].type == LineType.Table; i++) {
+                for (i++; i < lines.length && lines[i].type == LineType.Table; i++) {
                     tableLines.push(lines[i])
                 }
                 if (i < lines.length && lines[i].type != LineType.Table) {
                     i--;
                 }
+                console.log(tableLines)
                 const tableContents = tableLines
-                    .filter((line, id) => !(id == 1 && /[-|]+/.test(line.line)))
-                    .map((x) => x.tableContent!)
+                    .filter((line, id) => !(id == 1 && /[-|:]+/.test(line.line)))
+                    .map((line) => line.tableContent!
+                        .filter((piece, id) => id != 0 && id != line.tableContent!.length - 1))
+                let colAlignments: ('center' | 'left' | 'right')[] = []
+                if (tableLines.length > 1) {
+                    const indicatorLine = tableLines[1].line;
+                    if (/[-|:]+/.test(indicatorLine)) {
+                        colAlignments = indicatorLine.slice(1,-1).split('|').map((indicator) => {
+                            const startsWithColon = indicator.startsWith(':');
+                            const endsWithColon = indicator.endsWith(':');
+                            return startsWithColon
+                                ? (endsWithColon ? 'center' : 'left')
+                                : (endsWithColon ? 'right' : 'left');
+                        });
+                    }
+                }
+                console.log(tableLines[1].line, /[-|:]+/.test(tableLines[1].line));
                 const tableHeader = tableContents[0];
                 const tableBody = tableContents.filter((row, id) => id > 0);
                 elements.push(
                     <Table key={i}>
                         <Table.Thead>
                             <Table.Tr>
-                                {tableHeader.map((cell, cellID) => <Table.Th
-                                    key={cellID}>{renderLineContent(cell)}</Table.Th>)}
+                                {tableHeader.map((cell, cellID) =>
+                                    <Table.Th
+                                    key={cellID}
+                                    style={{textAlign: colAlignments[cellID] ?? 'left'}}>
+                                        {renderLineContent(cell)}
+                                    </Table.Th>)}
                             </Table.Tr>
                         </Table.Thead>
                         <Table.Tbody>
                             {tableBody.map((row, rowID) => <Table.Tr key={rowID}>
-                                {row.map((cell, cellID) => <Table.Td key={cellID}>{renderLineContent(cell)}</Table.Td>)}
+                                {row.map((cell, cellID) =>
+                                    <Table.Td key={cellID}
+                                              style={{textAlign: colAlignments[cellID] ?? 'left'}}>
+                                        {renderLineContent(cell)}
+                                    </Table.Td>)}
                             </Table.Tr>)}
                         </Table.Tbody>
                     </Table>
