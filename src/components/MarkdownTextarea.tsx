@@ -120,7 +120,7 @@ const processBlockquotes = (lines: Line[], rootKey: number): JSX.Element => {
 }
 
 const nextLinesOfType = (lines: Line[], type: LineType, startingAt: number) => {
-    let group: Line[] = [];
+    const group: Line[] = [];
     for (let i = startingAt; i < lines.length; i++) {
         if (lines[i].type == type) {
             group.push(lines[i])
