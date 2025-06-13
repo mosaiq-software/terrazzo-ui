@@ -119,6 +119,18 @@ const processBlockquotes = (lines: Line[], rootKey: number): JSX.Element => {
     return treeToElements(root, rootKey);
 }
 
+const nextLinesOfType = (lines: Line[], type: LineType, startingAt: number) => {
+    const group: Line[] = [];
+    for (let i = startingAt; i < lines.length; i++) {
+        if (lines[i].type == type) {
+            group.push(lines[i])
+        } else {
+            break;
+        }
+    }
+    return group;
+}
+
 const renderMarkdown = (markdown: string): JSX.Element[] => {
     const rawLines = markdown.split('\n');
     const lines: Line[] = rawLines.map((line) => {
@@ -130,32 +142,22 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
         const line = lines[i];
         switch (line.type) {
             case LineType.Blockquote: {
-                const blockquoteLines: Line[] = [line];
-                for (i++; i < lines.length && lines[i].type == LineType.Blockquote; i++) {
-                    blockquoteLines.push(lines[i]);
-                }
-                if (i < lines.length && lines[i].type != LineType.Blockquote) {
-                    i--;
-                }
+                const blockquoteLines: Line[] = nextLinesOfType(lines, LineType.Blockquote, i);
+                i += blockquoteLines.length - 1;
                 elements.push(processBlockquotes(blockquoteLines, i));
                 break;
             }
             case LineType.Table: {
-                const tableLines: Line[] = [line];
-                for (i++; i < lines.length && lines[i].type == LineType.Table; i++) {
-                    tableLines.push(lines[i]);
-                }
-                if (i < lines.length && lines[i].type != LineType.Table) {
-                    i--;
-                }
+                const tableLines: Line[] = nextLinesOfType(lines, LineType.Table, i);
+                i += tableLines.length - 1;
                 const tableContents = tableLines
-                    .filter((line, id) => !(id == 1 && /[-|:]+/.test(line.line)))
+                    .filter((line, id) => !(id == 1 && /^[-|:]+$/.test(line.line)))
                     .map((line) => line.tableContent!
-                        .filter((piece, id) => id != 0 && id != line.tableContent!.length - 1))
+                        .filter((_, id) => id != 0 && id != line.tableContent!.length - 1))
                 let colAlignments: ('center' | 'left' | 'right')[] = []
                 if (tableLines.length > 1) {
                     const indicatorLine = tableLines[1].line;
-                    if (/[-|:]+/.test(indicatorLine)) {
+                    if (/^[-|:]+$/.test(indicatorLine)) {
                         colAlignments = indicatorLine.slice(1,-1).split('|').map((indicator) => {
                             const startsWithColon = indicator.startsWith(':');
                             const endsWithColon = indicator.endsWith(':');
