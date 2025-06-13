@@ -16,18 +16,6 @@ export const MarkdownTextarea = (props:MarkdownTextareaProps) => {
     );
 }
 
-/*const RecursiveBlockquote = (bqProps: {depth: number, color?: string, children: JSX.Element[]}) => {
-
-    if (bqProps.depth == 0) {
-        return bqProps.children;
-    }
-    return (<Blockquote p='sm' color={(bqProps.depth == 1 && bqProps.color) ? bqProps.color : bqDefaultColor}>
-        <RecursiveBlockquote depth={bqProps.depth - 1}
-                             color={bqProps.color}
-                             children={bqProps.children} />
-    </Blockquote>);
-}*/
-
 const processBlockquotes = (lines: Line[], rootKey: number): JSX.Element => {
     interface BQTreeNode {
         parent: BQTreeNode | null,
