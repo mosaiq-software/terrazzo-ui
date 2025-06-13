@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, TableData } from '@mantine/core';
+import { Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, Blockquote } from '@mantine/core';
 
 interface MarkdownTextareaProps extends ContainerProps{
     children: string;
@@ -16,6 +16,109 @@ export const MarkdownTextarea = (props:MarkdownTextareaProps) => {
     );
 }
 
+const processBlockquotes = (lines: Line[], rootKey: number): JSX.Element => {
+    interface BQTreeNode {
+        parent: BQTreeNode | null,
+        children: (BQTreeNode | Line[])[],
+        depth: number,
+        color?: string
+    }
+
+    const bqDefaultColor = 'white';
+    const bqStyles = new Map([
+        ['{.is-danger}', 'red'],
+        ['{.is-warning}', 'yellow'],
+        ['{.is-success}', 'green'],
+        ['{.is-info}', 'blue'],
+    ])
+
+    const groups: Line[][] = [];
+    let currentGroup: Line[] = [lines[0]];
+    for (let i = 1; i < lines.length; i++) {
+        if (lines[i].blockquoteLevel == currentGroup[0].blockquoteLevel) {
+            currentGroup.push(lines[i]);
+        } else {
+            groups.push([...currentGroup]);
+            currentGroup = [lines[i]];
+        }
+    }
+    groups.push([...currentGroup]);
+
+    const root: BQTreeNode = {
+        parent: null,
+        children: [],
+        depth: 0
+    };
+    let currentNode = root;
+
+    groups.forEach((group) => {
+        const parentDepth = group[0].blockquoteLevel! - 1;
+        while (parentDepth > currentNode.depth) {
+            const newNode: BQTreeNode = {
+                parent: currentNode,
+                children: [],
+                depth: currentNode.depth + 1
+            }
+            currentNode.children = [...currentNode.children, newNode];
+            currentNode = newNode;
+        }
+        while (parentDepth < currentNode.depth) {
+            if (currentNode.parent == null) {
+                break;
+            } else {
+                currentNode = currentNode.parent;
+            }
+        }
+        currentNode.children = [...currentNode.children, group];
+    })
+
+    const colorNodeAndChildren = (node: BQTreeNode) => {
+        if (node.children.length > 0) {
+            const lastChild = node.children[node.children.length - 1];
+            if (Array.isArray(lastChild)) {
+                const lastChildID = lastChild.length - 1;
+                const lastLine = lastChild[lastChildID];
+                const lastContent = lastLine.content;
+                if (lastContent.length > 0) {
+                    const color = bqStyles.get(lastContent[0].text);
+                    if (color != undefined) {
+                        node.color = color;
+                        node.children[node.children.length - 1] = lastChild.filter((_,i) => i < lastChildID);
+                    } 
+                }
+            }
+            if (node.color == undefined) {
+                node.color = node.parent == null ? bqDefaultColor : node.parent.color;
+            }
+            for (const childNode of node.children) {
+                if (!Array.isArray(childNode)) {
+                    colorNodeAndChildren(childNode);
+                }
+            }
+        }
+    }
+
+    colorNodeAndChildren(root);
+
+    const treeToElements = (node: BQTreeNode, key: number): JSX.Element => {
+        return (<Blockquote p='sm'
+                            key={key}
+                            color={node.color == undefined ? bqDefaultColor : node.color}>
+            {node.children.map((childNode, id) => {
+                if (Array.isArray(childNode)) {
+                    return childNode.map((line, lineID) => <Text key={`${id}-${lineID}`}>
+                        {renderLineContent(line.content)}
+                    </Text>);
+                } else {
+                    return treeToElements(childNode, id);
+                }
+            })}
+        </Blockquote>);
+    }
+
+    return treeToElements(root, rootKey);
+}
+
 const renderMarkdown = (markdown: string): JSX.Element[] => {
     const rawLines = markdown.split('\n');
     const lines: Line[] = rawLines.map((line) => {
@@ -26,10 +129,21 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         switch (line.type) {
+            case LineType.Blockquote: {
+                const blockquoteLines: Line[] = [line];
+                for (i++; i < lines.length && lines[i].type == LineType.Blockquote; i++) {
+                    blockquoteLines.push(lines[i]);
+                }
+                if (i < lines.length && lines[i].type != LineType.Blockquote) {
+                    i--;
+                }
+                elements.push(processBlockquotes(blockquoteLines, i));
+                break;
+            }
             case LineType.Table: {
                 const tableLines: Line[] = [line];
                 for (i++; i < lines.length && lines[i].type == LineType.Table; i++) {
-                    tableLines.push(lines[i])
+                    tableLines.push(lines[i]);
                 }
                 if (i < lines.length && lines[i].type != LineType.Table) {
                     i--;
@@ -59,8 +173,8 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
                             <Table.Tr>
                                 {tableHeader.map((cell, cellID) =>
                                     <Table.Th
-                                    key={cellID}
-                                    style={{textAlign: colAlignments[cellID] ?? 'left'}}>
+                                        key={cellID}
+                                        style={{textAlign: colAlignments[cellID] ?? 'left'}}>
                                         {renderLineContent(cell)}
                                     </Table.Th>)}
                             </Table.Tr>
@@ -191,6 +305,11 @@ const extractLineData = (line: string): Line => {
     } else if (line.startsWith('|') && line.endsWith('|') && line.length > 2) {
         lineObject.type = LineType.Table;
         lineText = line.replace(/^|/, '').replace(/|$/, '');
+    } else if (/^>+ .*/.test(line)) {
+        lineObject.type = LineType.Blockquote;
+        // "blockquote level" is number of unescaped opening > 's (indifferent to spaces), starting at 1
+        lineObject.blockquoteLevel = line.match(/^>+/)![0].length;
+        lineText = line.replace(/^>+ /, '');
     }
 
     // INLINE FORMATTING
@@ -300,6 +419,7 @@ interface Line {
     content: LineContent[];
     headingLevel?: number;
     tableContent?: LineContent[][];
+    blockquoteLevel?: number;
 }
 
 interface LineContent {
