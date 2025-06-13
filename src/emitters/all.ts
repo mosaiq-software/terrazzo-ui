@@ -127,6 +127,10 @@ export const updateBoardLabel = async (sockCtx:SocketContextType, boardId:BoardI
     await sockCtx.emit<ClientSE.UPDATE_BOARD_LABEL>(ClientSE.UPDATE_BOARD_LABEL, {boardId, label});
 };
 
+export const updateCardsLabels = async (sockCtx:SocketContextType, cardId:CardId, labelIds:LabelId[]) => {
+    await sockCtx.emit<ClientSE.UPDATE_CARDS_LABELS>(ClientSE.UPDATE_CARDS_LABELS, {cardId, labelIds});
+};
+
 export const deleteBoardLabel = async (sockCtx:SocketContextType, boardId:BoardId, labelId:LabelId) => {
     await sockCtx.emit<ClientSE.DELETE_BOARD_LABEL>(ClientSE.DELETE_BOARD_LABEL,{ boardId, labelId});
 };

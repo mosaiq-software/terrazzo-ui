@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Box, Button, Center, Combobox, Grid, Group, Loader, Menu, Modal, Pill, Stack, Text, useCombobox} from "@mantine/core";
+import {Box, Button, Center, Checkbox, Combobox, Grid, Group, Loader, Menu, Modal, Pill, Stack, Text, useCombobox} from "@mantine/core";
 import {CollaborativeTextArea} from "@trz/components/CollaborativeTextArea";
 import {AvatarRow} from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
@@ -8,20 +8,16 @@ import {NoteType, notify} from "@trz/util/notifications";
 import { useTRZ } from "@trz/contexts/TRZ-context";
 import { getCardNumber } from "@trz/util/boardUtils";
 import {FaArchive, FaUserPlus} from "react-icons/fa";
-import {MdLabel, MdOutlinePriorityHigh} from "react-icons/md";
+import {MdOutlineCheck, MdOutlinePriorityHigh} from "react-icons/md";
 import {PriorityButtons, priorityColors} from "@trz/components/PriorityButtons";
-import {Priority} from "@mosaiq/terrazzo-common/constants";
 import {StoryPointButtons} from "@trz/components/StoryPointButtons";
 import { Card, CardId, UserId } from "@mosaiq/terrazzo-common/types";
 import { useUser } from "@trz/contexts/user-context";
-import { getRoomCode } from "@mosaiq/terrazzo-common/utils/socketUtils";
-import { RoomType, ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
-import {MarkdownTextarea} from "@trz/components/MarkdownTextarea";
-import { getCardData, updateCardField } from "@trz/emitters/all";
-import { TextObject } from "@trz/util/textUtils";
-import { initializeTextBlockData } from "@trz/emitters/text";
+import { ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
+import { getCardData, updateCardField, updateCardsLabels } from "@trz/emitters/all";
 import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
+import { colorIsDarkAdvanced } from "@trz/util/colorUtils";
 interface CardDetailsProps {
 	cardId: CardId;
 	boardCode: string;
@@ -73,6 +69,19 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 		});
 	});
 
+	useSocketListener<ServerSE.UPDATE_CARDS_LABELS>(ServerSE.UPDATE_CARDS_LABELS, (payload)=>{
+		if(payload.cardId !== props.cardId){
+			return;
+		}
+		setCard((prev)=>{
+			if(!prev){
+				return prev;
+			}
+			prev.labels = payload.labelIds;
+			return {...prev};
+		});
+	});
+	
 	useSocketListener<ServerSE.UPDATE_CARD_ASSIGNEE>(ServerSE.UPDATE_CARD_ASSIGNEE, (payload)=>{
 
 	});
@@ -111,18 +120,6 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 			await updateCardField(sockCtx, card.id, {archived: archive, order: 0});
 		}
 		onCloseModal();//this wont run ever due to sockCtx.boardData being updated
-	}
-
-	async function onChangeLabels() {
-		//TODO: Implement Change label
-	}
-
-	async function onJoinCard(){
-		//TODO: Implement user joining card
-	}
-
-	async function onAssignCard(){
-		//TODO: Implement to show all card members and add members to card
 	}
 
 	if(!props.cardId){
@@ -279,8 +276,21 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 									<Pill.Group
 										pt="xs"
 									>
-										<Pill size="md" bg='#87cefa' c={textColor}>To Do</Pill>
-										<Pill size="md" bg='#ff474c' c={textColor}>In Progress</Pill>
+										{
+											card.labels.map(labelId=>{
+												const label = trzCtx.boardData?.labels.filter(l=>l.id===labelId)[0];
+												if(!label)return null;
+												const textColor = colorIsDarkAdvanced(label.color) ? "#fff" : "#000";
+												return (
+													<Pill
+														key={label.id}
+														size="md"
+														bg={label.color}
+														c={textColor}
+													>{label.name}</Pill>
+												)
+											})
+										}
 									</Pill.Group>
 								</Grid.Col>
 							</Grid>
@@ -397,11 +407,49 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 									/>
 								</Menu.Dropdown>
 							</Menu>
-                            <Button bg={buttonColor}
-									leftSection={<MdLabel />}
-									justify={"flex-start"}
-									onClick={onChangeLabels}
-							>Labels</Button>
+							<Menu
+								position='right-start'
+								withArrow
+								arrowPosition="center"
+								withOverlay={true}
+								closeOnClickOutside={true}
+							>
+								<Menu.Target>
+									<Button
+										bg={buttonColor}
+										justify={"flex-start"}
+									>Labels</Button>
+								</Menu.Target>
+								<Menu.Dropdown ta='center'>
+									<Menu.Label>Labels</Menu.Label>
+									{
+										trzCtx.boardData?.labels.map(label=>{
+											const textColor = colorIsDarkAdvanced(label.color) ? "#fff" : "#000";
+											return (
+												<Box
+													key={label.id}
+													bg={label.color}
+													ta='left'
+													c={textColor}
+													style={{
+														borderRadius:"10px"
+													}}
+												>
+													<Checkbox label={label.name} checked={card.labels.includes(label.id)} onChange={()=>{
+														const labels = card.labels;
+														if(labels.includes(label.id)){
+															labels.splice(labels.indexOf(label.id), 1);
+														} else {
+															labels.push(label.id);
+														}
+														updateCardsLabels(sockCtx, card.id, labels);
+													}}/>
+												</Box>
+											)
+										})
+									}
+								</Menu.Dropdown>
+							</Menu>
 							{
 								<Button key={card.archived ? "Unarchive" : "Archive"}
 										bg={buttonColor}

@@ -41,7 +41,7 @@ const BoardSettingsPage = (): React.JSX.Element => {
 				const boardRes = await getBoardData(sockCtx, boardId);
 				setBoardLabels(boardRes?.labels ?? []);
 				setBoardData(boardRes);
-				trz.setBoardHeader(boardRes);
+				trz.setBoardData(boardRes);
 			} catch(err) {
 				notify(NoteType.BOARD_DATA_ERROR, err);
 				navigate("/dashboard");
@@ -51,7 +51,7 @@ const BoardSettingsPage = (): React.JSX.Element => {
 		fetchBoardData();
 		return ()=>{
 			strictIgnore = true;
-			trz.setBoardHeader(undefined);
+			trz.setBoardData(undefined);
 		}
 	}, [boardId, sockCtx.connected]);
 

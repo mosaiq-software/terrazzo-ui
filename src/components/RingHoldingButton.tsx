@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import {UnstyledButtonProps, Center, RingProgress, UnstyledButton} from "@mantine/core";
+import {Center, RingProgress, UnstyledButton} from "@mantine/core";
 import { useInterval } from "@mantine/hooks";
 
-interface RingHoldingButtonProps extends UnstyledButtonProps {
+interface RingHoldingButtonProps {
     children?: any;
     durationMs: number;
     color?:string;
@@ -52,7 +52,6 @@ export const RingHoldingButton = (props:RingHoldingButtonProps)=>{
 
     return (
         <UnstyledButton
-            {...props}
             onMouseUp={release}
             onMouseLeave={release}
             onMouseDown={down}
