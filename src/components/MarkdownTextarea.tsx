@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, Blockquote, Tabs } from '@mantine/core';
+import { Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, Blockquote } from '@mantine/core';
 
 interface MarkdownTextareaProps extends ContainerProps{
     children: string;
@@ -84,7 +84,7 @@ const processBlockquotes = (lines: Line[], rootKey: number): JSX.Element => {
                     if (color != undefined) {
                         node.color = color;
                         node.children[node.children.length - 1] = lastChild.filter((_,i) => i < lastChildID);
-                    }
+                    } 
                 }
             }
             if (node.color == undefined) {
@@ -131,112 +131,12 @@ const nextLinesOfType = (lines: Line[], type: LineType, startingAt: number) => {
     return group;
 }
 
-const constructTabsetLines = (lines: Line[]) => {
-
-    const head: (Line | Tabset)[] = [];
-    let currentTarget: (Line | Tabset)[] = head;
-    let currentTabset: (Tabset | null) = null;
-    const stack: number[] = [];
-
-    const adjustTarget = () => {
-        if (currentTabset == null) {
-            currentTarget = head;
-        } else {
-            currentTarget = currentTabset.tabs[currentTabset.tabs.length - 1].content;
-        }
-    }
-
-    for (let i = 0; i < lines.length; i++) {
-        const rawLine = lines[i];
-        const line = {...rawLine, content: rawLine.content.map((lc) => {
-                return {...lc, text: lc.text.replace(/{.tabset}/, '')};
-            })}
-        if (line.type != LineType.Heading) {
-            currentTarget.push(line);
-        } else {
-            while (currentTabset != null && (currentTabset as Tabset).selfLevel >= line.headingLevel!) {
-                currentTabset = (currentTabset as Tabset).parent;
-            }
-            while (stack.length > 0 && stack[0] > line.headingLevel!) {
-                stack.shift();
-            }
-
-            adjustTarget();
-
-            if (line.headingLevel! == stack[0]) {
-                if (currentTabset == null || currentTabset.childLevel < line.headingLevel!) {
-                    const newTabset: Tabset = {
-                        parent: currentTabset,
-                        tabs: [],
-                        selfLevel: line.headingLevel! - 1,
-                        childLevel: line.headingLevel!
-                    };
-                    currentTarget.push(newTabset);
-                    currentTabset = currentTarget[currentTarget.length - 1] as Tabset;
-                }
-                const newTab: Tab = {
-                    heading: line,
-                    content: []
-                };
-                currentTabset.tabs.push(newTab);
-            } else {
-                currentTarget.push(line);
-            }
-
-            adjustTarget();
-
-            if (rawLine.content.some((c) => (/{.tabset}/.test(c.text)))) {
-                stack.unshift(line.headingLevel! + 1);
-            }
-        }
-    }
-
-    return head;
-}
-
 const renderMarkdown = (markdown: string): JSX.Element[] => {
     const rawLines = markdown.split('\n');
     const lines: Line[] = rawLines.map((line) => {
         return extractLineData(line);
     });
 
-    const outerTabsetLines: (Line | Tabset)[] = constructTabsetLines(lines);
-
-
-
-    const renderMarkdownRecursive = (tabsetLines: (Line | Tabset)[]): JSX.Element[] => {
-        const elements: JSX.Element[] = [];
-        let lineGroup: Line[] = [];
-        let key = 0;
-        tabsetLines.forEach((tl, i) => {
-            if ('tabs' in tl) { // if tabset
-                elements.push(...processLines(lineGroup, key), <Tabs defaultValue='0' key={i}>
-                    <Tabs.List>
-                        {tl.tabs.map((t,i) =>
-                            <Tabs.Tab value={`${i}`} key={i}>
-                                {renderLineContent(t.heading.content)}
-                            </Tabs.Tab>)}
-                    </Tabs.List>
-                    {tl.tabs.map((t,i) =>
-                        <Tabs.Panel value={`${i}`} key={i}>
-                            {renderMarkdownRecursive(t.content)}
-                        </Tabs.Panel>)}
-                </Tabs>);
-                key += lineGroup.length + 1;
-                lineGroup = [];
-            } else { // if line
-                lineGroup.push(tl);
-            }
-        })
-        key += lineGroup.length + 1;
-        elements.push(...processLines(lineGroup, key));
-        return elements;
-    }
-
-    return renderMarkdownRecursive(outerTabsetLines);
-}
-
-const processLines = (lines: Line[], startKey: number): JSX.Element[] => {
     const elements: JSX.Element[] = [];
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
@@ -244,7 +144,7 @@ const processLines = (lines: Line[], startKey: number): JSX.Element[] => {
             case LineType.Blockquote: {
                 const blockquoteLines: Line[] = nextLinesOfType(lines, LineType.Blockquote, i);
                 i += blockquoteLines.length - 1;
-                elements.push(processBlockquotes(blockquoteLines, startKey + i));
+                elements.push(processBlockquotes(blockquoteLines, i));
                 break;
             }
             case LineType.Table: {
@@ -270,7 +170,7 @@ const processLines = (lines: Line[], startKey: number): JSX.Element[] => {
                 const tableHeader = tableContents[0];
                 const tableBody = tableContents.filter((row, id) => id > 0);
                 elements.push(
-                    <Table key={startKey + i}>
+                    <Table key={i}>
                         <Table.Thead>
                             <Table.Tr>
                                 {tableHeader.map((cell, cellID) =>
@@ -296,28 +196,28 @@ const processLines = (lines: Line[], startKey: number): JSX.Element[] => {
             }
             case LineType.Heading:
                 elements.push(
-                    <Title key={startKey + i} style={{ marginLeft: `${line.indentLevel * 20}px`}} order={line.headingLevel as TitleOrder}>
+                    <Title key={i} style={{ marginLeft: `${line.indentLevel * 20}px`}} order={line.headingLevel as TitleOrder}>
                         {renderLineContent(line.content)}
                     </Title>
                 );
                 break;
             case LineType.ListItem:
                 elements.push(
-                    <Text key={startKey + i} style={{ marginLeft: `${line.indentLevel * 20}px`}}>
+                    <Text key={i} style={{ marginLeft: `${line.indentLevel * 20}px`}}>
                         <Text span fw={700}>•</Text> {renderLineContent(line.content)}
                     </Text>
                 );
                 break;
             case LineType.HorizontalRule:
-                elements.push(<Divider key={startKey + i} />);
+                elements.push(<Divider key={i} />);
                 break;
             case LineType.LineBreak:
-                elements.push(<br key={startKey + i} />);
+                elements.push(<br key={i} />);
                 break;
             case LineType.Paragraph:
             default:
                 elements.push(
-                    <Text key={startKey + i} style={{ marginLeft: `${line.indentLevel * 20}px`}}>
+                    <Text key={i} style={{ marginLeft: `${line.indentLevel * 20}px`}}>
                         {renderLineContent(line.content)}
                     </Text>
                 );
@@ -512,18 +412,6 @@ enum LineContentStyle {
     Strikethrough = 'strikethrough',
     Keyboard = 'keyboard',
     Text = 'text',
-}
-
-interface Tab {
-    heading: Line,
-    content: (Line | Tabset)[]
-}
-
-interface Tabset {
-    parent: Tabset | null,
-    selfLevel: number,
-    childLevel: number,
-    tabs: Tab[]
 }
 
 interface Line {
