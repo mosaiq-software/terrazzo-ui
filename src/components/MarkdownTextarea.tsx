@@ -133,10 +133,10 @@ const nextLinesOfType = (lines: Line[], type: LineType, startingAt: number) => {
 
 const constructTabsetLines = (lines: Line[]) => {
 
-    let head: (Line | Tabset)[] = [];
+    const head: (Line | Tabset)[] = [];
     let currentTarget: (Line | Tabset)[] = head;
     let currentTabset: (Tabset | null) = null;
-    let stack: number[] = [];
+    const stack: number[] = [];
 
     const adjustTarget = () => {
         if (currentTabset == null) {
