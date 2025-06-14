@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, TableData } from '@mantine/core';
+import { Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, Blockquote, Tabs } from '@mantine/core';
 
 interface MarkdownTextareaProps extends ContainerProps{
     children: string;
@@ -16,32 +16,248 @@ export const MarkdownTextarea = (props:MarkdownTextareaProps) => {
     );
 }
 
+const processBlockquotes = (lines: Line[], rootKey: number): JSX.Element => {
+    interface BQTreeNode {
+        parent: BQTreeNode | null,
+        children: (BQTreeNode | Line[])[],
+        depth: number,
+        color?: string
+    }
+
+    const bqDefaultColor = 'white';
+    const bqStyles = new Map([
+        ['{.is-danger}', 'red'],
+        ['{.is-warning}', 'yellow'],
+        ['{.is-success}', 'green'],
+        ['{.is-info}', 'blue'],
+    ])
+
+    const groups: Line[][] = [];
+    let currentGroup: Line[] = [lines[0]];
+    for (let i = 1; i < lines.length; i++) {
+        if (lines[i].blockquoteLevel == currentGroup[0].blockquoteLevel) {
+            currentGroup.push(lines[i]);
+        } else {
+            groups.push([...currentGroup]);
+            currentGroup = [lines[i]];
+        }
+    }
+    groups.push([...currentGroup]);
+
+    const root: BQTreeNode = {
+        parent: null,
+        children: [],
+        depth: 0
+    };
+    let currentNode = root;
+
+    groups.forEach((group) => {
+        const parentDepth = group[0].blockquoteLevel! - 1;
+        while (parentDepth > currentNode.depth) {
+            const newNode: BQTreeNode = {
+                parent: currentNode,
+                children: [],
+                depth: currentNode.depth + 1
+            }
+            currentNode.children = [...currentNode.children, newNode];
+            currentNode = newNode;
+        }
+        while (parentDepth < currentNode.depth) {
+            if (currentNode.parent == null) {
+                break;
+            } else {
+                currentNode = currentNode.parent;
+            }
+        }
+        currentNode.children = [...currentNode.children, group];
+    })
+
+    const colorNodeAndChildren = (node: BQTreeNode) => {
+        if (node.children.length > 0) {
+            const lastChild = node.children[node.children.length - 1];
+            if (Array.isArray(lastChild)) {
+                const lastChildID = lastChild.length - 1;
+                const lastLine = lastChild[lastChildID];
+                const lastContent = lastLine.content;
+                if (lastContent.length > 0) {
+                    const color = bqStyles.get(lastContent[0].text);
+                    if (color != undefined) {
+                        node.color = color;
+                        node.children[node.children.length - 1] = lastChild.filter((_,i) => i < lastChildID);
+                    }
+                }
+            }
+            if (node.color == undefined) {
+                node.color = node.parent == null ? bqDefaultColor : node.parent.color;
+            }
+            for (const childNode of node.children) {
+                if (!Array.isArray(childNode)) {
+                    colorNodeAndChildren(childNode);
+                }
+            }
+        }
+    }
+
+    colorNodeAndChildren(root);
+
+    const treeToElements = (node: BQTreeNode, key: number): JSX.Element => {
+        return (<Blockquote p='sm'
+                            key={key}
+                            color={node.color == undefined ? bqDefaultColor : node.color}>
+            {node.children.map((childNode, id) => {
+                if (Array.isArray(childNode)) {
+                    return childNode.map((line, lineID) => <Text key={`${id}-${lineID}`}>
+                        {renderLineContent(line.content)}
+                    </Text>);
+                } else {
+                    return treeToElements(childNode, id);
+                }
+            })}
+        </Blockquote>);
+    }
+
+    return treeToElements(root, rootKey);
+}
+
+const nextLinesOfType = (lines: Line[], type: LineType, startingAt: number) => {
+    const group: Line[] = [];
+    for (let i = startingAt; i < lines.length; i++) {
+        if (lines[i].type == type) {
+            group.push(lines[i])
+        } else {
+            break;
+        }
+    }
+    return group;
+}
+
+const constructTabsetLines = (lines: Line[]) => {
+
+    let head: (Line | Tabset)[] = [];
+    let currentTarget: (Line | Tabset)[] = head;
+    let currentTabset: (Tabset | null) = null;
+    let stack: number[] = [];
+
+    const adjustTarget = () => {
+        if (currentTabset == null) {
+            currentTarget = head;
+        } else {
+            currentTarget = currentTabset.tabs[currentTabset.tabs.length - 1].content;
+        }
+    }
+
+    for (let i = 0; i < lines.length; i++) {
+        const rawLine = lines[i];
+        const line = {...rawLine, content: rawLine.content.map((lc) => {
+                return {...lc, text: lc.text.replace(/{.tabset}/, '')};
+            })}
+        if (line.type != LineType.Heading) {
+            currentTarget.push(line);
+        } else {
+            while (currentTabset != null && (currentTabset as Tabset).selfLevel >= line.headingLevel!) {
+                currentTabset = (currentTabset as Tabset).parent;
+            }
+            while (stack.length > 0 && stack[0] > line.headingLevel!) {
+                stack.shift();
+            }
+
+            adjustTarget();
+
+            if (line.headingLevel! == stack[0]) {
+                if (currentTabset == null || currentTabset.childLevel < line.headingLevel!) {
+                    const newTabset: Tabset = {
+                        parent: currentTabset,
+                        tabs: [],
+                        selfLevel: line.headingLevel! - 1,
+                        childLevel: line.headingLevel!
+                    };
+                    currentTarget.push(newTabset);
+                    currentTabset = currentTarget[currentTarget.length - 1] as Tabset;
+                }
+                const newTab: Tab = {
+                    heading: line,
+                    content: []
+                };
+                currentTabset.tabs.push(newTab);
+            } else {
+                currentTarget.push(line);
+            }
+
+            adjustTarget();
+
+            if (rawLine.content.some((c) => (/{.tabset}/.test(c.text)))) {
+                stack.unshift(line.headingLevel! + 1);
+            }
+        }
+    }
+
+    return head;
+}
+
 const renderMarkdown = (markdown: string): JSX.Element[] => {
     const rawLines = markdown.split('\n');
     const lines: Line[] = rawLines.map((line) => {
         return extractLineData(line);
     });
 
+    const outerTabsetLines: (Line | Tabset)[] = constructTabsetLines(lines);
+
+
+
+    const renderMarkdownRecursive = (tabsetLines: (Line | Tabset)[]): JSX.Element[] => {
+        const elements: JSX.Element[] = [];
+        let lineGroup: Line[] = [];
+        let key = 0;
+        tabsetLines.forEach((tl, i) => {
+            if ('tabs' in tl) { // if tabset
+                elements.push(...processLines(lineGroup, key), <Tabs defaultValue='0' key={i}>
+                    <Tabs.List>
+                        {tl.tabs.map((t,i) =>
+                            <Tabs.Tab value={`${i}`} key={i}>
+                                {renderLineContent(t.heading.content)}
+                            </Tabs.Tab>)}
+                    </Tabs.List>
+                    {tl.tabs.map((t,i) =>
+                        <Tabs.Panel value={`${i}`} key={i}>
+                            {renderMarkdownRecursive(t.content)}
+                        </Tabs.Panel>)}
+                </Tabs>);
+                key += lineGroup.length + 1;
+                lineGroup = [];
+            } else { // if line
+                lineGroup.push(tl);
+            }
+        })
+        key += lineGroup.length + 1;
+        elements.push(...processLines(lineGroup, key));
+        return elements;
+    }
+
+    return renderMarkdownRecursive(outerTabsetLines);
+}
+
+const processLines = (lines: Line[], startKey: number): JSX.Element[] => {
     const elements: JSX.Element[] = [];
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         switch (line.type) {
+            case LineType.Blockquote: {
+                const blockquoteLines: Line[] = nextLinesOfType(lines, LineType.Blockquote, i);
+                i += blockquoteLines.length - 1;
+                elements.push(processBlockquotes(blockquoteLines, startKey + i));
+                break;
+            }
             case LineType.Table: {
-                const tableLines: Line[] = [line];
-                for (i++; i < lines.length && lines[i].type == LineType.Table; i++) {
-                    tableLines.push(lines[i])
-                }
-                if (i < lines.length && lines[i].type != LineType.Table) {
-                    i--;
-                }
+                const tableLines: Line[] = nextLinesOfType(lines, LineType.Table, i);
+                i += tableLines.length - 1;
                 const tableContents = tableLines
-                    .filter((line, id) => !(id == 1 && /[-|:]+/.test(line.line)))
+                    .filter((line, id) => !(id == 1 && /^[-|:]+$/.test(line.line)))
                     .map((line) => line.tableContent!
-                        .filter((piece, id) => id != 0 && id != line.tableContent!.length - 1))
+                        .filter((_, id) => id != 0 && id != line.tableContent!.length - 1))
                 let colAlignments: ('center' | 'left' | 'right')[] = []
                 if (tableLines.length > 1) {
                     const indicatorLine = tableLines[1].line;
-                    if (/[-|:]+/.test(indicatorLine)) {
+                    if (/^[-|:]+$/.test(indicatorLine)) {
                         colAlignments = indicatorLine.slice(1,-1).split('|').map((indicator) => {
                             const startsWithColon = indicator.startsWith(':');
                             const endsWithColon = indicator.endsWith(':');
@@ -54,13 +270,13 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
                 const tableHeader = tableContents[0];
                 const tableBody = tableContents.filter((row, id) => id > 0);
                 elements.push(
-                    <Table key={i}>
+                    <Table key={startKey + i}>
                         <Table.Thead>
                             <Table.Tr>
                                 {tableHeader.map((cell, cellID) =>
                                     <Table.Th
-                                    key={cellID}
-                                    style={{textAlign: colAlignments[cellID] ?? 'left'}}>
+                                        key={cellID}
+                                        style={{textAlign: colAlignments[cellID] ?? 'left'}}>
                                         {renderLineContent(cell)}
                                     </Table.Th>)}
                             </Table.Tr>
@@ -80,28 +296,28 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
             }
             case LineType.Heading:
                 elements.push(
-                    <Title key={i} style={{ marginLeft: `${line.indentLevel * 20}px`}} order={line.headingLevel as TitleOrder}>
+                    <Title key={startKey + i} style={{ marginLeft: `${line.indentLevel * 20}px`}} order={line.headingLevel as TitleOrder}>
                         {renderLineContent(line.content)}
                     </Title>
                 );
                 break;
             case LineType.ListItem:
                 elements.push(
-                    <Text key={i} style={{ marginLeft: `${line.indentLevel * 20}px`}}>
+                    <Text key={startKey + i} style={{ marginLeft: `${line.indentLevel * 20}px`}}>
                         <Text span fw={700}>•</Text> {renderLineContent(line.content)}
                     </Text>
                 );
                 break;
             case LineType.HorizontalRule:
-                elements.push(<Divider key={i} />);
+                elements.push(<Divider key={startKey + i} />);
                 break;
             case LineType.LineBreak:
-                elements.push(<br key={i} />);
+                elements.push(<br key={startKey + i} />);
                 break;
             case LineType.Paragraph:
             default:
                 elements.push(
-                    <Text key={i} style={{ marginLeft: `${line.indentLevel * 20}px`}}>
+                    <Text key={startKey + i} style={{ marginLeft: `${line.indentLevel * 20}px`}}>
                         {renderLineContent(line.content)}
                     </Text>
                 );
@@ -191,6 +407,11 @@ const extractLineData = (line: string): Line => {
     } else if (line.startsWith('|') && line.endsWith('|') && line.length > 2) {
         lineObject.type = LineType.Table;
         lineText = line.replace(/^|/, '').replace(/|$/, '');
+    } else if (/^>+ .*/.test(line)) {
+        lineObject.type = LineType.Blockquote;
+        // "blockquote level" is number of unescaped opening > 's (indifferent to spaces), starting at 1
+        lineObject.blockquoteLevel = line.match(/^>+/)![0].length;
+        lineText = line.replace(/^>+ /, '');
     }
 
     // INLINE FORMATTING
@@ -293,6 +514,18 @@ enum LineContentStyle {
     Text = 'text',
 }
 
+interface Tab {
+    heading: Line,
+    content: (Line | Tabset)[]
+}
+
+interface Tabset {
+    parent: Tabset | null,
+    selfLevel: number,
+    childLevel: number,
+    tabs: Tab[]
+}
+
 interface Line {
     line: string;
     type: LineType;
@@ -300,6 +533,7 @@ interface Line {
     content: LineContent[];
     headingLevel?: number;
     tableContent?: LineContent[][];
+    blockquoteLevel?: number;
 }
 
 interface LineContent {
