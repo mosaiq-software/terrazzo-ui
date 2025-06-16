@@ -109,7 +109,7 @@ const BoardPage = (): React.JSX.Element => {
 					}
 
 					// set the board header in the TRZ context
-					trz.setBoardHeader(boardRes);
+					trz.setBoardData(boardRes);
 				}
 			} catch(err) {
 				notify(NoteType.BOARD_DATA_ERROR, err);
@@ -122,14 +122,14 @@ const BoardPage = (): React.JSX.Element => {
 			strictIgnore = true;
 
 			// clear the board header when leaving the page
-			trz.setBoardHeader(undefined);
+			trz.setBoardData(undefined);
 		}
 	}, [boardId, sockCtx.connected]);
 
 	useSocketListener<ServerSE.UPDATE_BOARD_FIELD>(ServerSE.UPDATE_BOARD_FIELD, (payload)=>{
 		setBoardData(prev => {
 			if(!prev) {return prev;}
-			return updateBaseFromPartial<BoardHeader>(prev, payload);
+			return {...updateBaseFromPartial<BoardHeader>(prev, payload)};
 		});
 	});
 
@@ -387,20 +387,9 @@ const BoardPage = (): React.JSX.Element => {
 	const onRender:React.ProfilerOnRenderCallback = (id, phase, actualDuration, baseDuration, startTime, commitTime) => {
 		// console.log("Rendered", id, "in", phase, "for", actualDuration+"ms", "from", startTime+"ms", "to", commitTime+"ms");
 	}
-
-	async function onArchiveBoardClick() {	
-		try {
-			if (params.boardId as BoardId) {
-				await updateBoardField(sockCtx, params.boardId as BoardId, { archived: true });
-				notify(NoteType.CHANGES_SAVED);
-			}
-		} catch (e) {
-			notify(NoteType.BOARD_DATA_ERROR, e);
-		}
-	}
 	
 	return (
-		<Profiler onRender={onRender} id={"board"}>
+		// <Profiler onRender={onRender} id={"board"}>
 		<Container 
 			h={`calc(100vh - ${trz.navbarHeight}px)`} 
 			fluid 
@@ -411,14 +400,6 @@ const BoardPage = (): React.JSX.Element => {
 				overflowX: "scroll"
 			}}
 		>
-			<Button
-				variant="light"
-				color="read"
-				w="min-content"
-				onClick={onArchiveBoardClick}>
-				Archive Board
-			</Button>
-
 			<CollaborativeMouseTracker
 				boardId={boardId}
 				draggingObject={draggingObject}
@@ -487,7 +468,7 @@ const BoardPage = (): React.JSX.Element => {
 				}	
 			</CollaborativeMouseTracker>
 		</Container>
-		</Profiler>
+		// </Profiler>
 	);
 };
 

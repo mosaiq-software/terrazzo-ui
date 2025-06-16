@@ -1,6 +1,6 @@
 import { EntityType, Role } from "@mosaiq/terrazzo-common/constants";
 import { ClientSE } from "@mosaiq/terrazzo-common/socketTypes";
-import { Board, BoardHeader, BoardId, BoardRes, Card, CardHeader, CardId, EntityId, Invite, InviteId, List, ListHeader, ListId, MembershipRecord, MembershipRecordId, Organization, OrganizationHeader, OrganizationId, Project, ProjectHeader, ProjectId, UID, UserDash, UserId } from "@mosaiq/terrazzo-common/types";
+import { Board, BoardHeader, BoardId, BoardRes, Card, CardHeader, CardId, EntityId, Invite, InviteId, Label, LabelId, List, ListHeader, ListId, MembershipRecord, MembershipRecordId, Organization, OrganizationHeader, OrganizationId, Project, ProjectHeader, ProjectId, UID, UserDash, UserId } from "@mosaiq/terrazzo-common/types";
 import { SocketContextType } from "@trz/contexts/socket-context";
 import { NoteType, notify } from "@trz/util/notifications";
 
@@ -82,6 +82,10 @@ export const createCard = async (sockCtx:SocketContextType, listID:ListId, cardN
     await sockCtx.emit<ClientSE.CREATE_CARD>(ClientSE.CREATE_CARD, {listID, cardName});
 }
 
+export const createBoardLabel = async (sockCtx:SocketContextType, boardId:BoardId, name:string, color:string):Promise<undefined> => {
+    await sockCtx.emit<ClientSE.CREATE_BOARD_LABEL>(ClientSE.CREATE_BOARD_LABEL, {boardId, name, color});
+}
+
 export async function updateField<T extends (CardHeader | ListHeader | BoardHeader | ProjectHeader | OrganizationHeader | MembershipRecord)>(
     sockCtx:SocketContextType,
     event:
@@ -117,6 +121,18 @@ export const updateMembershipRecordField = async (sockCtx:SocketContextType, id:
 
 export const updateCardAssignee = async (sockCtx:SocketContextType, cardId: CardId, userId: UserId, assigned:boolean) => {
     await sockCtx.emit<ClientSE.UPDATE_CARD_ASSIGNEE>(ClientSE.UPDATE_CARD_ASSIGNEE, {cardId, userId, assigned});
+};
+
+export const updateBoardLabel = async (sockCtx:SocketContextType, boardId:BoardId, label:Label) => {
+    await sockCtx.emit<ClientSE.UPDATE_BOARD_LABEL>(ClientSE.UPDATE_BOARD_LABEL, {boardId, label});
+};
+
+export const updateCardsLabels = async (sockCtx:SocketContextType, cardId:CardId, labelIds:LabelId[]) => {
+    await sockCtx.emit<ClientSE.UPDATE_CARDS_LABELS>(ClientSE.UPDATE_CARDS_LABELS, {cardId, labelIds});
+};
+
+export const deleteBoardLabel = async (sockCtx:SocketContextType, boardId:BoardId, labelId:LabelId) => {
+    await sockCtx.emit<ClientSE.DELETE_BOARD_LABEL>(ClientSE.DELETE_BOARD_LABEL,{ boardId, labelId});
 };
 
 export const sendInvite = async (sockCtx:SocketContextType, toUsername: string, entityId: EntityId, entityType: EntityType, role: Role) => {
