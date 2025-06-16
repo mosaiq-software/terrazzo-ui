@@ -420,7 +420,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 										justify={"flex-start"}
 									>Labels</Button>
 								</Menu.Target>
-								<Menu.Dropdown ta='center'>
+								<Menu.Dropdown ta='center' miw="10rem">
 									<Menu.Label>Labels</Menu.Label>
 									{
 										trzCtx.boardData?.labels.map(label=>{
@@ -431,19 +431,25 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 													bg={label.color}
 													ta='left'
 													c={textColor}
+													my={4}
 													style={{
-														borderRadius:"10px"
+														borderRadius:"4px",
 													}}
 												>
-													<Checkbox label={label.name} checked={card.labels.includes(label.id)} onChange={()=>{
-														const labels = card.labels;
-														if(labels.includes(label.id)){
-															labels.splice(labels.indexOf(label.id), 1);
-														} else {
-															labels.push(label.id);
+													<Checkbox
+														label={label.name}
+														checked={card.labels.includes(label.id)}
+														p={4}
+														onChange={()=>{
+															const labels = card.labels;
+															if(labels.includes(label.id)){
+																labels.splice(labels.indexOf(label.id), 1);
+															} else {
+																labels.push(label.id);
+															}
+															updateCardsLabels(sockCtx, card.id, labels);
 														}
-														updateCardsLabels(sockCtx, card.id, labels);
-													}}/>
+													}/>
 												</Box>
 											)
 										})
