@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {Box, Group, Paper, Pill, Text, Title} from "@mantine/core";
+import {Box, Checkbox, Group, Paper, Pill, Text, Title} from "@mantine/core";
 import {Card, CardId} from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from "@trz/components/AvatarRow";
 import {priorityColors} from "@trz/components/PriorityButtons";
@@ -10,7 +10,7 @@ import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils"
 import { useSocket } from "@trz/contexts/socket-context";
 import { getCardData } from "@trz/emitters/all";
 import { NoteType, notify } from "@trz/util/notifications";
-import { useInViewport, useSessionStorage } from "@mantine/hooks";
+import {useHover, useInViewport, useSessionStorage} from "@mantine/hooks";
 import { colorIsDarkAdvanced } from "@trz/util/colorUtils";
 import { useTRZ } from "@trz/contexts/TRZ-context";
 
@@ -26,7 +26,8 @@ const CardElement = (props: CardElementProps) => {
 	const trzCtx = useTRZ();
 	const [card, setCard] = useState<Card | undefined>(undefined);
 	const {ref: viewportRef, inViewport} = useInViewport();
-	
+	const [checked, setChecked] = useState<boolean>(true);
+
 	useEffect(()=>{
 		let strictIgnore = false;
 		const fetchCardData = async () => {
@@ -91,7 +92,7 @@ const CardElement = (props: CardElementProps) => {
 	});
 	
 	const onOpenCardModal = () => {
-		if(!card || props.dragging || props.isOverlay){
+		if(!card || props.dragging || props.isOverlay || checked){
 			return;
 		}
 		props.onClick();
@@ -126,6 +127,7 @@ const CardElement = (props: CardElementProps) => {
 		>
 			{process.env.DEBUG==="true" && <Text fz="6pt">{props.cardId}</Text>}
 			{card && inViewport && <React.Fragment>
+
 				<Pill.Group>
 					{
 						card.labels.map(labelId=>{
@@ -146,6 +148,12 @@ const CardElement = (props: CardElementProps) => {
 						})
 					}
 				</Pill.Group>
+				<Checkbox
+					onMouseEnter={() => {setChecked(true)}}
+					onMouseLeave={() => {setChecked(false)}}
+					radius="xl"
+					size="md"
+				/>
 				<Title 
 					order={5} 
 					lineClamp={7} 
