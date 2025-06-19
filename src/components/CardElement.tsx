@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {Box, Checkbox, Group, Paper, Pill, Text, Title} from "@mantine/core";
+import {Box, Checkbox, Flex, Group, Paper, Pill, Stack, Text, Title} from "@mantine/core";
 import {Card, CardId} from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from "@trz/components/AvatarRow";
 import {priorityColors} from "@trz/components/PriorityButtons";
@@ -26,7 +26,9 @@ const CardElement = (props: CardElementProps) => {
 	const trzCtx = useTRZ();
 	const [card, setCard] = useState<Card | undefined>(undefined);
 	const {ref: viewportRef, inViewport} = useInViewport();
-	const [checked, setChecked] = useState<boolean>(true);
+	const [checkHover, setCheckHover] = useState<boolean>(true);
+	const [checked, setChecked] = useState(false);
+	const [cardHovered, setCardHovered] = useState<boolean>(false);
 
 	useEffect(()=>{
 		let strictIgnore = false;
@@ -92,7 +94,7 @@ const CardElement = (props: CardElementProps) => {
 	});
 	
 	const onOpenCardModal = () => {
-		if(!card || props.dragging || props.isOverlay || checked){
+		if(!card || props.dragging || props.isOverlay || checkHover){
 			return;
 		}
 		props.onClick();
@@ -124,6 +126,8 @@ const CardElement = (props: CardElementProps) => {
 			} : undefined)
 			}}
 			onClick={onOpenCardModal}
+			onMouseEnter={()=> {setCardHovered(true)}}
+			onMouseLeave={()=> {setCardHovered(false)}}
 		>
 			{process.env.DEBUG==="true" && <Text fz="6pt">{props.cardId}</Text>}
 			{card && inViewport && <React.Fragment>
@@ -148,29 +152,54 @@ const CardElement = (props: CardElementProps) => {
 						})
 					}
 				</Pill.Group>
-				<Checkbox
-					onMouseEnter={() => {setChecked(true)}}
-					onMouseLeave={() => {setChecked(false)}}
-					radius="xl"
-					size="md"
-				/>
-				<Title 
-					order={5} 
-					lineClamp={7} 
-					c="#ffffff"
+				<Flex
+					gap="sm"
+					justify="flex-start"
+					align="center"
+					direction="row"
 					style={{
-						wordWrap: "break-word",
-						textWrap: "wrap",
-						userSelect: "none",
+						transition: "transform 1s",
+						transitionDuration: "1s"
 					}}
-				>{card.name}</Title>
-				<Text
-					size='xs'
-					c="#878787"
-					style={{
-						userSelect: "none",
-					}}
-				>{getCardNumber(props.boardCode, card.cardNumber)}</Text>
+				>
+					{(cardHovered || checked) &&
+						<Checkbox
+							onMouseEnter={() => {
+								setCheckHover(true)
+							}}
+							onMouseLeave={() => {
+								setCheckHover(false)
+							}}
+							radius="xl"
+							size="sm"
+							checked={checked}
+							onChange={(event) => setChecked(event.currentTarget.checked)}
+						/>
+					}
+					<Stack
+						align="flex-start"
+						justify="center"
+						gap="0"
+					>
+						<Title
+							order={5}
+							lineClamp={7}
+							c="#ffffff"
+							style={{
+								wordWrap: "break-word",
+								textWrap: "wrap",
+								userSelect: "none",
+							}}
+						>{card.name}</Title>
+						<Text
+							size='xs'
+							c="#878787"
+							style={{
+								userSelect: "none",
+							}}
+						>{getCardNumber(props.boardCode, card.cardNumber)}</Text>
+					</Stack>
+				</Flex>
 				<Group justify='space-between' style={{flexDirection: "row-reverse"}}>
 					{/* icons for info abt the card */}
 					{card.assignees != undefined && card.assignees.length > 0 &&
