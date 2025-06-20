@@ -9,7 +9,7 @@ import { useTRZ } from "@trz/contexts/TRZ-context";
 import { getCardNumber } from "@trz/util/boardUtils";
 import {FaArchive, FaUserPlus} from "react-icons/fa";
 import {MdLabel, MdOutlinePriorityHigh} from "react-icons/md";
-import {PriorityButtons, priorityColors} from "@trz/components/PriorityButtons";
+import {PriorityButtons, priorityColors, unicodeMap} from "@trz/components/PriorityButtons";
 import {Priority} from "@mosaiq/terrazzo-common/constants";
 import {StoryPointButtons} from "@trz/components/StoryPointButtons";
 import { Card, CardId, UserId } from "@mosaiq/terrazzo-common/types";
@@ -269,7 +269,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 											pt="xs"
 										>
 											<Box bg={priorityColors[card.priority - 1]} w='35' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
-												<Text c='white' ta='center'>{card.priority}</Text>
+												<Text c='white' ta='center'>{unicodeMap[card.priority]}</Text>
 											</Box>
 										</Stack>
 									</Grid.Col>

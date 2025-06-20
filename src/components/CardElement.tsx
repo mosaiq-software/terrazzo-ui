@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import {Box, Group, Paper, Pill, Text, Title} from "@mantine/core";
 import {Card, CardId} from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from "@trz/components/AvatarRow";
-import {priorityColors} from "@trz/components/PriorityButtons";
+import {priorityColors, unicodeMap} from "@trz/components/PriorityButtons";
 import { CARD_CACHE_PREFIX, getCardNumber } from "@trz/util/boardUtils";
 import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
@@ -24,7 +24,7 @@ const CardElement = (props: CardElementProps) => {
 	const [card, setCard] = useState<Card | undefined>(undefined);
 	const textColor = "#ffffff";
 	const {ref: viewportRef, inViewport} = useInViewport();
-	
+
 	useEffect(()=>{
 		let strictIgnore = false;
 		const fetchCardData = async () => {
@@ -152,8 +152,8 @@ const CardElement = (props: CardElementProps) => {
 						<AvatarRow users={card.assignees} maxUsers={3}/>
 					}
 					{card.priority &&
-						<Box w='20' bg={priorityColors[card.priority - 1]}  style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
-							<Text c="white" ta='center'>{card.priority}</Text>
+						<Box w='35' bg={priorityColors[card.priority - 1]}  style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
+							<Text c="white" ta='center'>{unicodeMap[card.priority]}</Text>
 						</Box>
 					}
 					{card.storyPoints &&
