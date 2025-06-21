@@ -11,6 +11,8 @@ import { useSocket } from "@trz/contexts/socket-context";
 import { getCardData } from "@trz/emitters/all";
 import { NoteType, notify } from "@trz/util/notifications";
 import { useInViewport, useSessionStorage } from "@mantine/hooks";
+import { colorIsDarkAdvanced } from "@trz/util/colorUtils";
+import { useTRZ } from "@trz/contexts/TRZ-context";
 
 interface CardElementProps {
 	cardId: CardId;
@@ -21,8 +23,8 @@ interface CardElementProps {
 }
 const CardElement = (props: CardElementProps) => {
 	const sockCtx = useSocket();
+	const trzCtx = useTRZ();
 	const [card, setCard] = useState<Card | undefined>(undefined);
-	const textColor = "#ffffff";
 	const {ref: viewportRef, inViewport} = useInViewport();
 
 	useEffect(()=>{
@@ -71,6 +73,19 @@ const CardElement = (props: CardElementProps) => {
 		});
 	});
 
+	useSocketListener<ServerSE.UPDATE_CARDS_LABELS>(ServerSE.UPDATE_CARDS_LABELS, (payload)=>{
+		if(payload.cardId !== props.cardId){
+			return;
+		}
+		setCard((prev)=>{
+			if(!prev){
+				return prev;
+			}
+			prev.labels = payload.labelIds;
+			return {...prev};
+		});
+	});
+
 	useSocketListener<ServerSE.UPDATE_CARD_ASSIGNEE>(ServerSE.UPDATE_CARD_ASSIGNEE, (payload)=>{
 
 	});
@@ -112,22 +127,24 @@ const CardElement = (props: CardElementProps) => {
 			{process.env.DEBUG==="true" && <Text fz="6pt">{props.cardId}</Text>}
 			{card && inViewport && <React.Fragment>
 				<Pill.Group>
-					<Pill
-						size="xs"
-						bg='#87cefa'
-						c={textColor}
-						style={{
-							userSelect: "none",
-						}}
-					>To Do</Pill>
-					<Pill
-						size="xs"
-						bg='#ff474c'
-						c={textColor}
-						style={{
-							userSelect: "none",
-						}}
-					>In Progress</Pill>
+					{
+						card.labels.map(labelId=>{
+							const label = trzCtx.boardData?.labels.filter(l=>l.id===labelId)[0];
+							if(!label)return null;
+							const textColor = colorIsDarkAdvanced(label.color) ? "#fff" : "#000";
+							return (
+								<Pill
+									style={{
+										userSelect: "none"
+									}}
+									key={label.id}
+									size="xs"
+									bg={label.color}
+									c={textColor}
+								>{label.name}</Pill>
+							)
+						})
+					}
 				</Pill.Group>
 				<Title 
 					order={5} 
