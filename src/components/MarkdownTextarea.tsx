@@ -1,5 +1,6 @@
 import React from 'react';
 import { Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, Blockquote, Tabs } from '@mantine/core';
+import Emoji from 'emojilib'
 
 interface MarkdownTextareaProps extends ContainerProps{
     children: string;
@@ -368,8 +369,24 @@ const renderLineContent = (content: LineContent[]): JSX.Element[] => {
     return elements;
 }
 
+const processEmojis = (line: string)=> {
+    const emojiEntries = Object.entries(Emoji)
+    return line.replace((/:([a-z0-9-_+]+):/gi), (match, keyword) => {
+        for (let i = 0; i < emojiEntries.length; i++) {
+            const [emoji, names] = emojiEntries[i];
+            if (names.includes(keyword)) {
+                return emoji
+            }
+        }
+        return match;
+    })
+}
+
 const INDENT_SPACES = '  ';
 const extractLineData = (line: string): Line => {
+
+    line = processEmojis(line);
+
     const lineObject: Line = {
         line,
         type: LineType.Paragraph,
