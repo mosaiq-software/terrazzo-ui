@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, Blockquote, Tabs } from '@mantine/core';
+import { Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, Blockquote, Tabs, Anchor } from '@mantine/core';
 import Emoji from 'emojilib'
 
 interface MarkdownTextareaProps extends ContainerProps{
@@ -361,6 +361,9 @@ const renderLineContent = (content: LineContent[]): JSX.Element[] => {
             case LineContentStyle.Highlight:
                 elements.push(<Text span inherit key={i} style={{ backgroundColor: '#77734f' }}>{item.text}</Text>);
                 break;
+            case LineContentStyle.Link:
+                elements.push(<Anchor key={i} href={item.href!}>{item.text}</Anchor>)
+                break;
             default:
                 elements.push(<Text span inherit key={i}>{item.text}</Text>);
                 break;
@@ -470,6 +473,53 @@ const extractLineData = (line: string): Line => {
         }
     }
 
+    const FORMATTED_URL_REGEX = /(\[[^\]]+\]\(https?:\/\/[a-z0-9\-\.]+\.[a-z0-9\-]+(?:\/[^ \n\t\)]*)?\))/gi;
+    const URL_REGEX = /(https?:\/\/[a-z0-9\-.]+\.[a-z0-9\-]+(?:\/[^ \n\t]*)?)/gi;
+
+    const splitByLink = (contents: LineContent[]) => {
+        const splitByThing = (regex: RegExp, makeDelimContent: (body: string) => LineContent)=> {
+            for (let i = 0; i < contents.length; i++) {
+                if (contents[i].style !== LineContentStyle.Text) {
+                    continue;
+                }
+                const splitLine = contents[i].text.split(regex);
+                const delimContents: LineContent[] = splitLine.map((str, index) => {
+                    const isSpecial = (index % 2 == 1)
+                    if (!isSpecial) {
+                        return {
+                            text: str,
+                            style: LineContentStyle.Text
+                        };
+                    } else {
+                        return makeDelimContent(str);
+                    }
+                });
+                contents.splice(i, 1, ...delimContents);
+                i += delimContents.length - 1;
+            }
+        }
+
+        splitByThing(FORMATTED_URL_REGEX, (str) => {
+            const match = str.match(/\[([^\]]+)\]\(([^\)]+)\)/);
+            const text = match![1];
+            const href = match![2];
+            return {
+                text: text,
+                style: LineContentStyle.Link,
+                href: href
+            };
+        })
+
+        splitByThing(URL_REGEX, (str) => {
+            return {
+                text: str,
+                style: LineContentStyle.Link,
+                href: str
+            }
+        })
+
+    }
+
     const delimiters = [
         ['`', LineContentStyle.InlineCode],
         ['**', LineContentStyle.Bold],
@@ -489,12 +539,13 @@ const extractLineData = (line: string): Line => {
             text: td,
             style: LineContentStyle.Text
         }]);
-        const contentses = rootContentses;
+        let contentses = rootContentses;
         contentses.forEach((td) => {
             for (let i = 0; i < delimiters.length; i++) {
                 splitByDelimiter(td, delimiters[i][0], delimiters[i][1]);
             }
         })
+        contentses.forEach((c) => splitByLink(c));
         lineObject.tableContent = contentses;
     }
 
@@ -506,6 +557,7 @@ const extractLineData = (line: string): Line => {
     for (let i = 0; i < delimiters.length; i++) {
         splitByDelimiter(contents, delimiters[i][0], delimiters[i][1]);
     }
+    splitByLink(contents);
     lineObject.content = contents;
 
     return lineObject;
@@ -534,6 +586,7 @@ enum LineContentStyle {
     Keyboard = 'keyboard',
     Highlight = 'highlight',
     Text = 'text',
+    Link = 'link'
 }
 
 interface Tab {
@@ -561,4 +614,5 @@ interface Line {
 interface LineContent {
     text: string;
     style: LineContentStyle;
+    href?: string;
 }
