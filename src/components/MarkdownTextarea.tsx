@@ -357,6 +357,9 @@ const renderLineContent = (content: LineContent[]): JSX.Element[] => {
             case LineContentStyle.Keyboard:
                 elements.push(<Kbd key={i}>{item.text}</Kbd>);
                 break;
+            case LineContentStyle.Highlight:
+                elements.push(<Text span inherit key={i} style={{ backgroundColor: '#77734f' }}>{item.text}</Text>);
+                break;
             default:
                 elements.push(<Text span inherit key={i}>{item.text}</Text>);
                 break;
@@ -460,6 +463,7 @@ const extractLineData = (line: string): Line => {
         ['^', LineContentStyle.Superscript],
         ['~', LineContentStyle.Subscript],
         ['@@', LineContentStyle.Keyboard],
+        ['==', LineContentStyle.Highlight]
     ] as [string, LineContentStyle][];
 
     // if table, format each individual cell (may refactor)
@@ -511,6 +515,7 @@ enum LineContentStyle {
     Superscript = 'superscript',
     Strikethrough = 'strikethrough',
     Keyboard = 'keyboard',
+    Highlight = 'highlight',
     Text = 'text',
 }
 
