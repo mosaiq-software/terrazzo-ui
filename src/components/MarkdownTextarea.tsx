@@ -1,6 +1,8 @@
-import React from 'react';
-import { Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, Blockquote, Tabs, Anchor } from '@mantine/core';
-import Emoji from 'emojilib'
+import React, { useState } from 'react';
+import { Card, Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, Blockquote, Tabs, Anchor, HoverCard, Flex, Image } from '@mantine/core';
+import Emoji from 'emojilib';
+import LinkPreview from '@ashwamegh/react-link-preview';
+import { RiArrowRightUpBoxLine, RiLink } from "react-icons/ri";
 
 interface MarkdownTextareaProps extends ContainerProps{
     children: string;
@@ -16,6 +18,7 @@ export const MarkdownTextarea = (props:MarkdownTextareaProps) => {
         </Container>
     );
 }
+
 
 const processBlockquotes = (lines: Line[], rootKey: number): JSX.Element => {
     interface BQTreeNode {
@@ -362,7 +365,7 @@ const renderLineContent = (content: LineContent[]): JSX.Element[] => {
                 elements.push(<Text span inherit key={i} style={{ backgroundColor: '#77734f' }}>{item.text}</Text>);
                 break;
             case LineContentStyle.Link:
-                elements.push(<Anchor key={i} href={item.href!}>{item.text}</Anchor>)
+                elements.push(<LinkWithPreview key={i} url={item.href!} text={item.text}></LinkWithPreview>);
                 break;
             default:
                 elements.push(<Text span inherit key={i}>{item.text}</Text>);
@@ -370,6 +373,86 @@ const renderLineContent = (content: LineContent[]): JSX.Element[] => {
         }
     }
     return elements;
+}
+
+const LinkWithPreview = (props: {url: string, text: string}) => {
+
+    const [url, text] = [props.url, props.text];
+
+    const renderLinkPreview = ({ loading, preview }) => {
+
+        const copyToClipboard = (str: string) => {
+            navigator.clipboard.writeText(str);
+        }
+
+        return loading ? (
+            <Text>Loading <Anchor href={url} target="_blank">{url}</Anchor>...</Text>
+        ) : (
+            <Flex gap='sm' align='center'>
+                <Anchor href={url} target="_blank" style={{
+                    display: 'block',
+                    maxHeight: '25vh',
+                    maxWidth: '25vh',
+                    overflowY: 'auto'
+                }}>
+                    <Image height='100%' src={preview.img} alt={preview.title} radius='sm'/>
+                </Anchor>
+                <Container>
+                    <Anchor href={url} target="_blank" style={{
+                        display: 'block',
+                        color: 'inherit'}}
+                    >
+                        <Flex gap='sm' align='center'>
+                            <Image src={preview.favicon} alt={preview.title} style={{
+                                objectFit: 'contain',
+                                backgroundColor: '#ffffffdd',
+                                borderRadius: '10%',
+                                height: '26px',
+                                width: '26px'
+                            }} />
+                            <Title order={4}>{preview.title}<RiArrowRightUpBoxLine style={{
+                                height: '18px',
+                                width: '18px',
+                                flexShrink: '0',
+                                marginLeft: '1ch'
+                            }} /></Title>
+                        </Flex>
+                    </Anchor>
+                    <Text>{preview.description}</Text>
+                    <Divider my='sm' />
+                    <Flex gap='sm' align='center' style={{
+                        cursor: 'pointer'
+                    }} onClick={() => copyToClipboard(url)}>
+                        <RiLink style={{
+                            height: '18px',
+                            width: '18px',
+                            flexShrink: '0'
+                        }} />
+                        <Text>Copy link</Text>
+                    </Flex>
+                </Container>
+            </Flex>
+        )
+    }
+
+    return (<HoverCard shadow='md' withArrow openDelay={200} closeDelay={200}>
+        <HoverCard.Target>
+            <Anchor href={url}>{text}</Anchor>
+        </HoverCard.Target>
+        <HoverCard.Dropdown>
+            <Card style={{
+                maxWidth: '40vw',
+                maxHeight: '40vh',
+                padding: '0',
+                overflowY: 'auto'
+            }}>
+                <LinkPreview
+                    url={url}
+                    render={renderLinkPreview}
+                />
+            </Card>
+        </HoverCard.Dropdown>
+    </HoverCard>);
 }
 
 const processEmojis = (line: string)=> {
@@ -589,6 +672,7 @@ const extractLineData = (line: string): Line => {
 
     return lineObject;
 }
+
 
 
 enum LineType {
