@@ -344,7 +344,7 @@ const renderLineContent = (content: LineContent[]): JSX.Element[] => {
                 elements.push(<Text span inherit key={i} fs={'italic'}>{item.text}</Text>);
                 break;
             case LineContentStyle.InlineCode:
-                elements.push(<Text span inherit key={i} style={{ fontFamily: 'monospace', backgroundColor: '#f5f5f5', padding: '2px 4px', borderRadius: '4px' }}>{item.text}</Text>);
+                elements.push(<Text span inherit key={i} style={{ fontFamily: 'monospace', backgroundColor: '#24282C', padding: '2px 4px', borderRadius: '4px' }}>{item.text}</Text>);
                 break;
             case LineContentStyle.Subscript:
                 elements.push(<Text span inherit key={i} style={{ verticalAlign: 'sub' }}>{item.text}</Text>);
