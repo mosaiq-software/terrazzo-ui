@@ -374,7 +374,7 @@ const renderLineContent = (content: LineContent[]): JSX.Element[] => {
 
 const processEmojis = (line: string)=> {
     const emojiEntries = Object.entries(Emoji)
-    return line.replace((/:([a-z0-9-_+]+):/gi), (match, keyword) => {
+    return line.replace((/(?<!(?:^|[^\\])(?:\\\\)*\\):([a-z0-9-_+]+):/gi), (match, keyword) => {
         for (let i = 0; i < emojiEntries.length; i++) {
             const [emoji, names] = emojiEntries[i];
             if (names.includes(keyword)) {
@@ -453,7 +453,8 @@ const extractLineData = (line: string): Line => {
             if (contents[i].style !== LineContentStyle.Text) {
                 continue;
             }
-            const delimSplit = contents[i].text.split(delim);
+            // contents[i].text.split(delim);
+            const delimSplit = splitStringWithEscape(contents[i].text, delim, true);
             const delimContents: LineContent[] = [];
             for (let j = 0; j < delimSplit.length; j++) {
                 delimContents.push({
@@ -520,6 +521,30 @@ const extractLineData = (line: string): Line => {
 
     }
 
+    const splitStringWithEscape = (line: string, delim: string, delimIsPaired: boolean): string[] => {
+        const neuterSpecials = (str: string) => {
+            return str.replace(/[*^|]/g, '\\$&');
+        }
+        const regex = new RegExp(`(?<!(?:^|[^\\\\])(?:\\\\\\\\)*\\\\)${neuterSpecials(delim)}`, 'gi');
+        const splitLine = line.split(regex);
+        if (delimIsPaired && splitLine.length > 1 && splitLine.length % 2 == 0) {
+            const lastTwo = splitLine.slice(-2).join(delim);
+            splitLine.splice(splitLine.length - 2, 2, lastTwo)
+        }
+        return splitLine;
+    }
+
+    const pruneBackslashes = (lines: LineContent[]) => {
+        const newLines: LineContent[] = lines.map((line) => {
+            // remove backslashes with
+            // before: an even number (incl 0) of backslashes
+            // after: after: any of `*_~^@=|\
+            // UPDATE THIS LIST WHEN ADDING NEW SPECIAL CHARACTERS (THIS ONE vvv)
+            return {...line, text: line.text.replace(/(?<=(?:^|[^\\])(?:\\\\)*)\\(?=[`*_~^@=|#>\-:\\])/gi, '')};
+        })
+        lines.splice(0, lines.length, ...newLines);
+    }
+
     const delimiters = [
         ['`', LineContentStyle.InlineCode],
         ['**', LineContentStyle.Bold],
@@ -535,17 +560,18 @@ const extractLineData = (line: string): Line => {
 
     // if table, format each individual cell (may refactor)
     if (lineObject.type == LineType.Table) {
-        const rootContentses: LineContent[][] = lineText.split('|').map((td) => [{
+        const rootContentses: LineContent[][] = splitStringWithEscape(lineText, '|', false).map((td) => [{
             text: td,
             style: LineContentStyle.Text
         }]);
-        let contentses = rootContentses;
+        const contentses = rootContentses;
         contentses.forEach((td) => {
             for (let i = 0; i < delimiters.length; i++) {
                 splitByDelimiter(td, delimiters[i][0], delimiters[i][1]);
             }
         })
         contentses.forEach((c) => splitByLink(c));
+        contentses.forEach((c) => pruneBackslashes(c));
         lineObject.tableContent = contentses;
     }
 
@@ -558,6 +584,7 @@ const extractLineData = (line: string): Line => {
         splitByDelimiter(contents, delimiters[i][0], delimiters[i][1]);
     }
     splitByLink(contents);
+    pruneBackslashes(contents);
     lineObject.content = contents;
 
     return lineObject;
