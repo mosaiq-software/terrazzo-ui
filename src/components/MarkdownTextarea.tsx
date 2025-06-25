@@ -560,8 +560,8 @@ const extractLineData = (line: string): Line => {
         }
     }
 
-    const FORMATTED_URL_REGEX = /(\[[^\]]+\]\(https?:\/\/[a-z0-9\-\.]+\.[a-z0-9\-]+(?:\/[^ \n\t\)]*)?\))/gi;
-    const URL_REGEX = /(https?:\/\/[a-z0-9\-.]+\.[a-z0-9\-]+(?:\/[^ \n\t]*)?)/gi;
+    const FORMATTED_URL_REGEX = /(\[[^\]]+\]\(https?:\/\/[a-z0-9\-.]+\.[a-z0-9-]+(?:\/[^ \n\t)]*)?\))/gi;
+    const URL_REGEX = /(https?:\/\/[a-z0-9\-.]+\.[a-z0-9-]+(?:\/[^ \n\t]*)?)/gi;
 
     const splitByLink = (contents: LineContent[]) => {
         const splitByThing = (regex: RegExp, makeDelimContent: (body: string) => LineContent)=> {
@@ -587,7 +587,7 @@ const extractLineData = (line: string): Line => {
         }
 
         splitByThing(FORMATTED_URL_REGEX, (str) => {
-            const match = str.match(/\[([^\]]+)\]\(([^\)]+)\)/);
+            const match = str.match(/\[([^\]]+)\]\(([^)]+)\)/);
             const text = match![1];
             const href = match![2];
             return {
