@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, Blockquote, Tabs, Anchor, HoverCard, Flex, Image } from '@mantine/core';
+import { Card, Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, Blockquote, Tabs, Anchor, HoverCard, Flex, Image, Code } from '@mantine/core';
 import Emoji from 'emojilib';
 import LinkPreview from '@ashwamegh/react-link-preview';
 import { RiArrowRightUpBoxLine, RiLink } from "react-icons/ri";
@@ -123,10 +123,10 @@ const processBlockquotes = (lines: Line[], rootKey: number): JSX.Element => {
     return treeToElements(root, rootKey);
 }
 
-const nextLinesOfType = (lines: Line[], type: LineType, startingAt: number) => {
+const nextLinesOfType = (lines: Line[], type: LineType, startingAt: number, negate: boolean = false) => {
     const group: Line[] = [];
     for (let i = startingAt; i < lines.length; i++) {
-        if (lines[i].type == type) {
+        if ((!negate && lines[i].type == type) || (negate && lines[i].type != type)) {
             group.push(lines[i])
         } else {
             break;
@@ -199,14 +199,14 @@ const constructTabsetLines = (lines: Line[]) => {
 }
 
 const renderMarkdown = (markdown: string): JSX.Element[] => {
-    const rawLines = markdown.split('\n');
+    const codeblockReadyMarkdown = markdown.replace(/(?<=[^\n\\])```/g, '\n```').replace(/```(?=[^\n])/g, '```\n');
+    // put ``` on its own line always
+    const rawLines = codeblockReadyMarkdown.split('\n');
     const lines: Line[] = rawLines.map((line) => {
         return extractLineData(line);
     });
 
     const outerTabsetLines: (Line | Tabset)[] = constructTabsetLines(lines);
-
-
 
     const renderMarkdownRecursive = (tabsetLines: (Line | Tabset)[]): JSX.Element[] => {
         const elements: JSX.Element[] = [];
@@ -245,6 +245,23 @@ const processLines = (lines: Line[], startKey: number): JSX.Element[] => {
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         switch (line.type) {
+            case LineType.CodeBlockBoundary: {
+                const codeBlockInnerLines: Line[] = nextLinesOfType(lines, LineType.CodeBlockBoundary, i + 1, true);
+                i += codeBlockInnerLines.length + 1; // plus one for closing boundary
+                const codeBlockInnerText = codeBlockInnerLines.map((l) => `${INDENT_SPACES.repeat(l.indentLevel)}${l.line}`).join('\n');
+
+                // identify language if applicable & perform code highlighting
+
+                elements.push(<Code block style={{
+                    fontFamily: 'monospace',
+                    backgroundColor: '#24282C',
+                    padding: '2px 4px',
+                    borderRadius: '4px',
+                    fontSize: 'inherit',
+                    border: '2px solid #212628'
+                }}>{codeBlockInnerText}</Code>);
+                break;
+            }
             case LineType.Blockquote: {
                 const blockquoteLines: Line[] = nextLinesOfType(lines, LineType.Blockquote, i);
                 i += blockquoteLines.length - 1;
@@ -474,8 +491,6 @@ const processEmojis = (line: string)=> {
 const INDENT_SPACES = '  ';
 const extractLineData = (line: string): Line => {
 
-    line = processEmojis(line);
-
     const lineObject: Line = {
         line,
         type: LineType.Paragraph,
@@ -498,6 +513,9 @@ const extractLineData = (line: string): Line => {
         return lineObject;
     } else if (line.trim() === '---') {
         lineObject.type = LineType.HorizontalRule;
+        return lineObject;
+    } else if (line === '```') {
+        lineObject.type = LineType.CodeBlockBoundary;
         return lineObject;
     }
 
@@ -638,6 +656,9 @@ const extractLineData = (line: string): Line => {
             // before: an even number (incl 0) of backslashes
             // after: after: any of `*_~^@=|\
             // UPDATE THIS LIST WHEN ADDING NEW SPECIAL CHARACTERS (THIS ONE vvv)
+            if (line.style == LineContentStyle.InlineCode) {
+                return line;
+            }
             return {...line, text: line.text.replace(/(?<=(?:^|[^\\])(?:\\\\)*)\\(?=[`*_~^@=|#>\-:\\])/gi, '')};
         })
         lines.splice(0, lines.length, ...newLines);
@@ -656,16 +677,24 @@ const extractLineData = (line: string): Line => {
         ['==', LineContentStyle.Highlight]
     ] as [string, LineContentStyle][];
 
-    // if table, format each individual cell (may refactor)
+    // need to refactor this badly
     if (lineObject.type == LineType.Table) {
         const rootContentses: LineContent[][] = splitStringWithEscape(lineText, '|', false).map((td) => [{
             text: td,
             style: LineContentStyle.Text
         }]);
         const contentses = rootContentses;
+        contentses.forEach((c) => splitByDelimiter(c, delimiters[0][0], delimiters[0][1]));
+        contentses.forEach((contents) => {
+            contents.forEach((c) => {
+                if (c.style != LineContentStyle.InlineCode) {
+                    c.text = processEmojis(c.text);
+                }
+            })
+        })
         contentses.forEach((c) => splitByLink(c));
         contentses.forEach((td) => {
-            for (let i = 0; i < delimiters.length; i++) {
+            for (let i = 1; i < delimiters.length; i++) {
                 splitByDelimiter(td, delimiters[i][0], delimiters[i][1]);
             }
         })
@@ -678,8 +707,14 @@ const extractLineData = (line: string): Line => {
         style: LineContentStyle.Text,
     }];
     const contents = rootContents;
+    splitByDelimiter(contents, delimiters[0][0], delimiters[0][1]);
+    contents.forEach((c) => {
+        if (c.style != LineContentStyle.InlineCode) {
+            c.text = processEmojis(c.text);
+        }
+    })
     splitByLink(contents);
-    for (let i = 0; i < delimiters.length; i++) {
+    for (let i = 1; i < delimiters.length; i++) {
         splitByDelimiter(contents, delimiters[i][0], delimiters[i][1]);
     }
     pruneBackslashes(contents);
@@ -695,7 +730,7 @@ enum LineType {
     List = 'list',
     Blockquote = 'blockquote',
     Paragraph = 'paragraph',
-    CodeBlock = 'codeBlock',
+    CodeBlockBoundary = 'codeBlockBoundary',
     HorizontalRule = 'horizontalRule',
     ListItem = 'listItem',
     LineBreak = 'lineBreak',
