@@ -385,6 +385,8 @@ const LinkWithPreview = (props: {url: string, text: string}) => {
             navigator.clipboard.writeText(str);
         }
 
+        console.log(preview);
+
         return loading ? (
             <Text>Loading <Anchor href={url} target="_blank">{url}</Anchor>...</Text>
         ) : (
@@ -448,6 +450,7 @@ const LinkWithPreview = (props: {url: string, text: string}) => {
             }}>
                 <LinkPreview
                     url={url}
+                    customDomain='https://webpreviews.mosaiq.dev/parse/link'
                     render={renderLinkPreview}
                 />
             </Card>
