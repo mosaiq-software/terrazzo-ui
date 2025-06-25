@@ -367,6 +367,11 @@ const renderLineContent = (content: LineContent[]): JSX.Element[] => {
             case LineContentStyle.Link:
                 elements.push(<LinkWithPreview key={i} url={item.href!} text={item.text}></LinkWithPreview>);
                 break;
+            case LineContentStyle.Image:
+                elements.push(<Image style={{
+                    cursor: 'default'
+                }} key={i} w='auto' maw='100%' fit='contain' src={item.href!} alt={item.text} px='sm' />)
+                break;
             default:
                 elements.push(<Text span inherit key={i}>{item.text}</Text>);
                 break;
@@ -556,6 +561,7 @@ const extractLineData = (line: string): Line => {
     }
 
     const FORMATTED_URL_REGEX = /(\[[^\]]+\]\(https?:\/\/[a-z0-9\-.]+\.[a-z0-9-]+(?:\/[^ \n\t)]*)?\))/gi;
+    const IMAGE_REGEX = new RegExp(`!${FORMATTED_URL_REGEX.source}`, 'gi');
     const URL_REGEX = /(https?:\/\/[a-z0-9\-.]+\.[a-z0-9-]+(?:\/[^ \n\t]*)?)/gi;
 
     const splitByLink = (contents: LineContent[]) => {
@@ -580,6 +586,17 @@ const extractLineData = (line: string): Line => {
                 i += delimContents.length - 1;
             }
         }
+
+        splitByThing(IMAGE_REGEX, (str) => {
+            const match = str.match(/\[([^\]]+)\]\(([^)]+)\)/);
+            const text = match![1];
+            const href = match![2];
+            return {
+                text: text,
+                style: LineContentStyle.Image,
+                href: href
+            };
+        })
 
         splitByThing(FORMATTED_URL_REGEX, (str) => {
             const match = str.match(/\[([^\]]+)\]\(([^)]+)\)/);
@@ -646,12 +663,12 @@ const extractLineData = (line: string): Line => {
             style: LineContentStyle.Text
         }]);
         const contentses = rootContentses;
+        contentses.forEach((c) => splitByLink(c));
         contentses.forEach((td) => {
             for (let i = 0; i < delimiters.length; i++) {
                 splitByDelimiter(td, delimiters[i][0], delimiters[i][1]);
             }
         })
-        contentses.forEach((c) => splitByLink(c));
         contentses.forEach((c) => pruneBackslashes(c));
         lineObject.tableContent = contentses;
     }
@@ -661,10 +678,10 @@ const extractLineData = (line: string): Line => {
         style: LineContentStyle.Text,
     }];
     const contents = rootContents;
+    splitByLink(contents);
     for (let i = 0; i < delimiters.length; i++) {
         splitByDelimiter(contents, delimiters[i][0], delimiters[i][1]);
     }
-    splitByLink(contents);
     pruneBackslashes(contents);
     lineObject.content = contents;
 
@@ -695,7 +712,8 @@ enum LineContentStyle {
     Keyboard = 'keyboard',
     Highlight = 'highlight',
     Text = 'text',
-    Link = 'link'
+    Link = 'link',
+    Image = 'image'
 }
 
 interface Tab {
