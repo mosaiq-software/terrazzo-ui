@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Card, Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, Blockquote, Tabs, Anchor, HoverCard, Flex, Image } from '@mantine/core';
 import Emoji from 'emojilib';
 import LinkPreview from '@ashwamegh/react-link-preview';
@@ -385,7 +385,6 @@ const LinkWithPreview = (props: {url: string, text: string}) => {
             navigator.clipboard.writeText(str);
         }
 
-        console.log(preview);
 
         return loading ? (
             <Text>Loading <Anchor href={url} target="_blank">{url}</Anchor>...</Text>
