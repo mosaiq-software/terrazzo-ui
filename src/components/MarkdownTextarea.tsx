@@ -392,8 +392,6 @@ const LinkWithPreview = (props: {url: string, text: string}) => {
             <Flex gap='sm' align='center'>
                 <Anchor href={url} target="_blank" style={{
                     display: 'block',
-                    maxHeight: '25vh',
-                    maxWidth: '25vh',
                     overflowY: 'auto'
                 }}>
                     <Image height='100%' src={preview.img} alt={preview.title} radius='sm'/>
@@ -442,11 +440,9 @@ const LinkWithPreview = (props: {url: string, text: string}) => {
         </HoverCard.Target>
         <HoverCard.Dropdown>
             <Card style={{
-                maxWidth: '40vw',
-                maxHeight: '40vh',
                 padding: '0',
-                overflowY: 'auto'
-            }}>
+                overflowY: 'auto',
+            }} maw='min(90vw, 480px)' mah='min(90vh, 320px)'>
                 <LinkPreview
                     url={url}
                     customDomain='https://webpreviews.mosaiq.dev/parse/link'
