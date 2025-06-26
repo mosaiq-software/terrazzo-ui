@@ -1,8 +1,10 @@
 import React from 'react';
-import { Card, Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, Blockquote, Tabs, Anchor, HoverCard, Flex, Image } from '@mantine/core';
+import { Card, Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, Blockquote, Tabs, Anchor, HoverCard, Flex, Image, Code } from '@mantine/core';
 import Emoji from 'emojilib';
 import LinkPreview from '@ashwamegh/react-link-preview';
 import { RiArrowRightUpBoxLine, RiLink } from "react-icons/ri";
+import { CodeHighlight } from '@mantine/code-highlight';
+import '@mantine/code-highlight/styles.css';
 
 interface MarkdownTextareaProps extends ContainerProps{
     children: string;
@@ -123,10 +125,10 @@ const processBlockquotes = (lines: Line[], rootKey: number): JSX.Element => {
     return treeToElements(root, rootKey);
 }
 
-const nextLinesOfType = (lines: Line[], type: LineType, startingAt: number) => {
+const nextLinesOfType = (lines: Line[], type: LineType, startingAt: number, negate: boolean = false) => {
     const group: Line[] = [];
     for (let i = startingAt; i < lines.length; i++) {
-        if (lines[i].type == type) {
+        if ((!negate && lines[i].type == type) || (negate && lines[i].type != type)) {
             group.push(lines[i])
         } else {
             break;
@@ -199,14 +201,14 @@ const constructTabsetLines = (lines: Line[]) => {
 }
 
 const renderMarkdown = (markdown: string): JSX.Element[] => {
-    const rawLines = markdown.split('\n');
+    const codeblockReadyMarkdown = markdown.replace(/(?<=[^\n\\])```/g, '\n```').replace(/```(?=[^\n])/g, '```\n');
+    // put ``` on its own line always
+    const rawLines = codeblockReadyMarkdown.split('\n');
     const lines: Line[] = rawLines.map((line) => {
         return extractLineData(line);
     });
 
     const outerTabsetLines: (Line | Tabset)[] = constructTabsetLines(lines);
-
-
 
     const renderMarkdownRecursive = (tabsetLines: (Line | Tabset)[]): JSX.Element[] => {
         const elements: JSX.Element[] = [];
@@ -240,11 +242,48 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
     return renderMarkdownRecursive(outerTabsetLines);
 }
 
+const isValidLanguage = (name: string): boolean => {
+    if (name.indexOf(' ') > -1) {
+        return false;
+    }
+    // language list is based on highlight.js.
+    // gleaned from here: https://highlightjs.readthedocs.io/en/latest/supported-languages.html
+    const VALID_LANGUAGES = "1c abnf accesslog ada arduino ino armasm arm avrasm actionscript as angelscript asc apache apacheconf applescript osascript arcade asciidoc adoc aspectj autohotkey autoit awk mawk nawk gawk bash sh zsh basic bnf brainfuck bf csharp cs c h cpp hpp cc hh c++ h++ cxx hxx cal cos cls cmake cmake.in coq csp css capnproto capnp clojure clj coffeescript coffee cson iced crmsh crm pcmk crystal cr d dart dpr dfm pas pascal diff patch django jinja dns zone bind dockerfile docker dos bat cmd dsconfig dts dust dst ebnf elixir elm erlang erl excel xls xlsx fsharp fs fsx fsi fsscript fix fortran f90 f95 gcode nc gams gms gauss gss gherkin go golang golo gololang gradle graphql groovy xml html xhtml rss atom xjb xsd xsl plist svg http https haml handlebars hbs html.hbs html.handlebars haskell hs haxe hx hy hylang ini toml inform7 i7 irpf90 json java jsp javascript js jsx julia jl julia-repl kotlin kt tex leaf lasso ls lassoscript less ldif lisp livecodeserver livescript ls lua makefile mk mak make markdown md mkdown mkd mathematica mma wl matlab maxima mel mercury mips mipsasm mizar mojolicious monkey moonscript moon n1ql nsis nginx nginxconf nim nimrod nix ocaml ml objectivec mm objc obj-c obj-c++ objective-c++ glsl openscad scad ruleslanguage oxygene pf pf.conf php parser3 perl pl pm plaintext txt text pony pgsql postgres postgresql powershell ps ps1 processing prolog properties proto protobuf puppet pp python py gyp profile python-repl pycon k kdb qml r reasonml re rib rsl graph instances ruby rb gemspec podspec thor irb rust rs SAS sas scss sql p21 step stp scala scheme scilab sci shell console smali smalltalk st sml ml stan stanfuncs stata stylus styl subunit swift tcl tk tap thrift tp twig craftcms typescript ts tsx mts cts vbnet vb vbscript vbs vhdl vala verilog v vim axapta x++ x86asm xl tao xquery xpath xq xqm yml yaml zephir zep".split(' ')
+    return VALID_LANGUAGES.includes(name);
+}
+
 const processLines = (lines: Line[], startKey: number): JSX.Element[] => {
     const elements: JSX.Element[] = [];
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         switch (line.type) {
+            case LineType.CodeBlockBoundary: {
+                const codeBlockInnerLines: Line[] = nextLinesOfType(lines, LineType.CodeBlockBoundary, i + 1, true);
+                i += codeBlockInnerLines.length + 1; // +1 for closing boundary
+
+                let codeBlockInnerText: string = '';
+                let language = '';
+                if (codeBlockInnerLines.length > 0 && isValidLanguage(codeBlockInnerLines[0].line)) {
+                    language = codeBlockInnerLines[0].line;
+                    codeBlockInnerText = codeBlockInnerLines.slice(1).map((l) =>
+                        `${INDENT_SPACES.repeat(l.indentLevel)}${l.line}`).join('\n');
+                } else {
+                    codeBlockInnerText = codeBlockInnerLines.map((l) =>
+                        `${INDENT_SPACES.repeat(l.indentLevel)}${l.line}`).join('\n');
+                }
+
+                elements.push(<CodeHighlight language={language}
+                                             code={codeBlockInnerText}
+                                             style={{
+                                                 border: '3px solid #212427',
+                                                 backgroundColor: '#24282C',
+                                                 padding: '2px 4px',
+                                                 borderRadius: '4px',
+                                                 marginTop: '4px',
+                                                 marginBottom: '4px'
+                                             }}></CodeHighlight>);
+                break;
+            }
             case LineType.Blockquote: {
                 const blockquoteLines: Line[] = nextLinesOfType(lines, LineType.Blockquote, i);
                 i += blockquoteLines.length - 1;
@@ -474,8 +513,6 @@ const processEmojis = (line: string)=> {
 const INDENT_SPACES = '  ';
 const extractLineData = (line: string): Line => {
 
-    line = processEmojis(line);
-
     const lineObject: Line = {
         line,
         type: LineType.Paragraph,
@@ -498,6 +535,9 @@ const extractLineData = (line: string): Line => {
         return lineObject;
     } else if (line.trim() === '---') {
         lineObject.type = LineType.HorizontalRule;
+        return lineObject;
+    } else if (line === '```') {
+        lineObject.type = LineType.CodeBlockBoundary;
         return lineObject;
     }
 
@@ -638,6 +678,9 @@ const extractLineData = (line: string): Line => {
             // before: an even number (incl 0) of backslashes
             // after: after: any of `*_~^@=|\
             // UPDATE THIS LIST WHEN ADDING NEW SPECIAL CHARACTERS (THIS ONE vvv)
+            if (line.style == LineContentStyle.InlineCode) {
+                return line;
+            }
             return {...line, text: line.text.replace(/(?<=(?:^|[^\\])(?:\\\\)*)\\(?=[`*_~^@=|#>\-:\\])/gi, '')};
         })
         lines.splice(0, lines.length, ...newLines);
@@ -656,21 +699,29 @@ const extractLineData = (line: string): Line => {
         ['==', LineContentStyle.Highlight]
     ] as [string, LineContentStyle][];
 
-    // if table, format each individual cell (may refactor)
+    const processLineContents = (contents: LineContent[]) => {
+        // inline-code, emoji, link, other-inline-markdown, backslashes
+        splitByDelimiter(contents, delimiters[0][0], delimiters[0][1]);
+        contents.forEach((c) => {
+            if (c.style != LineContentStyle.InlineCode) {
+                c.text = processEmojis(c.text);
+            }
+        })
+        splitByLink(contents);
+        for (let i = 1; i < delimiters.length; i++) {
+            splitByDelimiter(contents, delimiters[i][0], delimiters[i][1]);
+        }
+        pruneBackslashes(contents);
+    }
+
     if (lineObject.type == LineType.Table) {
-        const rootContentses: LineContent[][] = splitStringWithEscape(lineText, '|', false).map((td) => [{
+        const rootTableContents: LineContent[][] = splitStringWithEscape(lineText, '|', false).map((td) => [{
             text: td,
             style: LineContentStyle.Text
         }]);
-        const contentses = rootContentses;
-        contentses.forEach((c) => splitByLink(c));
-        contentses.forEach((td) => {
-            for (let i = 0; i < delimiters.length; i++) {
-                splitByDelimiter(td, delimiters[i][0], delimiters[i][1]);
-            }
-        })
-        contentses.forEach((c) => pruneBackslashes(c));
-        lineObject.tableContent = contentses;
+        const tableContents = rootTableContents;
+        tableContents.forEach((c) => processLineContents(c))
+        lineObject.tableContent = tableContents;
     }
 
     const rootContents: LineContent[] = [{
@@ -678,11 +729,7 @@ const extractLineData = (line: string): Line => {
         style: LineContentStyle.Text,
     }];
     const contents = rootContents;
-    splitByLink(contents);
-    for (let i = 0; i < delimiters.length; i++) {
-        splitByDelimiter(contents, delimiters[i][0], delimiters[i][1]);
-    }
-    pruneBackslashes(contents);
+    processLineContents(contents);
     lineObject.content = contents;
 
     return lineObject;
@@ -695,7 +742,7 @@ enum LineType {
     List = 'list',
     Blockquote = 'blockquote',
     Paragraph = 'paragraph',
-    CodeBlock = 'codeBlock',
+    CodeBlockBoundary = 'codeBlockBoundary',
     HorizontalRule = 'horizontalRule',
     ListItem = 'listItem',
     LineBreak = 'lineBreak',
