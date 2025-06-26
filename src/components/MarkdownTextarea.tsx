@@ -699,29 +699,29 @@ const extractLineData = (line: string): Line => {
         ['==', LineContentStyle.Highlight]
     ] as [string, LineContentStyle][];
 
-    // need to refactor this badly
+    const processLineContents = (contents: LineContent[]) => {
+        // inline-code, emoji, link, other-inline-markdown, backslashes
+        splitByDelimiter(contents, delimiters[0][0], delimiters[0][1]);
+        contents.forEach((c) => {
+            if (c.style != LineContentStyle.InlineCode) {
+                c.text = processEmojis(c.text);
+            }
+        })
+        splitByLink(contents);
+        for (let i = 1; i < delimiters.length; i++) {
+            splitByDelimiter(contents, delimiters[i][0], delimiters[i][1]);
+        }
+        pruneBackslashes(contents);
+    }
+
     if (lineObject.type == LineType.Table) {
-        const rootContentses: LineContent[][] = splitStringWithEscape(lineText, '|', false).map((td) => [{
+        const rootTableContents: LineContent[][] = splitStringWithEscape(lineText, '|', false).map((td) => [{
             text: td,
             style: LineContentStyle.Text
         }]);
-        const contentses = rootContentses;
-        contentses.forEach((c) => splitByDelimiter(c, delimiters[0][0], delimiters[0][1]));
-        contentses.forEach((contents) => {
-            contents.forEach((c) => {
-                if (c.style != LineContentStyle.InlineCode) {
-                    c.text = processEmojis(c.text);
-                }
-            })
-        })
-        contentses.forEach((c) => splitByLink(c));
-        contentses.forEach((td) => {
-            for (let i = 1; i < delimiters.length; i++) {
-                splitByDelimiter(td, delimiters[i][0], delimiters[i][1]);
-            }
-        })
-        contentses.forEach((c) => pruneBackslashes(c));
-        lineObject.tableContent = contentses;
+        const tableContents = rootTableContents;
+        tableContents.forEach((c) => processLineContents(c))
+        lineObject.tableContent = tableContents;
     }
 
     const rootContents: LineContent[] = [{
@@ -729,17 +729,7 @@ const extractLineData = (line: string): Line => {
         style: LineContentStyle.Text,
     }];
     const contents = rootContents;
-    splitByDelimiter(contents, delimiters[0][0], delimiters[0][1]);
-    contents.forEach((c) => {
-        if (c.style != LineContentStyle.InlineCode) {
-            c.text = processEmojis(c.text);
-        }
-    })
-    splitByLink(contents);
-    for (let i = 1; i < delimiters.length; i++) {
-        splitByDelimiter(contents, delimiters[i][0], delimiters[i][1]);
-    }
-    pruneBackslashes(contents);
+    processLineContents(contents);
     lineObject.content = contents;
 
     return lineObject;
