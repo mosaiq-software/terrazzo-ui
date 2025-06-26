@@ -3,6 +3,8 @@ import { Card, Button, Container, ContainerProps, Divider, Group, Kbd, Text, Tex
 import Emoji from 'emojilib';
 import LinkPreview from '@ashwamegh/react-link-preview';
 import { RiArrowRightUpBoxLine, RiLink } from "react-icons/ri";
+import { CodeHighlight } from '@mantine/code-highlight';
+import '@mantine/code-highlight/styles.css';
 
 interface MarkdownTextareaProps extends ContainerProps{
     children: string;
@@ -240,6 +242,16 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
     return renderMarkdownRecursive(outerTabsetLines);
 }
 
+const isValidLanguage = (name: string): boolean => {
+    if (name.indexOf(' ') > -1) {
+        return false;
+    }
+    // language list is based on highlight.js.
+    // gleaned from here: https://highlightjs.readthedocs.io/en/latest/supported-languages.html
+    const VALID_LANGUAGES = "1c abnf accesslog ada arduino ino armasm arm avrasm actionscript as angelscript asc apache apacheconf applescript osascript arcade asciidoc adoc aspectj autohotkey autoit awk mawk nawk gawk bash sh zsh basic bnf brainfuck bf csharp cs c h cpp hpp cc hh c++ h++ cxx hxx cal cos cls cmake cmake.in coq csp css capnproto capnp clojure clj coffeescript coffee cson iced crmsh crm pcmk crystal cr d dart dpr dfm pas pascal diff patch django jinja dns zone bind dockerfile docker dos bat cmd dsconfig dts dust dst ebnf elixir elm erlang erl excel xls xlsx fsharp fs fsx fsi fsscript fix fortran f90 f95 gcode nc gams gms gauss gss gherkin go golang golo gololang gradle graphql groovy xml html xhtml rss atom xjb xsd xsl plist svg http https haml handlebars hbs html.hbs html.handlebars haskell hs haxe hx hy hylang ini toml inform7 i7 irpf90 json java jsp javascript js jsx julia jl julia-repl kotlin kt tex leaf lasso ls lassoscript less ldif lisp livecodeserver livescript ls lua makefile mk mak make markdown md mkdown mkd mathematica mma wl matlab maxima mel mercury mips mipsasm mizar mojolicious monkey moonscript moon n1ql nsis nginx nginxconf nim nimrod nix ocaml ml objectivec mm objc obj-c obj-c++ objective-c++ glsl openscad scad ruleslanguage oxygene pf pf.conf php parser3 perl pl pm plaintext txt text pony pgsql postgres postgresql powershell ps ps1 processing prolog properties proto protobuf puppet pp python py gyp profile python-repl pycon k kdb qml r reasonml re rib rsl graph instances ruby rb gemspec podspec thor irb rust rs SAS sas scss sql p21 step stp scala scheme scilab sci shell console smali smalltalk st sml ml stan stanfuncs stata stylus styl subunit swift tcl tk tap thrift tp twig craftcms typescript ts tsx mts cts vbnet vb vbscript vbs vhdl vala verilog v vim axapta x++ x86asm xl tao xquery xpath xq xqm yml yaml zephir zep".split(' ')
+    return VALID_LANGUAGES.includes(name);
+}
+
 const processLines = (lines: Line[], startKey: number): JSX.Element[] => {
     const elements: JSX.Element[] = [];
     for (let i = 0; i < lines.length; i++) {
@@ -247,19 +259,29 @@ const processLines = (lines: Line[], startKey: number): JSX.Element[] => {
         switch (line.type) {
             case LineType.CodeBlockBoundary: {
                 const codeBlockInnerLines: Line[] = nextLinesOfType(lines, LineType.CodeBlockBoundary, i + 1, true);
-                i += codeBlockInnerLines.length + 1; // plus one for closing boundary
-                const codeBlockInnerText = codeBlockInnerLines.map((l) => `${INDENT_SPACES.repeat(l.indentLevel)}${l.line}`).join('\n');
+                i += codeBlockInnerLines.length + 1; // +1 for closing boundary
 
-                // identify language if applicable & perform code highlighting
+                let codeBlockInnerText: string = '';
+                let language = '';
+                if (codeBlockInnerLines.length > 0 && isValidLanguage(codeBlockInnerLines[0].line)) {
+                    language = codeBlockInnerLines[0].line;
+                    codeBlockInnerText = codeBlockInnerLines.slice(1).map((l) =>
+                        `${INDENT_SPACES.repeat(l.indentLevel)}${l.line}`).join('\n');
+                } else {
+                    codeBlockInnerText = codeBlockInnerLines.map((l) =>
+                        `${INDENT_SPACES.repeat(l.indentLevel)}${l.line}`).join('\n');
+                }
 
-                elements.push(<Code block style={{
-                    fontFamily: 'monospace',
-                    backgroundColor: '#24282C',
-                    padding: '2px 4px',
-                    borderRadius: '4px',
-                    fontSize: 'inherit',
-                    border: '2px solid #212628'
-                }}>{codeBlockInnerText}</Code>);
+                elements.push(<CodeHighlight language={language}
+                                             code={codeBlockInnerText}
+                                             style={{
+                                                 border: '3px solid #212427',
+                                                 backgroundColor: '#24282C',
+                                                 padding: '2px 4px',
+                                                 borderRadius: '4px',
+                                                 marginTop: '4px',
+                                                 marginBottom: '4px'
+                                             }}></CodeHighlight>);
                 break;
             }
             case LineType.Blockquote: {
