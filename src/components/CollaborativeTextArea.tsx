@@ -7,8 +7,15 @@ import {UserCaret} from '@trz/components/UserCaret';
 import { Position, RoomType, ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
 import { NoteType, notify } from "@trz/util/notifications";
 import { useRoom } from "@trz/hooks/useRoom";
-import { executeTextBlockEvent, fullName } from "@mosaiq/terrazzo-common/utils/textUtils";
-import {emitTextBlockEvents, initializeTextBlockData, syncUpdatedCaret} from "@trz/emitters/text";
+import {
+  executeTextBlockEvent,
+  fullName,
+} from "@mosaiq/terrazzo-common/utils/textUtils";
+import {
+  emitTextBlockEvents,
+  initializeTextBlockData,
+  syncUpdatedCaret,
+} from "@trz/emitters/text";
 import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { Box, Button, Text } from "@mantine/core";
 import { MarkdownTextarea } from "./MarkdownTextarea";
@@ -351,7 +358,14 @@ export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
         }
         {
             !editingMode && (collaborativeTextObject.text.length === 0) &&
-            <Text>{props.placeholder}</Text>
+            <Text
+                style={{ cursor: 'text' }}
+                onDoubleClick={()=>{
+                    setEditingMode(true);
+                }}
+            >
+                {props.placeholder}
+            </Text>
         }
         <Button
             key={editingMode ? "Done" : "Edit"}

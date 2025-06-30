@@ -1,5 +1,10 @@
 import React from 'react';
-import { Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, Blockquote, Tabs } from '@mantine/core';
+import { Card, Button, Container, ContainerProps, Divider, Group, Kbd, Text, Textarea, Title, TitleOrder, Table, Blockquote, Tabs, Anchor, HoverCard, Flex, Image, Code } from '@mantine/core';
+import Emoji from 'emojilib';
+import LinkPreview from '@ashwamegh/react-link-preview';
+import { RiArrowRightUpBoxLine, RiLink } from "react-icons/ri";
+import { CodeHighlight } from '@mantine/code-highlight';
+import '@mantine/code-highlight/styles.css';
 
 interface MarkdownTextareaProps extends ContainerProps{
     children: string;
@@ -15,6 +20,7 @@ export const MarkdownTextarea = (props:MarkdownTextareaProps) => {
         </Container>
     );
 }
+
 
 const processBlockquotes = (lines: Line[], rootKey: number): JSX.Element => {
     interface BQTreeNode {
@@ -119,10 +125,10 @@ const processBlockquotes = (lines: Line[], rootKey: number): JSX.Element => {
     return treeToElements(root, rootKey);
 }
 
-const nextLinesOfType = (lines: Line[], type: LineType, startingAt: number) => {
+const nextLinesOfType = (lines: Line[], type: LineType, startingAt: number, negate: boolean = false) => {
     const group: Line[] = [];
     for (let i = startingAt; i < lines.length; i++) {
-        if (lines[i].type == type) {
+        if ((!negate && lines[i].type == type) || (negate && lines[i].type != type)) {
             group.push(lines[i])
         } else {
             break;
@@ -195,14 +201,14 @@ const constructTabsetLines = (lines: Line[]) => {
 }
 
 const renderMarkdown = (markdown: string): JSX.Element[] => {
-    const rawLines = markdown.split('\n');
+    const codeblockReadyMarkdown = markdown.replace(/(?<=[^\n\\])```/g, '\n```').replace(/```(?=[^\n])/g, '```\n');
+    // put ``` on its own line always
+    const rawLines = codeblockReadyMarkdown.split('\n');
     const lines: Line[] = rawLines.map((line) => {
         return extractLineData(line);
     });
 
     const outerTabsetLines: (Line | Tabset)[] = constructTabsetLines(lines);
-
-
 
     const renderMarkdownRecursive = (tabsetLines: (Line | Tabset)[]): JSX.Element[] => {
         const elements: JSX.Element[] = [];
@@ -236,11 +242,48 @@ const renderMarkdown = (markdown: string): JSX.Element[] => {
     return renderMarkdownRecursive(outerTabsetLines);
 }
 
+const isValidLanguage = (name: string): boolean => {
+    if (name.indexOf(' ') > -1) {
+        return false;
+    }
+    // language list is based on highlight.js.
+    // gleaned from here: https://highlightjs.readthedocs.io/en/latest/supported-languages.html
+    const VALID_LANGUAGES = "1c abnf accesslog ada arduino ino armasm arm avrasm actionscript as angelscript asc apache apacheconf applescript osascript arcade asciidoc adoc aspectj autohotkey autoit awk mawk nawk gawk bash sh zsh basic bnf brainfuck bf csharp cs c h cpp hpp cc hh c++ h++ cxx hxx cal cos cls cmake cmake.in coq csp css capnproto capnp clojure clj coffeescript coffee cson iced crmsh crm pcmk crystal cr d dart dpr dfm pas pascal diff patch django jinja dns zone bind dockerfile docker dos bat cmd dsconfig dts dust dst ebnf elixir elm erlang erl excel xls xlsx fsharp fs fsx fsi fsscript fix fortran f90 f95 gcode nc gams gms gauss gss gherkin go golang golo gololang gradle graphql groovy xml html xhtml rss atom xjb xsd xsl plist svg http https haml handlebars hbs html.hbs html.handlebars haskell hs haxe hx hy hylang ini toml inform7 i7 irpf90 json java jsp javascript js jsx julia jl julia-repl kotlin kt tex leaf lasso ls lassoscript less ldif lisp livecodeserver livescript ls lua makefile mk mak make markdown md mkdown mkd mathematica mma wl matlab maxima mel mercury mips mipsasm mizar mojolicious monkey moonscript moon n1ql nsis nginx nginxconf nim nimrod nix ocaml ml objectivec mm objc obj-c obj-c++ objective-c++ glsl openscad scad ruleslanguage oxygene pf pf.conf php parser3 perl pl pm plaintext txt text pony pgsql postgres postgresql powershell ps ps1 processing prolog properties proto protobuf puppet pp python py gyp profile python-repl pycon k kdb qml r reasonml re rib rsl graph instances ruby rb gemspec podspec thor irb rust rs SAS sas scss sql p21 step stp scala scheme scilab sci shell console smali smalltalk st sml ml stan stanfuncs stata stylus styl subunit swift tcl tk tap thrift tp twig craftcms typescript ts tsx mts cts vbnet vb vbscript vbs vhdl vala verilog v vim axapta x++ x86asm xl tao xquery xpath xq xqm yml yaml zephir zep".split(' ')
+    return VALID_LANGUAGES.includes(name);
+}
+
 const processLines = (lines: Line[], startKey: number): JSX.Element[] => {
     const elements: JSX.Element[] = [];
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
         switch (line.type) {
+            case LineType.CodeBlockBoundary: {
+                const codeBlockInnerLines: Line[] = nextLinesOfType(lines, LineType.CodeBlockBoundary, i + 1, true);
+                i += codeBlockInnerLines.length + 1; // +1 for closing boundary
+
+                let codeBlockInnerText: string = '';
+                let language = '';
+                if (codeBlockInnerLines.length > 0 && isValidLanguage(codeBlockInnerLines[0].line)) {
+                    language = codeBlockInnerLines[0].line;
+                    codeBlockInnerText = codeBlockInnerLines.slice(1).map((l) =>
+                        `${INDENT_SPACES.repeat(l.indentLevel)}${l.line}`).join('\n');
+                } else {
+                    codeBlockInnerText = codeBlockInnerLines.map((l) =>
+                        `${INDENT_SPACES.repeat(l.indentLevel)}${l.line}`).join('\n');
+                }
+
+                elements.push(<CodeHighlight language={language}
+                                             code={codeBlockInnerText}
+                                             style={{
+                                                 border: '3px solid #212427',
+                                                 backgroundColor: '#24282C',
+                                                 padding: '2px 4px',
+                                                 borderRadius: '4px',
+                                                 marginTop: '4px',
+                                                 marginBottom: '4px'
+                                             }}></CodeHighlight>);
+                break;
+            }
             case LineType.Blockquote: {
                 const blockquoteLines: Line[] = nextLinesOfType(lines, LineType.Blockquote, i);
                 i += blockquoteLines.length - 1;
@@ -343,7 +386,7 @@ const renderLineContent = (content: LineContent[]): JSX.Element[] => {
                 elements.push(<Text span inherit key={i} fs={'italic'}>{item.text}</Text>);
                 break;
             case LineContentStyle.InlineCode:
-                elements.push(<Text span inherit key={i} style={{ fontFamily: 'monospace', backgroundColor: '#f5f5f5', padding: '2px 4px', borderRadius: '4px' }}>{item.text}</Text>);
+                elements.push(<Text span inherit key={i} style={{ fontFamily: 'monospace', backgroundColor: '#24282C', padding: '2px 4px', borderRadius: '4px' }}>{item.text}</Text>);
                 break;
             case LineContentStyle.Subscript:
                 elements.push(<Text span inherit key={i} style={{ verticalAlign: 'sub' }}>{item.text}</Text>);
@@ -357,6 +400,17 @@ const renderLineContent = (content: LineContent[]): JSX.Element[] => {
             case LineContentStyle.Keyboard:
                 elements.push(<Kbd key={i}>{item.text}</Kbd>);
                 break;
+            case LineContentStyle.Highlight:
+                elements.push(<Text span inherit key={i} style={{ backgroundColor: '#77734f' }}>{item.text}</Text>);
+                break;
+            case LineContentStyle.Link:
+                elements.push(<LinkWithPreview key={i} url={item.href!} text={item.text}></LinkWithPreview>);
+                break;
+            case LineContentStyle.Image:
+                elements.push(<Image style={{
+                    cursor: 'default'
+                }} key={i} w='auto' maw='100%' fit='contain' src={item.href!} alt={item.text} px='sm' />)
+                break;
             default:
                 elements.push(<Text span inherit key={i}>{item.text}</Text>);
                 break;
@@ -365,8 +419,100 @@ const renderLineContent = (content: LineContent[]): JSX.Element[] => {
     return elements;
 }
 
+const LinkWithPreview = (props: {url: string, text: string}) => {
+
+    const [url, text] = [props.url, props.text];
+
+    const renderLinkPreview = ({ loading, preview }) => {
+
+        const copyToClipboard = (str: string) => {
+            navigator.clipboard.writeText(str);
+        }
+
+
+        return loading ? (
+            <Text>Loading <Anchor href={url} target="_blank">{url}</Anchor>...</Text>
+        ) : (
+            <Flex gap='sm' align='center'>
+                <Anchor href={url} target="_blank" style={{
+                    display: 'block',
+                    overflowY: 'auto'
+                }}>
+                    <Image height='100%' src={preview.img} alt={preview.title} radius='sm'/>
+                </Anchor>
+                <Container>
+                    <Anchor href={url} target="_blank" style={{
+                        display: 'block',
+                        color: 'inherit'}}
+                    >
+                        <Flex gap='sm' align='center'>
+                            <Image src={preview.favicon} alt={preview.title} style={{
+                                objectFit: 'contain',
+                                backgroundColor: '#ffffffdd',
+                                borderRadius: '10%',
+                                height: '26px',
+                                width: '26px'
+                            }} />
+                            <Title order={4}>{preview.title}<RiArrowRightUpBoxLine style={{
+                                height: '18px',
+                                width: '18px',
+                                flexShrink: '0',
+                                marginLeft: '1ch'
+                            }} /></Title>
+                        </Flex>
+                    </Anchor>
+                    <Text>{preview.description}</Text>
+                    <Divider my='sm' />
+                    <Flex gap='sm' align='center' style={{
+                        cursor: 'pointer'
+                    }} onClick={() => copyToClipboard(url)}>
+                        <RiLink style={{
+                            height: '18px',
+                            width: '18px',
+                            flexShrink: '0'
+                        }} />
+                        <Text>Copy link</Text>
+                    </Flex>
+                </Container>
+            </Flex>
+        )
+    }
+
+    return (<HoverCard shadow='md' withArrow openDelay={200} closeDelay={200}>
+        <HoverCard.Target>
+            <Anchor href={url}>{text}</Anchor>
+        </HoverCard.Target>
+        <HoverCard.Dropdown>
+            <Card style={{
+                padding: '0',
+                overflowY: 'auto',
+            }} maw='min(90vw, 480px)' mah='min(90vh, 320px)'>
+                <LinkPreview
+                    url={url}
+                    customDomain='https://webpreviews.mosaiq.dev/parse/link'
+                    render={renderLinkPreview}
+                />
+            </Card>
+        </HoverCard.Dropdown>
+    </HoverCard>);
+}
+
+const processEmojis = (line: string)=> {
+    const emojiEntries = Object.entries(Emoji)
+    return line.replace((/(?<!(?:^|[^\\])(?:\\\\)*\\):([a-z0-9-_+]+):/gi), (match, keyword) => {
+        for (let i = 0; i < emojiEntries.length; i++) {
+            const [emoji, names] = emojiEntries[i];
+            if (names.includes(keyword)) {
+                return emoji
+            }
+        }
+        return match;
+    })
+}
+
 const INDENT_SPACES = '  ';
 const extractLineData = (line: string): Line => {
+
     const lineObject: Line = {
         line,
         type: LineType.Paragraph,
@@ -389,6 +535,9 @@ const extractLineData = (line: string): Line => {
         return lineObject;
     } else if (line.trim() === '---') {
         lineObject.type = LineType.HorizontalRule;
+        return lineObject;
+    } else if (line === '```') {
+        lineObject.type = LineType.CodeBlockBoundary;
         return lineObject;
     }
 
@@ -430,7 +579,8 @@ const extractLineData = (line: string): Line => {
             if (contents[i].style !== LineContentStyle.Text) {
                 continue;
             }
-            const delimSplit = contents[i].text.split(delim);
+            // contents[i].text.split(delim);
+            const delimSplit = splitStringWithEscape(contents[i].text, delim, true);
             const delimContents: LineContent[] = [];
             for (let j = 0; j < delimSplit.length; j++) {
                 delimContents.push({
@@ -450,6 +600,92 @@ const extractLineData = (line: string): Line => {
         }
     }
 
+    const FORMATTED_URL_REGEX = /(\[[^\]]+\]\(https?:\/\/[a-z0-9\-.]+\.[a-z0-9-]+(?:\/[^ \n\t)]*)?\))/gi;
+    const IMAGE_REGEX = new RegExp(`!${FORMATTED_URL_REGEX.source}`, 'gi');
+    const URL_REGEX = /(https?:\/\/[a-z0-9\-.]+\.[a-z0-9-]+(?:\/[^ \n\t]*)?)/gi;
+
+    const splitByLink = (contents: LineContent[]) => {
+        const splitByThing = (regex: RegExp, makeDelimContent: (body: string) => LineContent)=> {
+            for (let i = 0; i < contents.length; i++) {
+                if (contents[i].style !== LineContentStyle.Text) {
+                    continue;
+                }
+                const splitLine = contents[i].text.split(regex);
+                const delimContents: LineContent[] = splitLine.map((str, index) => {
+                    const isSpecial = (index % 2 == 1)
+                    if (!isSpecial) {
+                        return {
+                            text: str,
+                            style: LineContentStyle.Text
+                        };
+                    } else {
+                        return makeDelimContent(str);
+                    }
+                });
+                contents.splice(i, 1, ...delimContents);
+                i += delimContents.length - 1;
+            }
+        }
+
+        splitByThing(IMAGE_REGEX, (str) => {
+            const match = str.match(/\[([^\]]+)\]\(([^)]+)\)/);
+            const text = match![1];
+            const href = match![2];
+            return {
+                text: text,
+                style: LineContentStyle.Image,
+                href: href
+            };
+        })
+
+        splitByThing(FORMATTED_URL_REGEX, (str) => {
+            const match = str.match(/\[([^\]]+)\]\(([^)]+)\)/);
+            const text = match![1];
+            const href = match![2];
+            return {
+                text: text,
+                style: LineContentStyle.Link,
+                href: href
+            };
+        })
+
+        splitByThing(URL_REGEX, (str) => {
+            return {
+                text: str,
+                style: LineContentStyle.Link,
+                href: str
+            }
+        })
+
+    }
+
+    const splitStringWithEscape = (line: string, delim: string, delimIsPaired: boolean): string[] => {
+        const neuterSpecials = (str: string) => {
+            return str.replace(/[*^|]/g, '\\$&');
+        }
+        const regex = new RegExp(`(?<!(?:^|[^\\\\])(?:\\\\\\\\)*\\\\)${neuterSpecials(delim)}`, 'gi');
+        const splitLine = line.split(regex);
+        if (delimIsPaired && splitLine.length > 1 && splitLine.length % 2 == 0) {
+            const lastTwo = splitLine.slice(-2).join(delim);
+            splitLine.splice(splitLine.length - 2, 2, lastTwo)
+        }
+        return splitLine;
+    }
+
+    const pruneBackslashes = (lines: LineContent[]) => {
+        const newLines: LineContent[] = lines.map((line) => {
+            // remove backslashes with
+            // before: an even number (incl 0) of backslashes
+            // after: after: any of `*_~^@=|\
+            // UPDATE THIS LIST WHEN ADDING NEW SPECIAL CHARACTERS (THIS ONE vvv)
+            if (line.style == LineContentStyle.InlineCode) {
+                return line;
+            }
+            return {...line, text: line.text.replace(/(?<=(?:^|[^\\])(?:\\\\)*)\\(?=[`*_~^@=|#>\-:\\])/gi, '')};
+        })
+        lines.splice(0, lines.length, ...newLines);
+    }
+
     const delimiters = [
         ['`', LineContentStyle.InlineCode],
         ['**', LineContentStyle.Bold],
@@ -460,21 +696,32 @@ const extractLineData = (line: string): Line => {
         ['^', LineContentStyle.Superscript],
         ['~', LineContentStyle.Subscript],
         ['@@', LineContentStyle.Keyboard],
+        ['==', LineContentStyle.Highlight]
     ] as [string, LineContentStyle][];
 
-    // if table, format each individual cell (may refactor)
+    const processLineContents = (contents: LineContent[]) => {
+        // inline-code, emoji, link, other-inline-markdown, backslashes
+        splitByDelimiter(contents, delimiters[0][0], delimiters[0][1]);
+        contents.forEach((c) => {
+            if (c.style != LineContentStyle.InlineCode) {
+                c.text = processEmojis(c.text);
+            }
+        })
+        splitByLink(contents);
+        for (let i = 1; i < delimiters.length; i++) {
+            splitByDelimiter(contents, delimiters[i][0], delimiters[i][1]);
+        }
+        pruneBackslashes(contents);
+    }
+
     if (lineObject.type == LineType.Table) {
-        const rootContentses: LineContent[][] = lineText.split('|').map((td) => [{
+        const rootTableContents: LineContent[][] = splitStringWithEscape(lineText, '|', false).map((td) => [{
             text: td,
             style: LineContentStyle.Text
         }]);
-        const contentses = rootContentses;
-        contentses.forEach((td) => {
-            for (let i = 0; i < delimiters.length; i++) {
-                splitByDelimiter(td, delimiters[i][0], delimiters[i][1]);
-            }
-        })
-        lineObject.tableContent = contentses;
+        const tableContents = rootTableContents;
+        tableContents.forEach((c) => processLineContents(c))
+        lineObject.tableContent = tableContents;
     }
 
     const rootContents: LineContent[] = [{
@@ -482,13 +729,12 @@ const extractLineData = (line: string): Line => {
         style: LineContentStyle.Text,
     }];
     const contents = rootContents;
-    for (let i = 0; i < delimiters.length; i++) {
-        splitByDelimiter(contents, delimiters[i][0], delimiters[i][1]);
-    }
+    processLineContents(contents);
     lineObject.content = contents;
 
     return lineObject;
 }
+
 
 
 enum LineType {
@@ -496,7 +742,7 @@ enum LineType {
     List = 'list',
     Blockquote = 'blockquote',
     Paragraph = 'paragraph',
-    CodeBlock = 'codeBlock',
+    CodeBlockBoundary = 'codeBlockBoundary',
     HorizontalRule = 'horizontalRule',
     ListItem = 'listItem',
     LineBreak = 'lineBreak',
@@ -511,7 +757,10 @@ enum LineContentStyle {
     Superscript = 'superscript',
     Strikethrough = 'strikethrough',
     Keyboard = 'keyboard',
+    Highlight = 'highlight',
     Text = 'text',
+    Link = 'link',
+    Image = 'image'
 }
 
 interface Tab {
@@ -539,4 +788,5 @@ interface Line {
 interface LineContent {
     text: string;
     style: LineContentStyle;
+    href?: string;
 }
