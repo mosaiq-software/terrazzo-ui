@@ -8,7 +8,7 @@ import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
 import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
 import { useSocket } from "@trz/contexts/socket-context";
-import { getCardData } from "@trz/emitters/all";
+import {getCardData, updateCardField} from "@trz/emitters/all";
 import { NoteType, notify } from "@trz/util/notifications";
 import {useHover, useInViewport, useSessionStorage} from "@mantine/hooks";
 import { colorIsDarkAdvanced } from "@trz/util/colorUtils";
@@ -29,7 +29,6 @@ const CardElement = (props: CardElementProps) => {
 	const [checkHover, setCheckHover] = useState<boolean>(true);
 	const [checked, setChecked] = useState(false);
 	const [cardHovered, setCardHovered] = useState<boolean>(false);
-
 
 	useEffect(()=>{
 		let strictIgnore = false;
@@ -100,6 +99,21 @@ const CardElement = (props: CardElementProps) => {
 		}
 		props.onClick();
 	}
+
+	const updateCompleted = async () => {
+		if(card && card.dateCompleted == null){
+			console.log("update")
+			await updateCardField(sockCtx, props.cardId, {dateCompleted: new Date()});
+		}else{
+			await updateCardField(sockCtx, props.cardId, {dateCompleted: null});
+		}
+	}
+
+	useEffect(() =>{
+		if(card){
+			console.log(card.dateCompleted);
+		}
+	}, [card])
 	
 	return (
 		<Paper
@@ -163,7 +177,7 @@ const CardElement = (props: CardElementProps) => {
 						transitionDuration: "1s"
 					}}
 				>
-					{(cardHovered || checked) &&
+					{(cardHovered || card.dateCompleted) &&
 						<Checkbox
 							onMouseEnter={() => {
 								setCheckHover(true)
@@ -173,8 +187,8 @@ const CardElement = (props: CardElementProps) => {
 							}}
 							radius="xl"
 							size="sm"
-							checked={checked}
-							onChange={(event) => setChecked(event.currentTarget.checked)}
+							checked={!!card.dateCompleted}
+							onChange={updateCompleted}
 						/>
 					}
 					<Stack
