@@ -1,0 +1,28 @@
+.Spotlight-Modal-body {
+    padding: 0;
+}
+
+.Search-Button-root {
+    height: 100%;
+    width: calc(10rem * var(--mantine-scale));
+    line-height: inherit;
+}
+.Search-Button-inner {
+    align-items: start;
+}
+
+.Search-Input-wrapper {
+    height: 100%;
+}
+.Search-Input-input {
+    line-height: inherit;
+    height: 100%;
+    min-height: 100%;
+    box-sizing: border-box;
+    border: calc(0.0625rem * var(--mantine-scale)) solid #757575;
+    border-radius: calc(0.25 * 1rem);
+    outline: none;
+}
+.Search-Input-input:hover {
+    border-color: #ffffff;
+}
