@@ -1,5 +1,5 @@
-import React, { createContext, Profiler, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Container } from "@mantine/core";
+import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {Container} from "@mantine/core";
 import CollaborativeMouseTracker from "@trz/wrappers/CollaborativeMouseTracker";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSocket } from "@trz/contexts/socket-context";
@@ -38,7 +38,6 @@ import { arrayMoveInPlace, updateBaseFromPartial } from "@mosaiq/terrazzo-common
 import { useRoom } from "@trz/hooks/useRoom";
 import { useMap } from "@trz/hooks/useMap";
 import { CARD_CACHE_PREFIX, LIST_CACHE_PREFIX } from "@trz/util/boardUtils";
-import { useLocation } from "react-router-dom";
 
 interface BoardContextType {
 	listToCardsMap: Map<ListId, CardId[]>;
@@ -125,6 +124,9 @@ const BoardPage = (): React.JSX.Element => {
 					for (const key of toRemove) {
 						sessionStorage.removeItem(key);
 					}
+
+					// set the board header in the TRZ context
+					trz.setBoardData(boardRes);
 				}
 			} catch (err) {
 				notify(NoteType.BOARD_DATA_ERROR, err);
@@ -135,13 +137,16 @@ const BoardPage = (): React.JSX.Element => {
 		fetchBoardData();
 		return () => {
 			strictIgnore = true;
+
+			// clear the board header when leaving the page
+			trz.setBoardData(undefined);
 		}
 	}, [boardId, sockCtx.connected]);
 
 	useSocketListener<ServerSE.UPDATE_BOARD_FIELD>(ServerSE.UPDATE_BOARD_FIELD, (payload) => {
 		setBoardData(prev => {
 			if (!prev) { return prev; }
-			return updateBaseFromPartial<BoardHeader>(prev, payload);
+			return {...updateBaseFromPartial<BoardHeader>(prev, payload)};
 		});
 	});
 
@@ -411,7 +416,7 @@ const BoardPage = (): React.JSX.Element => {
 	}
 
 	return (
-		<Profiler onRender={onRender} id={"board"}>
+		// <Profiler onRender={onRender} id={"board"}>
 			<Container
 				h={`calc(100vh - ${trz.navbarHeight}px)`}
 				fluid
@@ -490,7 +495,7 @@ const BoardPage = (): React.JSX.Element => {
 					}
 				</CollaborativeMouseTracker>
 			</Container>
-		</Profiler>
+		// </Profiler>
 	);
 };
 

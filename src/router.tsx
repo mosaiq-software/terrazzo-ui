@@ -8,6 +8,7 @@ import HomePage from "@trz/pages/HomePage";
 import OrganizationPage from "@trz/pages/OrganizationPage";
 import ProjectPage from "@trz/pages/ProjectPage";
 import BoardPage from "@trz/pages/BoardPage";
+import BoardSettingsPage from "@trz/pages/BoardSettingsPage";
 import LoginPage from "@trz/pages/auth/LoginPage";
 
 const Router = () => {
@@ -21,7 +22,8 @@ const Router = () => {
 			<Route path='/create-account' element={<SetUpAccount />} />
 			<Route element={<ContentPageWrapper />}>
 				<Route path='/dashboard' element={<HomePage />} />
-				<Route path='/board/:boardId/:tabId?' element={<BoardPage />} />
+				<Route path='/board/:boardId/' element={<BoardPage/>} />
+				<Route path='/board/:boardId/settings' element={<BoardSettingsPage/>} />
 				<Route path='/board/:boardId/card/:cardId' element={<BoardPage />} />
 				<Route path='/card/:cardId' element={<BoardPage />} />
 				<Route path='/project/:projectId/:tabId?' element={<ProjectPage />} />

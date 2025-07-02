@@ -22,21 +22,10 @@ const CreateBoard = (props: ContextModalProps<{ modalBody: string, projectId: Pr
 
         if(boardName.length < 1){
             setErrorName("Enter a Title");
-            if(boardAbbreviation.length < 1){
-                setErrorAbv("Enter an abbreviation");
-            }
             return;
         }
         if(boardName.length > 50){
             setErrorName("Max 50 characters");
-            return;
-        }
-        if(boardAbbreviation.length < 1){
-            setErrorAbv("Enter an Abbreviation");
-            return;
-        }
-        if(boardAbbreviation.length > 4){
-            setErrorAbv("Max 3 characters");
             return;
         }
         try {
@@ -72,7 +61,6 @@ const CreateBoard = (props: ContextModalProps<{ modalBody: string, projectId: Pr
                 <TextInput
                     label="Board Abbreviation"
                     placeholder="Board Abbreviation"
-                    withAsterisk
                     error = {errorAbv}
                     w={250}
                     value={boardAbbreviation}

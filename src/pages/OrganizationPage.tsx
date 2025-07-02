@@ -1,5 +1,5 @@
 import React, { useEffect, useState} from "react";
-import { Box, Avatar, Group, Flex, Title, Text, Tabs, ScrollArea, Center, Stack, Button} from "@mantine/core";
+import { Box, Avatar, Group, Flex, Title, Text, Tabs, ScrollArea, Center, Stack, Button, Loader} from "@mantine/core";
 import {AvatarRow} from "@trz/components/AvatarRow";
 import {Organization, OrganizationId} from "@mosaiq/terrazzo-common/types";
 import { useNavigate, useParams } from "react-router-dom";
@@ -24,7 +24,7 @@ const OrganizationPage = (): React.JSX.Element => {
 	const sockCtx = useSocket();
     const trz = useTRZ();
 	const navigate = useNavigate();
-    const [orgData, setOrgData] = useState<Organization | undefined>();
+    const [orgData, setOrgData] = useState<Organization | undefined | null>();
     const {userDash, updateUserDash} = useDashboard()
     const orgId = params.orgId as OrganizationId | undefined;
     const tabId = params.tabId;
@@ -40,7 +40,7 @@ const OrganizationPage = (): React.JSX.Element => {
             }
             try{
                 const org = await getOrganizationData(sockCtx, orgId);
-                setOrgData(org);
+                setOrgData(org ?? null);
             } catch(err) {
                 notify(NoteType.ORG_DATA_ERROR, err);
                 navigate("/dashboard");
@@ -60,7 +60,10 @@ const OrganizationPage = (): React.JSX.Element => {
         });
     });
 
-    if(!orgData || !orgId){
+    if(orgData === undefined){
+        return <Loader/>;
+    }
+    if(orgData === null || !orgId){
         return <NotFound itemType="Organization" error={PageErrors.NOT_FOUND}/>
     }
     if(!myMembershipRecord){

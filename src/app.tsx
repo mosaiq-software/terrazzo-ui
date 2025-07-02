@@ -27,15 +27,15 @@ const App = () => {
 		<MantineProvider theme={theme} defaultColorScheme="dark">
             <BrowserRouter>
                 <Notifications/>
-                <TRZProvider>
-                    <UserProvider>
-                        <SocketProvider>
+                <UserProvider>
+                    <SocketProvider>
+                        <TRZProvider>
                             <ModalsProvider modals={modals}>
                                 <Router/>
                             </ModalsProvider>
-                        </SocketProvider>
-                    </UserProvider>
-                </TRZProvider>
+                        </TRZProvider>
+                    </SocketProvider>
+                </UserProvider>
             </BrowserRouter>
 		</MantineProvider>
 	);
