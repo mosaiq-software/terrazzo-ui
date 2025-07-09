@@ -24,5 +24,12 @@
     outline: none;
 }
 .Search-Input-input:hover {
-    border-color: #ffffff;
+    border-color: #fff;
+}
+
+.AutoComplete-Item-container {
+    background-color: var(--mantine-color-default);
+}
+.AutoComplete-Item-container:hover {
+    background-color: #444;
 }

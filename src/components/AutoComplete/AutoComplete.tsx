@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, ChangeEventHandler } from 'react'
 import { Button, Modal, Input, Text, Divider } from '@mantine/core'
 import { useDisclosure } from '@mantine/hooks'
-import { useNavigate } from 'react-router'
+import { To, NavLink, useLocation } from 'react-router'
 import Fuse from 'fuse.js'
 
 import { OrganizationId, Project, ProjectId, BoardRes, BoardId, Card, CardId  } from '@mosaiq/terrazzo-common/types'
@@ -11,11 +11,20 @@ import { NoteType, notify } from "@trz/util/notifications"
 import { useSocket } from '@trz/contexts/socket-context'
 import './AutoComplete.css'
 
+// NOTE(ttph): Keywords for filtering
+enum categoryIds 
+{
+    organization = "@org",
+    project = "@project",
+    board = "@board",
+    card = "@card",
+}
 
-// NOTE(ttph): Data redundancy. GOOD? BAD? ¯\_(ツ)_/¯
-type SearchObject_Projs  = { title: string; object: Project; }
-type SearchObject_Boards = { title: string; object: BoardRes; }
-type SearchObject_Cards  = { title: string; board: string; object: Card; }
+// TODO(ttph): Better object structure for fuzzy searching
+type SearchObject = { title: string; category: string; }
+interface SearchObject_Projs  extends SearchObject { object: Project; }
+interface SearchObject_Boards extends SearchObject { object: BoardRes; }
+interface SearchObject_Cards  extends SearchObject { board: string; object: Card; }
 
 // NOTE(ttph): Different meaning for conceptual reasons
 type Object_Projs  = SearchObject_Projs
@@ -24,10 +33,11 @@ type Object_Cards  = SearchObject_Cards
 
 type SearchQuery = {
     pattern: string;
-    projs:  SearchObject_Projs[];
-    boards: SearchObject_Boards[];
-    cards:  SearchObject_Cards[];
+    searchObjects: {
+        [key:string]: SearchObject[]
+    }
 }
+
 type SearchResults = {
     projResults:  Object_Projs[];
     boardResults: Object_Boards[];
@@ -43,7 +53,11 @@ export function AutoComplete() {
     const [ opened, { close, open } ] = useDisclosure(false);
     const { userDash }                = useDashboard();
     const sockCtx                     = useSocket();
-    const navigate = useNavigate();
+    const location = useLocation();
+
+    useEffect(() => {
+        close();
+    }, [location]);
 
     const fetchOrganizationData = useCallback(async (orgId: OrganizationId) => {
         if (!orgId || !sockCtx.connected) return;
@@ -92,12 +106,20 @@ export function AutoComplete() {
         }
     }, [sockCtx]);
 
-    // ttph: fetches all data associated with a user 
+    // NOTE(ttph): fetches all data associated with a user 
     useEffect(() => {
         if (!userDash || !sockCtx.connected) return;
 
-        const getData = setTimeout(() => {
-            const fuse_search_query = { pattern: searchPattern, projs: [], boards: [], cards: [] } as SearchQuery;
+        const getData = setTimeout(() => 
+        {
+            const fuse_search_query = { 
+                pattern: searchPattern, 
+                searchObjects: {
+                   projs:  [], 
+                   boards: [], 
+                   cards:  [] 
+                }
+            } as SearchQuery;
 
             userDash.organizations.map(async (organization) => {
                 const org_data = await fetchOrganizationData(organization.id);
@@ -107,21 +129,39 @@ export function AutoComplete() {
                     const project_data = await fetchProjectData(project.id);
                     if (!project_data) { return; }
 
-                    const searchObjectProj = { title: project_data.name, object: project_data };
-                    fuse_search_query.projs.push(searchObjectProj);
+                    const searchObjectProj = { 
+                        title: project_data.name, 
+                        category: categoryIds.project, 
+                        object: project_data 
+                    };
+
+                    fuse_search_query.searchObjects.projs.push(searchObjectProj);
+
                     project_data.boards.map(async (board) => {
                         const board_data = await fetchBoardData(board.id);
                         if (!board_data) { return; }
 
-                        const searchObjectBoard = { title: board_data.name, object: board_data };
-                        fuse_search_query.boards.push(searchObjectBoard);
+                        const searchObjectBoard = { 
+                            title: board_data.name, 
+                            category: categoryIds.board, 
+                            object: board_data 
+                        };
+
+                        fuse_search_query.searchObjects.boards.push(searchObjectBoard);
+
                         await Promise.all(board_data.lists.map(async (list) => {
                             list.cardIds.map(async (cardId) => {
                                 const card_data = await fetchCardData(cardId);
                                 if (!card_data) { return; }
 
-                                const searchObjectCard = { title: card_data.name, board: board_data.name, object: card_data };
-                                fuse_search_query.cards.push(searchObjectCard);
+                                const searchObjectCard = { 
+                                    title: card_data.name, 
+                                    category: categoryIds.card,
+                                    board: board_data.name, 
+                                    object: card_data 
+                                };
+
+                                fuse_search_query.searchObjects.cards.push(searchObjectCard);
                                 setSearchQuery(fuse_search_query);
                             });
                         }));
@@ -136,22 +176,24 @@ export function AutoComplete() {
     useEffect(() => {
         if (!searchQuery) return;
 
+        // TODO(ttph): Filtering
+
         const searchPattern = searchQuery.pattern;
         const fuseSearchResults = { projResults: [], boardResults: [], cardResults: [] } as SearchResults;
 
-        const fuseProjs = new Fuse(searchQuery.projs, { keys: ['title'] });
+        const fuseProjs = new Fuse(searchQuery.searchObjects.projs, { keys: ['title', 'category'] });
         fuseProjs.search(searchPattern).map((result) => {
-            fuseSearchResults.projResults.push(result.item);
+            fuseSearchResults.projResults.push(result.item as SearchObject_Projs);
         });
 
-        const fuseBoards = new Fuse(searchQuery.boards, { keys: ['title'] });
+        const fuseBoards = new Fuse(searchQuery.searchObjects.boards, { keys: ['title', 'category'] });
         fuseBoards.search(searchPattern).map((result) => {
-            fuseSearchResults.boardResults.push(result.item);
+            fuseSearchResults.boardResults.push(result.item as SearchObject_Boards);
         });
 
-        const fuseCards = new Fuse(searchQuery.cards, { keys: ['title', 'board'] });
+        const fuseCards = new Fuse(searchQuery.searchObjects.cards, { keys: ['title', 'category', 'board'] });
         fuseCards.search(searchPattern).map((result) => {
-            fuseSearchResults.cardResults.push(result.item);
+            fuseSearchResults.cardResults.push(result.item as SearchObject_Cards);
         });
 
         setSearchResults(fuseSearchResults);
@@ -188,10 +230,7 @@ export function AutoComplete() {
                                                 <AutoCompleteItem 
                                                     key={`projects${index.toString()}${results.title}`}
                                                     text={results.title}
-                                                    onMouseDown={() => {
-                                                        close();
-                                                        navigate(`/project/${results.object.id}`);
-                                                    }}
+                                                    href={`/project/${results.object.id}`}
                                                 />
                                             );
                                         })}
@@ -205,10 +244,7 @@ export function AutoComplete() {
                                                 <AutoCompleteItem 
                                                     key={`boards${index.toString()}${results.title}`}
                                                     text={results.title}
-                                                    onMouseDown={() => {
-                                                        close();
-                                                        navigate(`/board/${results.object.id}`);
-                                                    }}
+                                                    href={`/board/${results.object.id}`}
                                                 />
                                             );
                                         })}
@@ -222,11 +258,7 @@ export function AutoComplete() {
                                                 <AutoCompleteItem 
                                                     key={`cards${index.toString()}${results.title}`}
                                                     text={results.title}
-                                                    onMouseDown={() => {
-                                                        close();
-                                                        // TODO(ttph): Uncomment when card routes are merged
-                                                        // navigate(`/card/${results.object.id}`);
-                                                    }}
+                                                    href={`/card/${results.object.id}`}
                                                 />
                                             );
                                         })}
@@ -259,13 +291,16 @@ const AutoCompleteItemList = ({ text, children }:PropsAutoCompleteItemList) => {
 
 interface PropsAutoCompleteItem {
     text: string;
+    href: To;
     onMouseDown?: React.MouseEventHandler;
 }
-const AutoCompleteItem = ({ text, onMouseDown }:PropsAutoCompleteItem) => {
+const AutoCompleteItem = ({ text, href, onMouseDown }:PropsAutoCompleteItem) => {
     return (
-        <div className={'AutoComplete-Item-container'} onMouseDown={onMouseDown}>
-            <Text className={'AutoComplete-Item-text'}>{text}</Text>
-        </div>
+        <NavLink to={href}>
+            <div data-href={href} className={'AutoComplete-Item-container'} onMouseDown={onMouseDown}>
+                <Text className={'AutoComplete-Item-text'}>{text}</Text>
+            </div>
+        </NavLink>
     )
 }
 
