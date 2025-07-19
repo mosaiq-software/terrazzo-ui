@@ -15,7 +15,7 @@ import {StoryPointButtons} from "@trz/components/StoryPointButtons";
 import { Card, CardId, UserId } from "@mosaiq/terrazzo-common/types";
 import { useUser } from "@trz/contexts/user-context";
 import { ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
-import { getCardData, updateCardField, updateCardsLabels } from "@trz/emitters/all";
+import { getCardData, updateCardField, updateCardsLabels, updateCardAssignee } from "@trz/emitters/all";
 import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
 import { colorIsDarkAdvanced } from "@trz/util/colorUtils";
@@ -310,7 +310,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 									justify={"flex-start"}
 									onClick={()=>{
 										if(usr.userData){
-											// updateCardAssignee(card.id, usr.userData.id, !joinedCard);
+											updateCardAssignee(sockCtx, card.id, usr.userData.id, !joinedCard);
 										}
 									}}
 							>{joinedCard ? "Leave" : "Join"} Card</Button>

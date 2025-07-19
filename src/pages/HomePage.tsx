@@ -1,5 +1,5 @@
-import React from "react";
-import {Box, ScrollArea, Title, Flex, Divider, Text, Loader, Center, Kbd, Button, Tooltip, Avatar, Group, Stack, HoverCard, UnstyledButton} from "@mantine/core";
+import React, {useEffect, useState} from "react";
+import {Box, ScrollArea, Title, Flex, Divider, Text, Loader, Center, Kbd, Button, Tooltip, Avatar, Group, Stack, HoverCard, UnstyledButton, Anchor} from "@mantine/core";
 import { BOARD_CARD_WIDTH, BoardListCard} from "@trz/components/BoardListCards";
 import { useNavigate } from "react-router-dom";
 import { useSocket } from "@trz/contexts/socket-context";
@@ -9,6 +9,9 @@ import { modals } from "@mantine/modals";
 import { useTRZ } from "@trz/contexts/TRZ-context";
 import { AvatarRow } from "@trz/components/AvatarRow";
 import { useDashboard } from "@trz/contexts/dashboard-context";
+import { Card } from "@mosaiq/terrazzo-common/types";
+import {getCardData} from "@trz/emitters/all";
+import {NoteType, notify} from "@trz/util/notifications";
 
 const HomePage = (): React.JSX.Element => {
     const usr = useUser();
@@ -22,6 +25,7 @@ const HomePage = (): React.JSX.Element => {
     const orgsArch = userDash?.organizations.filter((e)=>e.archived);
     const projects = userDash?.standaloneProjects.filter((e)=>!e.archived);
     const projectsArch = userDash?.standaloneProjects.filter((e)=>e.archived);
+    const assignedCards = userDash?.assignedCards;
 
     return (
         <ScrollArea 
@@ -182,7 +186,28 @@ const HomePage = (): React.JSX.Element => {
                                 }</Box>
                             </>
                         }
-                        
+                        {
+                            assignedCards && assignedCards.length > 0 && <Box>
+                                <Title c='white' order={4} my="xs">My tasks</Title>
+                                <Box style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "repeat(auto-fill, 260px)",
+                                    maxWidth: "100%"
+                                }}>
+                                {assignedCards.map((card) => {
+                                    return (<BoardListCard
+                                        key={card.id}
+                                        title={card.name}
+                                        bgColor="#4b598c"
+                                        color="white"
+                                        onClick={()=>{
+                                            navigate("/card/"+card.id);
+                                        }}
+                                    />);
+                                })}
+                                </Box>
+                            </Box>
+                        }
                         {
                             (!userDash) && 
                             <Center w="100%" h="100%">
