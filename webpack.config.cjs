@@ -42,8 +42,18 @@ module.exports= () => {
                     use: ["style-loader", "css-loader", "postcss-loader"],
                 },
                 {
-                    test: /\.(png|svg|jpg|jpeg|gif)$/i,
+                    test: /\.svg$/,
+                    use: ['@svgr/webpack'],
+                    issuer: /\.[jt]sx?$/, // Only for JS/TS imports
+                },
+                {
+                    test: /\.(png|jpg|jpeg|gif)$/i,
                     type: 'asset/resource',
+                },
+                {
+                test: /\.svg$/i,
+                type: 'asset/resource',
+                issuer: { not: [/\.[jt]sx?$/] }, // Only for non-JS/TS imports
                 },
             ]
         },
