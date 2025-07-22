@@ -54,7 +54,7 @@ const LandingPage = () => (
           <Group gap="xs">
             <Button
               component={Link}
-              to="/signup"
+              to="/login"
               color={COLORS.primary}
               c={COLORS.background}
               variant="filled"
@@ -98,7 +98,7 @@ const LandingPage = () => (
         <Group gap="sm" mt="md">
           <Button
             component={Link}
-            to="/signup"
+            to="/login"
             color={COLORS.primary}
             c={COLORS.background}
             size="md"
