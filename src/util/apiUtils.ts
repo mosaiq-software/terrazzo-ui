@@ -2,13 +2,12 @@ import {RestMethods, RestRequestBody, RestRequestMethod, RestRequestParams, Rest
 
 export const getApiUrl = () => {
     const apiUrl = process.env.API_URL;
-    const apiPort = process.env.API_PORT;
 
-    if (!apiUrl || !apiPort) {
+    if (!apiUrl) {
         throw new Error("Missing required environment variables for API URL");
     }
 
-    return `${apiUrl}:${apiPort}`;
+    return apiUrl;
 };
 
 export async function callTrzApi<T extends RestRoutes> (endpoint:T, params:RestRequestParams[T], body:RestRequestBody[T],): Promise<RestResponse<T>> {
