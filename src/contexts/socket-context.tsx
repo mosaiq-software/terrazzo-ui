@@ -44,7 +44,10 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             userId: usr.userData.id,
             githubToken: usr.githubAuthToken,
         };
-        const sock = io(process.env.SOCKET_URL, {auth});
+        const sock = io(process.env.SOCKET_URL, {
+            auth,
+            path: "/socket"
+        });
 
         setSocketState(sock);
 

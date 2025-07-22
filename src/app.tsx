@@ -10,9 +10,9 @@ import Router from "./router";
 import {UserProvider} from "@trz/contexts/user-context";
 import { BrowserRouter } from "react-router-dom";
 import { ModalsProvider } from "@mantine/modals";
-import {CreateBoardModal} from "@trz/components/modals/CreateBoard";
-import {CreateProjectModal} from "@trz/components/modals/CreateProject";
-import {CreateOrganizationModal} from "@trz/components/modals/CreateOrganization";
+import {CreateBoardModal} from "@trz/components/Modals/CreateBoard";
+import {CreateProjectModal} from "@trz/components/Modals/CreateProject";
+import {CreateOrganizationModal} from "@trz/components/Modals/CreateOrganization";
 
 const theme = createTheme({});
 

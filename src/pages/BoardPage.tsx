@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {Container} from "@mantine/core";
-import CollaborativeMouseTracker from "@trz/wrappers/CollaborativeMouseTracker";
+import CollaborativeMouseTracker from "@trz/wrappers/collaborativeMouseTracker";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSocket } from "@trz/contexts/socket-context";
 import CreateList from "@trz/components/CreateList";

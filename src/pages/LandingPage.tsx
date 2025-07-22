@@ -174,7 +174,7 @@ const LandingPage = () => (
             </Text>
           </Group>
           <Anchor
-            href="https://mosaiq.software"
+            href="https://mosaiq.dev"
             target="_blank"
             rel="noopener noreferrer"
             c={COLORS.primary}
