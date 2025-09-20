@@ -1,34 +1,44 @@
+//Utility
 import React from "react";
-import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
-import { createTheme, MantineProvider } from '@mantine/core';
-import '@mantine/core/styles.css';
-import { TRZProvider } from "@trz/util/TRZ-context";
-import { getGithubLoginUrl } from "@trz/util/githubAuth";
+import "@mantine/core/styles.css";
+import '@mantine/notifications/styles.css';
+import {Button, createTheme, MantineProvider} from "@mantine/core";
+import { TRZProvider } from "@trz/contexts/TRZ-context";
+import { SocketProvider } from "@trz/contexts/socket-context";
+import { Notifications } from '@mantine/notifications';
+import Router from "./router";
+import {UserProvider} from "@trz/contexts/user-context";
+import { BrowserRouter } from "react-router-dom";
+import { ModalsProvider } from "@mantine/modals";
+import {CreateBoardModal} from "@trz/components/Modals/CreateBoard";
+import {CreateProjectModal} from "@trz/components/Modals/CreateProject";
+import {CreateOrganizationModal} from "@trz/components/Modals/CreateOrganization";
 
-import {GithubAuth} from "@trz/pages/auth/github";
+const theme = createTheme({});
 
-const theme = createTheme({
-
-});
+const modals = {
+	organization: CreateOrganizationModal,
+	project: CreateProjectModal,
+	board: CreateBoardModal,
+}
 
 const App = () => {
-    return (
-        <MantineProvider theme={theme}>
-            <TRZProvider>
-                <BrowserRouter>
-                    <Routes>
-                        <Route path="/" element={<Outlet />} />
-                        <Route path="/auth" element={<Outlet />}>
-                            <Route path="github" element={<GithubAuth />} />
-                        </Route>
-                    </Routes>
-                </BrowserRouter>
-                <p>
-                    Hello world! <a href={getGithubLoginUrl()}>Login with GitHub</a>
-                </p>
-            </TRZProvider>
-        </MantineProvider>
-    );
+	return (
+		<MantineProvider theme={theme} defaultColorScheme="dark">
+            <BrowserRouter>
+                <Notifications/>
+                <UserProvider>
+                    <SocketProvider>
+                        <TRZProvider>
+                            <ModalsProvider modals={modals}>
+                                <Router/>
+                            </ModalsProvider>
+                        </TRZProvider>
+                    </SocketProvider>
+                </UserProvider>
+            </BrowserRouter>
+		</MantineProvider>
+	);
 };
 
 export default App;
