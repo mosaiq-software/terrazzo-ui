@@ -103,8 +103,7 @@ const CardElement = (props: CardElementProps) => {
 			bg="#17191b"
 			radius="md"
 			p="sm"
-			shadow="lg"
-			bd="1px solid #757575"
+			shadow="md"
 			mih="85px"
 			style={{
 				cursor: "pointer",
@@ -146,16 +145,16 @@ const CardElement = (props: CardElementProps) => {
 						})
 					}
 				</Pill.Group>
-				<Title 
-					order={5} 
+				<Text 
 					lineClamp={7} 
 					c="#ffffff"
+                    fz="sm"
 					style={{
 						wordWrap: "break-word",
 						textWrap: "wrap",
 						userSelect: "none",
 					}}
-				>{card.name}</Title>
+				>{card.name}</Text>
 				<Text
 					size='xs'
 					c="#878787"
