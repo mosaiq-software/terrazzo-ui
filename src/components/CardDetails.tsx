@@ -388,37 +388,6 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 									<Button
 										bg={buttonColor}
 										justify={"flex-start"}
-									>Story Points</Button>
-								</Menu.Target>
-								<Menu.Dropdown ta='center'>
-									<Menu.Label>Story Points</Menu.Label>
-									<StoryPointButtons 
-										onChange={async (sp)=>{
-											if(!props.cardId){
-												notify(NoteType.CARD_UPDATE_ERROR);
-												return;
-											}
-											try{
-												await updateCardField(sockCtx, props.cardId, {storyPoints: sp});
-											}catch (e){
-												notify(NoteType.CARD_UPDATE_ERROR);
-												return;
-											}
-										}}
-									/>
-								</Menu.Dropdown>
-							</Menu>
-							<Menu
-								position='right-start'
-								withArrow
-								arrowPosition="center"
-								withOverlay={true}
-								closeOnClickOutside={true}
-							>
-								<Menu.Target>
-									<Button
-										bg={buttonColor}
-										justify={"flex-start"}
 									>Labels</Button>
 								</Menu.Target>
 								<Menu.Dropdown ta='center' miw="10rem">

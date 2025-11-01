@@ -172,11 +172,6 @@ const CardElement = (props: CardElementProps) => {
 							<Text c="white" ta='center'>{unicodeMap[card.priority]}</Text>
 						</Box>
 					}
-					{card.storyPoints &&
-						<Box bg='#f2bb6e' w='20' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
-							<Text c='white' ta='center'>{card.storyPoints}</Text>
-						</Box>
-					}
 				</Group>
 			</React.Fragment>}
 		</Paper>
