@@ -1,6 +1,6 @@
-import React, {createContext, useState} from 'react';
+import React, {createContext, useEffect, useState} from 'react';
 import {User, UserHeader} from "@mosaiq/terrazzo-common/types";
-import { revokeUserAccessToGithubAuth, tryLoginWithGithub } from '@trz/util/githubAuth';
+import { getUserDataFromGithub, revokeUserAccessToGithubAuth, tryLoginWithGithub } from '@trz/util/githubAuth';
 import { readSessionStorageValue, useSessionStorage } from '@mantine/hooks';
 import { LocalStorageKey } from '@mosaiq/terrazzo-common/constants';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +26,27 @@ const UserProvider: React.FC<any> = ({ children }) => {
     const [loginRouteDestination, setLoginRouteDestination] = useSessionStorage<string | null>({ key: "loginRouteDestination" });
     const [userData, setUser] = useState<UserHeader | null>(null);
     const navigate = useNavigate();
+    
+    useEffect(() => {
+        const tryLogin = async () => {
+            const savedToken = localStorage.getItem(LocalStorageKey.GITHUB_ACCESS_TOKEN);
+            console.log("Trying saved token:", savedToken);
+            if (!savedToken) {
+                return;
+            }
+            try {
+                const user = await getUserDataFromGithub(savedToken);
+                if (!user || typeof user === "string") {
+                    return {authToken: null, user: null};
+                }
+                setGithubAuthToken(savedToken);
+                setUser(user);
+            } catch (e) {
+                console.error("Failed to fetch user data", e);
+            }
+        };
+        tryLogin();
+    }, []);
 
     const githubLogin = async (code: string | undefined): Promise<void> => {
         // check if user is already logged in - passthrough

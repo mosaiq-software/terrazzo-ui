@@ -14,6 +14,7 @@ import {useDashboard} from "@trz/contexts/dashboard-context";
 import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
 import { AutoComplete } from '@trz/components/AutoComplete/AutoComplete'
+import { UserProfileIcon } from "@trz/components/UserProfileIcon";
 
 interface TRZAppLayoutProps {
     children: any;
@@ -21,7 +22,6 @@ interface TRZAppLayoutProps {
 const TRZAppLayout = (props: TRZAppLayoutProps) => {
     const trz = useTRZ();
     const sockCtx = useSocket();
-    const usr = useUser();
     const navigate = useNavigate();
     const location = useLocation();
     const params = useParams();
@@ -178,31 +178,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                         </Popover.Dropdown>
                     </Popover>
                     <AutoComplete/>
-                    <Menu
-                        transitionProps={{ transition: 'fade-down', duration: 150 }}
-                         position="bottom-end"
-                         offset={2}
-                         withArrow
-                         arrowPosition="center"
-                    >
-                        <Menu.Target>
-                            <UnstyledButton
-                                onClick={()=>{
-                                    console.log("User profile...")
-                                }}
-                                >
-                                    <Avatar size={"1.75rem"} src={usr.userData?.profilePicture} color="initials" name={fullName(usr.userData)} />
-                            </UnstyledButton>
-                        </Menu.Target>
-                        <Menu.Dropdown>
-                            <Menu.Item 
-                                color="red"
-                                onClick={()=>{
-                                    usr.logoutAll();
-                                }}
-                            >Logout</Menu.Item>
-                        </Menu.Dropdown>
-                    </Menu>
+                    <UserProfileIcon/>
                 </Group>
             </AppShell.Header>
 
