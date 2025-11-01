@@ -191,6 +191,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 										titleProps={{
 											order:3,
 											textWrap: "nowrap",
+                                            fw: 400,
 										}}
 										inputProps={{
 											w:"100%",
@@ -273,7 +274,6 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 									</Grid.Col>
 								}
 								<Grid.Col span={4}>
-									<Text fz="sm">Labels</Text>
 									<Pill.Group
 										pt="xs"
 									>
