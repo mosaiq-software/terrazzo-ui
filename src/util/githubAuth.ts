@@ -70,7 +70,7 @@ export const tryLoginWithGithub = async (callbackCode?:string): Promise<{authTok
         return {authToken: null, user: null};
     }
     const remember = readSessionStorageValue({key: "remember-me"});
-    if(remember === "true" || fromLocal){
+    if(remember !== "false" || fromLocal){
         localStorage.setItem(LocalStorageKey.GITHUB_ACCESS_TOKEN, authToken);
     } else {
         localStorage.removeItem(LocalStorageKey.GITHUB_ACCESS_TOKEN);
