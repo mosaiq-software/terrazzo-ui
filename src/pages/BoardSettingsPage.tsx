@@ -151,12 +151,6 @@ const BoardSettingsPage = (): React.JSX.Element => {
 									setIsDirty(true);
 								}}
 							/>
-							<Select
-								label="Visibility"
-								placeholder="Visibility"
-								data={['Public']}
-								value={'Public'}
-							/>
 							<Button
 								disabled={!isDirty}
 								variant="filled"
