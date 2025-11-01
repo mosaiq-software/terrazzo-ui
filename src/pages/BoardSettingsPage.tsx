@@ -253,7 +253,7 @@ const BoardSettingsPage = (): React.JSX.Element => {
 					</Fieldset>
 					<Divider/>
 					<Space/>
-					<Text>Created at {boardData.createdAt}</Text>
+					<Text>Created at {new Date(boardData.createdAt).toLocaleString()}</Text>
 					<Text>Board contains {boardData.totalCards} cards</Text>
 					<Divider/>
 					<Space/>
