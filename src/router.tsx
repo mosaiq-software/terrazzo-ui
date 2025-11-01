@@ -23,9 +23,9 @@ const Router = () => {
 			<Route element={<ContentPageWrapper />}>
 				<Route path='/dashboard' element={<HomePage />} />
 				<Route path='/board/:boardId/' element={<BoardPage/>} />
-				<Route path='/board/:boardId/settings' element={<BoardSettingsPage/>} />
 				<Route path='/board/:boardId/card/:cardId' element={<BoardPage />} />
 				<Route path='/card/:cardId' element={<BoardPage />} />
+				<Route path='/board/:boardId/settings' element={<BoardSettingsPage/>} />
 				<Route path='/project/:projectId/:tabId?' element={<ProjectPage />} />
 				<Route path='/org/:orgId/:tabId?' element={<OrganizationPage />} />
 			</Route>

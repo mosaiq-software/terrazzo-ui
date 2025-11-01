@@ -102,9 +102,9 @@ const BoardPage = (): React.JSX.Element => {
 						for (const card of list.cardIds) {
 							tempCardMap.set(card, list.listId);
 							cardIds.push(card);
-
+                            
 							// Opens corresponding card if url contains the cardId
-							if (cardId && card === cardId) {
+							if (card === cardId) {
 								setOpenedCard(card);
 							}
 						}

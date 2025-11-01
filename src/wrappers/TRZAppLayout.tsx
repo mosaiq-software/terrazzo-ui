@@ -13,6 +13,7 @@ import { replyInvite} from "@trz/emitters/all"
 import {useDashboard} from "@trz/contexts/dashboard-context";
 import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
+import { AutoComplete } from '@trz/components/AutoComplete/AutoComplete'
 
 interface TRZAppLayoutProps {
     children: any;
@@ -176,20 +177,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                             </ScrollAreaAutosize>
                         </Popover.Dropdown>
                     </Popover>
-                    <Box>
-                        <Input
-                            pointer
-                            component={"button"}
-                            onClick={()=>{}}
-                            size="xs"
-                        >
-                            <Group align={"center"}>
-                                <MdOutlineSearch size={"1rem"}/>
-                                <Text size={"1rem"} style={{ paddingRight: "2rem" }}>Search all</Text>
-                                <Text size={"1rem"}><Kbd>/</Kbd></Text>
-                            </Group>
-                        </Input>
-                    </Box>
+                    <AutoComplete/>
                     <Menu
                         transitionProps={{ transition: 'fade-down', duration: 150 }}
                          position="bottom-end"
