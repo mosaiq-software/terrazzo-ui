@@ -15,6 +15,7 @@ import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
 import { AutoComplete } from '@trz/components/AutoComplete/AutoComplete'
 import { UserProfileIcon } from "@trz/components/UserProfileIcon";
+import TerrazzoLogo from "../assets/terrazzo-logo.svg";
 
 interface TRZAppLayoutProps {
     children: any;
@@ -201,7 +202,8 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                         wrap="nowrap"
                         px={sidebarCollapsed ? "5px" : "0px"}
                         style={{
-                            transition: "padding 200ms"
+                            transition: "padding 200ms",
+                            flexDirection: "row-reverse"
                         }}
                     >
                         <Tooltip
@@ -215,21 +217,35 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                             <Burger
                                 transitionDuration={200}
                                 opened={!sidebarCollapsed}
-                                size="sm"
+                                size="20px"
                                 color="white"
                                 onClick={()=>{setSidebarCollapsed(!sidebarCollapsed)}}
                             />
                         </Tooltip>
-                        <NavLink to={"/"}>
-                            <Image
-                                src="https://mosaiq.dev/assets/terrazzo-logo.svg"
-                                alt="terrazzo"
+                        <NavLink to={"/"} style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            textDecoration: "none",
+                        }}>
+                            <TerrazzoLogo
                                 style={{
-                                    transition: "width 200ms",
-                                    width: sidebarCollapsed ? "0px" : "100px",
-                                    overflow: "clip",
+                                    fill: "#fafafa",
+                                    width: 16,
+                                    height: 20
                                 }}
                             />
+                            <Title
+                                order={3}
+                                c="#fafafa"
+                                fw={700}
+                                style={{
+                                    letterSpacing: 1,
+                                    textDecoration: "none",
+                                }}
+                            >
+                                errazzo
+                            </Title>
                         </NavLink>
                     </Group>
                     <Divider />
