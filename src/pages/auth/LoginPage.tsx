@@ -39,7 +39,7 @@ const LoginPage = (props:LoginPageProps) => {
                             onClick={()=>{window.location.href = getGithubLoginUrl();}}
                         >Login With Github</Button>
                         <Space/>
-                        <Checkbox label="Remember me" checked={rememberMe==="true"} onChange={(e)=>{onRememberMe(e.currentTarget.checked)}}/>
+                        <Checkbox label="Remember me" checked={rememberMe!=="false"} onChange={(e)=>{onRememberMe(e.currentTarget.checked)}}/>
                     </Stack>
                 </Paper>
             </Center>
