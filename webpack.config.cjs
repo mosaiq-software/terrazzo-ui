@@ -17,7 +17,7 @@ module.exports = () => {
             publicPath: "/",
         },
         devServer: {
-            port: "8081",
+            port: "8080",
             historyApiFallback: true,
             static: path.resolve(__dirname, "public"),
             liveReload: true
