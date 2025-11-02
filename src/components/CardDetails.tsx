@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Box, Button, Center, Checkbox, Combobox, Grid, Group, Loader, Menu, Modal, Pill, Stack, Text, useCombobox} from "@mantine/core";
-import {CollaborativeTextArea} from "@trz/components/CollaborativeTextArea";
+import {CollaborativeTextArea} from "@trz/components/CollaborativeTextArea/CollaborativeTextArea";
 import {AvatarRow} from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
 import {useSocket} from "@trz/contexts/socket-context";
@@ -304,7 +304,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 								maxLineLength={60}
 								textColor={textColor}
 								backgroundColor={bgDarkColor}
-								placeholder="Double click to edit!"
+								placeholder="Add a more detailed description..."
                                 idle={idle}
                                 name={fullName(usr.userData)}
                                 avatarUrl={usr.userData?.profilePicture}

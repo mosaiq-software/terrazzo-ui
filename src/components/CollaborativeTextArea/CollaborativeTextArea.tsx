@@ -24,12 +24,16 @@ import { AllStyledComponent } from '@remirror/styles/emotion';
 import { TextBlockId } from '@mosaiq/terrazzo-common/types';
 import type { AnyExtension, CreateEditorStateProps } from 'remirror';
 import type { RemirrorProps, UseThemeProps } from '@remirror/react';
-import { FloatingToolbar, WysiwygToolbar } from '@remirror/react-ui';
 import { YjsExtension } from '@remirror/extension-yjs';
 import { ProviderConfiguration, SocketIOProvider } from "@trz/util/yjsSocketProvier";
 import { Doc } from "yjs";
 import { ManagerOptions, SocketOptions } from 'socket.io-client';
 import { useImageColor } from '@trz/hooks/useImageColor';
+import { CollabTextAreaToolbar } from './Toolbar';
+import { CalloutExtension } from 'remirror/extensions';
+
+
+import "./CollaborativeTextAreaStyle.css";
 
 export interface ReactEditorProps
     extends Pick<CreateEditorStateProps, 'stringHandler'>,
@@ -139,10 +143,14 @@ const EditorWrapper = (props: EditorWrapperProps) => {
     }
 
     return (
-        <Editor
-            socketIOProvider={socketIOProvider}
-            {...props}
-        />
+        <AllStyledComponent>
+            <ThemeProvider theme={props.theme}>
+                <Editor
+                    socketIOProvider={socketIOProvider}
+                    {...props}
+                />
+            </ThemeProvider>
+        </AllStyledComponent>
     )
 };
 
@@ -163,6 +171,7 @@ const Editor = (props:EditorProps) => {
             }),
             new EmojiExtension({ plainText: false, data: data as any, moji: 'noto' }),
             new YjsExtension({ getProvider: () => props.socketIOProvider }),
+            new CalloutExtension({}),
             ...wysiwygPreset()
         ];
         return extensions;
@@ -175,19 +184,14 @@ const Editor = (props:EditorProps) => {
     });
 
     return (
-        <AllStyledComponent>
-            <ThemeProvider theme={props.theme}>
-                <Remirror manager={manager} i18nFormat={i18nFormat} initialContent={state}>
-                    <TopToolbar />
-                    <EditorComponent />
-                    <EmojiPopupComponent />
-                    <MentionComponent users={props.users} tags={props.tags} />
-                    <TableComponents />
-                    <BubbleMenu />
-                    {props.children}
-                </Remirror>
-            </ThemeProvider>
-        </AllStyledComponent>
+        <Remirror manager={manager} i18nFormat={i18nFormat} initialContent={state}>
+            <CollabTextAreaToolbar />
+            <EditorComponent />
+            <EmojiPopupComponent />
+            <MentionComponent users={props.users} tags={props.tags} />
+            <TableComponents />
+            {props.children}
+        </Remirror>
     );
 }
 
@@ -202,6 +206,8 @@ interface SharedCollaborativeTextAreaProps {
     color?: string;
     avatarUrl?: string;
     idle: boolean;
+    users?: MentionAtomNodeAttributes[];
+    tags?: string[];
 }
 
 export const CollaborativeTextArea = (props: SharedCollaborativeTextAreaProps) => {
@@ -213,5 +219,4 @@ export const CollaborativeTextArea = (props: SharedCollaborativeTextAreaProps) =
     );
 };
 
-const BubbleMenu: FC = () => <FloatingToolbar />;
-const TopToolbar: FC = () => <WysiwygToolbar />;
+
