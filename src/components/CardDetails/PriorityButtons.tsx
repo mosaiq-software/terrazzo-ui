@@ -101,12 +101,10 @@ interface PriorityChipProps {
     priority: number | null | undefined;
 }
 export const PriorityChip = (props: PriorityChipProps) => {
-    if(!props.priority || props.priority >= priorityColors.length || props.priority < 0){
-        return null;
-    }
+    const p = Math.max(0, Math.min(props.priority ?? 0, priorityColors.length - 1));
     return (
-        <Box bg={priorityColors[props.priority]} w='35' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
-            <Text c='white' ta='center'>{unicodeMap[props.priority]}</Text>
+        <Box bg={priorityColors[p]} w='35' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
+            <Text c='white' ta='center'>{unicodeMap[p]}</Text>
         </Box>
     )
 }

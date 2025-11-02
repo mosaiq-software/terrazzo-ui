@@ -1,11 +1,13 @@
-import { Box, Button, Checkbox, MantineSize, Menu, Pill, Stack, Text, Tooltip } from '@mantine/core';
+import { ActionIcon, Box, Button, Checkbox, MantineSize, Menu, Pill, Stack, Text, Tooltip } from '@mantine/core';
 import { Card, LabelId } from '@mosaiq/terrazzo-common/types';
 import { useSocket } from '@trz/contexts/socket-context';
 import { useTRZ } from '@trz/contexts/TRZ-context';
 import { updateCardsLabels } from '@trz/emitters/all';
 import { colorIsDarkAdvanced } from '@trz/util/colorUtils';
 import React, { useMemo } from 'react';
+import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { MdAddCircleOutline, MdCheck } from 'react-icons/md';
+import { useNavigate } from 'react-router';
 
 interface LabelsMenuProps {
     card: Card;
@@ -14,6 +16,7 @@ interface LabelsMenuProps {
 export const LabelsMenu = (props: LabelsMenuProps) => {
     const trzCtx = useTRZ();
     const sockCtx = useSocket();
+    const navigator = useNavigate();
     
     return (
         <Menu
@@ -23,9 +26,10 @@ export const LabelsMenu = (props: LabelsMenuProps) => {
             closeOnClickOutside={true}
             trigger="hover"
             closeDelay={200}
+            opened={!trzCtx.boardData?.labels.length ? false : undefined}
         >
             <Menu.Target>
-                {trzCtx.boardData?.labels.length && (
+                {trzCtx.boardData?.labels.length ? (
                     <Button
                         variant='subtle'
                         justify={"flex-start"}
@@ -36,6 +40,18 @@ export const LabelsMenu = (props: LabelsMenuProps) => {
                             size="sm"
                         />
                     </Button>
+                ) : (
+                    <Tooltip label="No labels available. Create labels in board settings to assign them to cards.">
+                        <ActionIcon
+                            variant='subtle'
+                            c="white"
+                            onClick={()=>{
+                                navigator(`/board/${trzCtx.boardData?.id}/settings`);
+                            }}
+                        >
+                            <IoMdInformationCircleOutline size="1.5rem"/>
+                        </ActionIcon>
+                    </Tooltip>
                 )}
             </Menu.Target>
             <Menu.Dropdown ta='center' miw="10rem">
