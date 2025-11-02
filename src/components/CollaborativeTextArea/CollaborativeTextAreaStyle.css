@@ -26,3 +26,7 @@ div[data-callout-type='success'] {
     background-color: #20a350 !important;
     border-left: 4px solid #46fd86 !important;
 }
+
+.remirror-editor {
+    overflow-y: visible !important;
+}

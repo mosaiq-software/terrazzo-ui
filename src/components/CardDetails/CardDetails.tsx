@@ -254,8 +254,12 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 						align="flex-start"
 						justify="space-between"
 					>
-						<Stack style={{
-						}}>
+						<Stack 
+                            style={{
+                                position:"relative",
+						    }}  
+                            pb="8rem"
+                        >
 							<Group
 								pb="lg"
 								pr="lg"
@@ -316,17 +320,6 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
                                         </Combobox.Options>
                                     </Combobox.Dropdown>
                                 </Combobox> */}
-                                {
-                                    <Button 
-                                        key={card.archived ? "Unarchive" : "Archive"}
-                                        bg={"red"}
-                                        leftSection={<FaArchive />}
-                                        justify={"flex-start"}
-                                        onClick={() => onArchiveCard(!card.archived)}
-                                    >
-                                        {card.archived ? "Unarchive" : "Archive"} card
-                                    </Button>
-                                }
 							</Group>
 							<CollaborativeTextArea
 								textBlockId={card.descriptionTextBlockId}
@@ -336,10 +329,22 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
                                 name={fullName(usr.userData)}
                                 avatarUrl={usr.userData?.profilePicture}
 							/>
-                            <Stack>
+                            <Stack style={{
+                                position:"absolute",
+                                bottom: 0,
+                            }}>
                                 <Text>
                                     Created at {new Date(card.createdAt).toLocaleString()} by {fullName(card.createdBy)}
                                 </Text>
+                                <Button 
+                                    key={card.archived ? "Unarchive" : "Archive"}
+                                    bg={"red"}
+                                    leftSection={<FaArchive />}
+                                    justify={"flex-start"}
+                                    onClick={() => onArchiveCard(!card.archived)}
+                                >
+                                    {card.archived ? "Unarchive" : "Archive"} card
+                                </Button>
                             </Stack>
 						</Stack>
 					</Group>
