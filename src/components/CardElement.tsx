@@ -88,7 +88,28 @@ const CardElement = (props: CardElementProps) => {
 	});
 
 	useSocketListener<ServerSE.UPDATE_CARD_ASSIGNEE>(ServerSE.UPDATE_CARD_ASSIGNEE, (payload)=>{
-
+        if(payload.cardId !== props.cardId){
+            return;
+        }
+        setCard((prev)=>{
+            if(!prev){
+                return prev;
+            }
+            const assigned = prev.assignees.includes(payload.userId);
+            if(payload.assigned && !assigned){
+                return {
+                    ...prev,
+                    assignees: [...prev.assignees, payload.userId]
+                };
+            }
+            if(!payload.assigned && assigned){
+                return {
+                    ...prev,
+                    assignees: prev.assignees.filter((a)=> a !== payload.userId)
+                };
+            }
+            return prev;
+        });
 	});
 	
 	const onOpenCardModal = () => {
