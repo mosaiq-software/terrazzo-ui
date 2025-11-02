@@ -1,16 +1,13 @@
 import React from "react";
-import { Menu } from "@mantine/core";
+import { Button, Flex, Menu } from "@mantine/core";
 import { Priority } from "@mosaiq/terrazzo-common/constants";
 import { NoteType, notify } from "@trz/util/notifications";
 import { CardId } from "@mosaiq/terrazzo-common/types";
 import { FiChevronsUp } from "react-icons/fi";
+import { MdOutlinePriorityHigh } from "react-icons/md";
 
-interface PriorityButtonProps {
-    color: string;
-    buttonText: string;
-    onClick: (priority: Priority | null) => void;
-}
 export const priorityColors: string[] = [
+    "gray",
     "#4A82C7",
     "#24296A",
     "#422760",
@@ -19,70 +16,57 @@ export const priorityColors: string[] = [
 ]
 
 export const unicodeMap = {
-    1: '\u25BC' + '\u25BC', // ▼▼
-    2: '\u25BC', // ▼
-    3: '\u25FC',  // ■
-    4: '\u25B2', // ▲
-    5: '\u25B2' + '\u25B2' // ▲▲
+    0: "None",
+    [Priority.LOWEST]: '\u25BC' + '\u25BC', // ▼▼
+    [Priority.LOW]: '\u25BC', // ▼
+    [Priority.MEDIUM]: '\u25FC',  // ■
+    [Priority.HIGH]: '\u25B2', // ▲
+    [Priority.HIGHEST]: '\u25B2' + '\u25B2' // ▲▲
 };
-
-const PriorityButton = (props: PriorityButtonProps): React.JSX.Element => {
-    async function onClick() {
-        let priority: Priority | null = null;
-        switch (props.buttonText) {
-            case "\u25BC' + '\u25BC":
-                priority = Priority.LOWEST;
-                break
-            case "\u25BC":
-                priority = Priority.LOW;
-                break
-            case "\u25FC":
-                priority = Priority.MEDIUM;
-                break
-            case "\u25B2":
-                priority = Priority.HIGH;
-                break
-            case "\u25B2' + '\u25B2":
-                priority = Priority.HIGHEST;
-                break
-            case "Remove Priority":
-                priority = null;
-                break
-        }
-        props.onClick(priority);
-    }
-
-    return (
-        <Menu.Item bg={props.color} ta='center' c='white' onClick={onClick}>{props.buttonText}</Menu.Item>
-    )
-}
 
 interface PriorityButtonsProps {
     onChange: (priority: Priority | null) => void;
 }
 export const PriorityButtons = (props: PriorityButtonsProps): React.JSX.Element => {
-    const priorityLength = Object.keys(Priority).length / 2;
-
     return (
-        <>
-            {
-                Array.from({ length: priorityLength }).map((_, index) => {
-                    const descendingIndex = priorityLength - index;
-                    return (
-                        <PriorityButton 
-                            color={priorityColors[descendingIndex - 1]}
-                            buttonText={`${unicodeMap[descendingIndex]}`}
-                            key={index}
-                            onClick={props.onChange}
-                        />
-                    )
-                })
-            }
-            <PriorityButton
-                color={"gray"}
-                buttonText={"Remove Priority"}
-                onClick={props.onChange}
-            />
-        </>
-    )
-}
+        <Menu
+            position='right-start'
+            withArrow
+            arrowPosition="center"
+            withOverlay={true}
+            closeOnClickOutside={true}
+        >
+            <Menu.Target>
+                <Button
+                    bg={"red"}
+                    leftSection={<MdOutlinePriorityHigh />}
+                    justify={"flex-start"}
+                >
+                    Card Priority
+                </Button>
+            </Menu.Target>
+            <Menu.Dropdown>
+                <Flex direction="column-reverse" align="center">
+                {
+                    priorityColors.map((_, index) => {
+                        return (
+                            <Menu.Item
+                                key={index}
+                                bg={priorityColors[index]}
+                                ta='center'
+                                c='white'
+                                onClick={()=>{
+                                    props.onChange(index)
+                                }}
+                            >
+                                {`${unicodeMap[index]}`}
+                            </Menu.Item>
+                        )
+                    })
+                }
+                <Menu.Label>Card Priority</Menu.Label>
+                </Flex>
+            </Menu.Dropdown>
+        </Menu>
+    );
+};

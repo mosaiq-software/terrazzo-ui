@@ -72,7 +72,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 			}
 			return {...updateBaseFromPartial<Card>(prev, payload)};
 		});
-	});
+    });
 
 	useSocketListener<ServerSE.UPDATE_CARDS_LABELS>(ServerSE.UPDATE_CARDS_LABELS, (payload)=>{
 		if(payload.cardId !== props.cardId){
@@ -90,12 +90,6 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 	useSocketListener<ServerSE.UPDATE_CARD_ASSIGNEE>(ServerSE.UPDATE_CARD_ASSIGNEE, (payload)=>{
 
 	});
-
-	const bgColor = "#323a40";
-	const bgDarkColor = "#22272b";
-	const textColor = "#ffffff";
-	const buttonColor = "#3b454c";
-	const closeColor = "#9fadbc";
 
 	const onCloseModal = () => {
 		props.onClose();
@@ -147,8 +141,8 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 			/>
 			<Modal.Content
 				h={"90vh"}
-				bg={bgColor}
-				c={textColor}
+				bg={"red"}
+				c={"red"}
 				style={{
 					overflowX: "hidden",
 					overflowY: "scroll"
@@ -156,7 +150,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 			>
 				<Modal.Header
 					p="0"
-					bg={bgColor}
+					bg={"red"}
 				>
 					<Modal.Title
 						w={"100%"}
@@ -199,7 +193,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 										}}
 										inputProps={{
 											w:"100%",
-											bg: bgDarkColor,
+											bg: "red",
 										}}
 										style={{
 											width: "95%",
@@ -211,7 +205,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 						</Group>
 						<Modal.CloseButton
 							variant="transparent"
-							c={closeColor}
+							c={"red"}
 							style={{
 								position: "absolute",
 								top: "0.75rem",
@@ -302,8 +296,6 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 							<CollaborativeTextArea
 								textBlockId={card.descriptionTextBlockId}
 								maxLineLength={60}
-								textColor={textColor}
-								backgroundColor={bgDarkColor}
 								placeholder="Add a more detailed description..."
                                 idle={idle}
                                 name={fullName(usr.userData)}
@@ -311,15 +303,18 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 							/>
 						</Stack>
 						<Stack justify='flex-start' align='stretch' pt="md" maw="140px">
-							<Button bg={buttonColor}
-									leftSection={<FaUserPlus />}
-									justify={"flex-start"}
-									onClick={()=>{
-										if(usr.userData){
-											// updateCardAssignee(card.id, usr.userData.id, !joinedCard);
-										}
-									}}
-							>{joinedCard ? "Leave" : "Join"} Card</Button>
+							<Button 
+                                bg={"red"}
+                                leftSection={<FaUserPlus />}
+                                justify={"flex-start"}
+                                onClick={()=>{
+                                    if(usr.userData){
+                                        // updateCardAssignee(card.id, usr.userData.id, !joinedCard);
+                                    }
+                                }}
+							>
+                                {joinedCard ? "Leave" : "Join"} Card
+                            </Button>
 							{/* <Combobox
 								store={combobox}
 								width={550}
@@ -351,38 +346,21 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 									</Combobox.Options>
 								</Combobox.Dropdown>
 							</Combobox> */}
-                            <Menu
-								position='right-start'
-								withArrow
-								arrowPosition="center"
-								withOverlay={true}
-								closeOnClickOutside={true}
-							>
-                                <Menu.Target>
-                                    <Button
-										bg={buttonColor}
-										leftSection={<MdOutlinePriorityHigh />}
-										justify={"flex-start"}
-									>Card Priority</Button>
-                                </Menu.Target>
-                                <Menu.Dropdown ta='center'>
-                                    <Menu.Label>Card Priority</Menu.Label>
-                                    <PriorityButtons 
-										onChange={async (priority)=>{
-											if(!props.cardId){
-												notify(NoteType.CARD_UPDATE_ERROR);
-												return;
-											}
-											try{
-												await updateCardField(sockCtx, props.cardId, {priority: priority});
-											}catch (e){
-												notify(NoteType.CARD_UPDATE_ERROR);
-												return;
-											}
-										}}
-									/>
-                                </Menu.Dropdown>
-                            </Menu>
+                            <PriorityButtons 
+                                onChange={async (priority)=>{
+                                    console.log("prio", priority)
+                                    if(!props.cardId){
+                                        notify(NoteType.CARD_UPDATE_ERROR);
+                                        return;
+                                    }
+                                    try{
+                                        await updateCardField(sockCtx, props.cardId, {priority: priority});
+                                    }catch (e){
+                                        notify(NoteType.CARD_UPDATE_ERROR);
+                                        return;
+                                    }
+                                }}
+                            />
 							<Menu
 								position='right-start'
 								withArrow
@@ -392,9 +370,11 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 							>
 								<Menu.Target>
 									<Button
-										bg={buttonColor}
+										bg={"red"}
 										justify={"flex-start"}
-									>Labels</Button>
+									>
+                                        Labels
+                                    </Button>
 								</Menu.Target>
 								<Menu.Dropdown ta='center' miw="10rem">
 									<Menu.Label>Labels</Menu.Label>
@@ -433,12 +413,15 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 								</Menu.Dropdown>
 							</Menu>
 							{
-								<Button key={card.archived ? "Unarchive" : "Archive"}
-										bg={buttonColor}
-										leftSection={<FaArchive />}
-										justify={"flex-start"}
-										onClick={() => onArchiveCard(!card.archived)}
-								>{card.archived ? "Unarchive" : "Archive"} card</Button>
+								<Button 
+                                    key={card.archived ? "Unarchive" : "Archive"}
+                                    bg={"red"}
+                                    leftSection={<FaArchive />}
+                                    justify={"flex-start"}
+                                    onClick={() => onArchiveCard(!card.archived)}
+								>
+                                    {card.archived ? "Unarchive" : "Archive"} card
+                                </Button>
 							}
 						</Stack>
 					</Group>}

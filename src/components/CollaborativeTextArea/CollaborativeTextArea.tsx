@@ -205,8 +205,6 @@ interface SharedCollaborativeTextAreaProps {
     maxLineLength: number;
     textBlockId: TextBlockId;
     fontSize?: number;
-    textColor: string;
-    backgroundColor: string;
     placeholder?: string;
     name? : string;
     color?: string;

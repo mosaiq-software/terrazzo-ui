@@ -62,8 +62,8 @@ const CardElement = (props: CardElementProps) => {
 	}, [props.cardId, sockCtx.connected, inViewport]);
 	
 	useSocketListener<ServerSE.UPDATE_CARD_FIELD>(ServerSE.UPDATE_CARD_FIELD, (payload)=>{
-		if(payload.id !== props.cardId){
-			return;
+        if(payload.id !== props.cardId){
+            return;
 		}
 		setCard((prev)=>{
 			if(!prev){
@@ -168,7 +168,7 @@ const CardElement = (props: CardElementProps) => {
 						<AvatarRow users={card.assignees} maxUsers={3}/>
 					}
 					{card.priority &&
-						<Box w='35' bg={priorityColors[card.priority - 1]}  style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
+						<Box w='35' bg={priorityColors[card.priority ]}  style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
 							<Text c="white" ta='center'>{unicodeMap[card.priority]}</Text>
 						</Box>
 					}
