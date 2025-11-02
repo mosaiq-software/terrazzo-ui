@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {Avatar, Tooltip, Text} from "@mantine/core";
 import { UserHeader, UserId } from "@mosaiq/terrazzo-common/types";
 import { useSocket } from "@trz/contexts/socket-context";
+import { getUserHeader } from "@trz/emitters/all";
 
 interface AvatarRowProps {
     users: (UserHeader | UserId)[]
@@ -16,13 +17,21 @@ export const AvatarRow = (props: AvatarRowProps) => {
             setUsers([]);
             return;
         }
-        // TODO test this out when assignees are a thing
-        // Promise.all(props.users.map(async (uid)=>{
-        //     return (typeof uid === "string") ? (await sockCtx.lookupUser(uid as UserId)) : (uid as UserHeader);
-        // }))
-        // .then((users)=>users.filter(u=>!!u))
-        // .then((users)=>setUsers(users))
-        // .catch(e=>{console.error("Error in avatar row "+e)});
+
+        const loadUsers = async () => {
+            const list: UserHeader[] = [];
+            for(const uObj of props.users) {
+                if(typeof uObj === "string"){
+                    const user = await getUserHeader(sockCtx, uObj);
+                    if(user){
+                        list.push(user);
+                    }
+                } else {
+                    list.push(uObj);
+                }
+            }
+        }
+        loadUsers();
     }, [props.users])
 
     return (

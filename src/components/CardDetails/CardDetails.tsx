@@ -20,6 +20,7 @@ import { useClipboard, useIdle } from "@mantine/hooks";
 import { IDLE_TIMEOUT_MS } from "@trz/util/textUtils";
 import { fullName } from "@mosaiq/terrazzo-common/utils/textUtils";
 import { LabelsMenu } from "./LabelsMenu";
+import {AssigneeMenu} from "./AssigneeMenu";
 
 interface CardDetailsProps {
 	cardId: CardId;
@@ -266,7 +267,8 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
                             }
                             <PriorityButtons card={card} />
                             <LabelsMenu card={card} />
-                            <Tooltip label="Assign yourself to this card">
+                            <AssigneeMenu card={card} />
+                            {/* <Tooltip label="Assign yourself to this card">
                                 <Button 
                                     variant="subtle"
                                     c="white"
@@ -280,38 +282,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
                                     >
                                     {joinedCard ? "Leave" : "Join"} Card
                                 </Button>
-                            </Tooltip>
-                            {/* <Combobox
-                                store={combobox}
-                                width={550}
-                                position="bottom-start"
-                                withArrow
-                                withinPortal={false}
-                                onOptionSubmit={async (val) => {
-                                    await sockCtx.updateCardAssignee(card.id, val as UserId, card.assignees.includes(card.id));
-                                }}
-                            >
-                                <Combobox.Target>
-                                    <Button bg={buttonColor}
-                                        leftSection={<FaUserGroup />}
-                                        justify={"flex-start"}
-                                        onClick={()=>{
-                                            combobox.toggleDropdown();
-                                        }}
-                                    >Members</Button>
-                                </Combobox.Target>
-
-                                <Combobox.Dropdown>
-                                    <Combobox.Options>
-                                        
-                                            {sockCtx.orgData?.members.map(m=>(
-                                                <Combobox.Option value={m.user.id} key={m.user.id}>
-                                                    {m.user.username}
-                                                </Combobox.Option>
-                                            ))}
-                                    </Combobox.Options>
-                                </Combobox.Dropdown>
-                            </Combobox> */}
+                            </Tooltip> */}
                         </Group>
                         <CollaborativeTextArea
                             textBlockId={card.descriptionTextBlockId}
