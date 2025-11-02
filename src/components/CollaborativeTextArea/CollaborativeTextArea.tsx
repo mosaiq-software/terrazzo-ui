@@ -34,6 +34,7 @@ import { CalloutExtension } from 'remirror/extensions';
 
 
 import "./CollaborativeTextAreaStyle.css";
+import { Alert } from '@mantine/core';
 
 export interface ReactEditorProps
     extends Pick<CreateEditorStateProps, 'stringHandler'>,
@@ -96,7 +97,7 @@ const EditorWrapper = (props: EditorWrapperProps) => {
     const IDLE_COLOR = "#afafaf";
     const imgColor = useImageColor(props.avatarUrl);
     const [socketIOProvider, setSocketIOProvider] = useState<SocketIOProvider | undefined>();
-    const [status, setStatus] = useState<string>('disconnected');
+    const [status, setStatus] = useState<string>('unknown');
     const [clients, setClients] = useState<string[]>([]);
 
     useEffect(()=>{
@@ -132,7 +133,6 @@ const EditorWrapper = (props: EditorWrapperProps) => {
             name: props.name || 'Unknown User',
             color: props.idle ? IDLE_COLOR : imgColor ?? props.color ?? "black",
         });
-        socketIOProvider.on('sync', (isSync: boolean) => console.log('websocket sync', isSync))
         socketIOProvider.on('status', ({ status: _status }: { status: string }) => {
             setStatus(_status);
         })
@@ -145,6 +145,12 @@ const EditorWrapper = (props: EditorWrapperProps) => {
     return (
         <AllStyledComponent>
             <ThemeProvider theme={props.theme}>
+                {
+                status === "disconnected" &&
+                    <Alert variant="light" color="red" title="Offline">
+                        Changes may not be saved!
+                    </Alert>
+                }
                 <Editor
                     socketIOProvider={socketIOProvider}
                     {...props}
