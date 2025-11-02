@@ -1,128 +1,208 @@
-import { TextBlockId } from "@mosaiq/terrazzo-common/types";
-import React, {useEffect, useRef, useState} from "react";
-
-import { Editor, rootCtx } from "@milkdown/kit/core";
-import { commonmark } from "@milkdown/kit/preset/commonmark";
-import { Milkdown, MilkdownProvider, useEditor } from "@milkdown/react";
-import { nord } from "@milkdown/theme-nord";
-
-import { collab, CollabService, collabServiceCtx } from "@milkdown/plugin-collab";
-import { cursor } from '@milkdown/kit/plugin/cursor'
-import { SocketIOProvider } from 'y-socket.io';
+import React, { FC, PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
+import { IdentifierSchemaAttributes } from 'remirror';
+import {
+  EmojiExtension,
+  MentionAtomExtension,
+  MentionAtomNodeAttributes,
+  PlaceholderExtension,
+  wysiwygPreset,
+  AnnotationExtension
+} from 'remirror/extensions';
+import data from 'svgmoji/emoji.json';
+import { TableComponents, TableExtension } from '@remirror/extension-react-tables';
+import { i18nFormat } from '@remirror/i18n';
+import {
+  EditorComponent,
+  EmojiPopupComponent,
+  MentionAtomPopupComponent,
+  MentionAtomState,
+  Remirror,
+  ThemeProvider,
+  useRemirror,
+} from '@remirror/react';
+import { AllStyledComponent } from '@remirror/styles/emotion';
+import { TextBlockId } from '@mosaiq/terrazzo-common/types';
+import type { AnyExtension, CreateEditorStateProps } from 'remirror';
+import type { RemirrorProps, UseThemeProps } from '@remirror/react';
+import { FloatingToolbar, WysiwygToolbar } from '@remirror/react-ui';
+import { YjsExtension } from '@remirror/extension-yjs';
+import { ProviderConfiguration, SocketIOProvider } from "@trz/util/yjsSocketProvier";
 import { Doc } from "yjs";
+import { ManagerOptions, SocketOptions } from 'socket.io-client';
 
+export interface ReactEditorProps
+    extends Pick<CreateEditorStateProps, 'stringHandler'>,
+        Pick<
+        RemirrorProps,
+        | 'initialContent'
+        | 'editable'
+        | 'autoFocus'
+        | 'hooks'
+        | 'i18nFormat'
+        | 'locale'
+        | 'supportedLocales'
+        > {
+    placeholder?: string;
+    theme?: UseThemeProps['theme'];
+}
+
+const extraAttributes: IdentifierSchemaAttributes[] = [
+    {
+        identifiers: ['mention', 'emoji'],
+        attributes: { role: { default: 'presentation' } },
+    },
+    { identifiers: ['mention'], attributes: { href: { default: null } } },
+];
+
+export interface SocialEditorProps extends Partial<ReactEditorProps>, Pick<MentionComponentProps, 'users' | 'tags'> {}
+
+interface MentionComponentProps<UserData extends MentionAtomNodeAttributes = MentionAtomNodeAttributes> {
+    users?: UserData[];
+    tags?: string[];
+}
+
+function MentionComponent({ users, tags }: MentionComponentProps) {
+    const [mentionState, setMentionState] = useState<MentionAtomState | null>();
+    const tagItems = useMemo(
+        () => (tags ?? []).map((tag) => ({ id: tag, label: `#${tag}` })),
+        [tags],
+    );
+    const items = useMemo(() => {
+        if (!mentionState) {
+            return [];
+        }
+
+        const allItems = mentionState.name === 'at' ? users : tagItems;
+
+        if (!allItems) {
+            return [];
+        }
+
+        const query = mentionState.query.full.toLowerCase() ?? '';
+        return allItems.filter((item) => item.label.toLowerCase().includes(query)).sort();
+    }, [mentionState, users, tagItems]);
+
+    return <MentionAtomPopupComponent onChange={setMentionState} items={items} />;
+}
+
+interface EditorWrapperProps extends PropsWithChildren<SocialEditorProps> {
+    maxLineLength: number;
+    textBlockId: TextBlockId;
+    fontSize?: number;
+    textColor: string;
+    backgroundColor: string;
+    placeholder: string;
+}
+
+const EditorWrapper = (props: EditorWrapperProps) => {
+    const [socketIOProvider, setSocketIOProvider] = useState<SocketIOProvider | undefined>();
+    const [status, setStatus] = useState<string>('disconnected');
+    const [clients, setClients] = useState<string[]>([]);
+
+    useEffect(()=>{
+        let _socketIOProvider: SocketIOProvider;
+        const init = async () => {
+            const doc = new Doc();
+            const url = process.env.SOCKET_URL;
+            if (!url)
+                throw new Error("SOCKET_URL environment variable is not set");
+            const textBlockId = props.textBlockId;
+            const pConf:ProviderConfiguration = {
+                autoConnect: true,
+            };
+            const sockConf: Partial<ManagerOptions & SocketOptions> = {
+                path: "/socket"
+            };
+            _socketIOProvider = new SocketIOProvider(url, textBlockId, doc, pConf, sockConf);
+            _socketIOProvider.awareness.on('change', () => setClients(Array.from(_socketIOProvider.awareness.getStates().keys()).map(key => `${key}`)))
+            _socketIOProvider.awareness.setLocalState({ id: Math.random(), name: 'Perico' });
+            _socketIOProvider.on('sync', (isSync: boolean) => console.log('websocket sync', isSync))
+            _socketIOProvider.on('status', ({ status: _status }: { status: string }) => {
+                setStatus(_status);
+            })
+            setSocketIOProvider(_socketIOProvider);
+        };
+        init();
+
+        return () => {
+            _socketIOProvider?.destroy();
+        };
+    }, [])
+
+    if (!socketIOProvider) {
+        return <div>Loading editor...</div>;
+    }
+
+    return (
+        <Editor
+            socketIOProvider={socketIOProvider}
+            {...props}
+        />
+    )
+};
+
+interface EditorProps extends EditorWrapperProps {
+    socketIOProvider: SocketIOProvider;
+}
+const Editor = (props:EditorProps) => {
+    const extensions = useCallback(()=>{
+        const extensions: AnyExtension[] = [
+            new AnnotationExtension({}),
+            new PlaceholderExtension({ placeholder:props.placeholder }),
+            new TableExtension({}),
+            new MentionAtomExtension({
+                matchers: [
+                    { name: 'at', char: '@' },
+                    { name: 'tag', char: '#' },
+                ],
+            }),
+            new EmojiExtension({ plainText: false, data: data as any, moji: 'noto' }),
+            new YjsExtension({ getProvider: () => props.socketIOProvider }),
+            ...wysiwygPreset()
+        ];
+        return extensions;
+    }, [props.placeholder]);
+
+    const { manager, state } = useRemirror({
+        extensions,
+        extraAttributes,
+        stringHandler: props.stringHandler,
+    });
+
+    return (
+        <AllStyledComponent>
+            <ThemeProvider theme={props.theme}>
+                <Remirror manager={manager} i18nFormat={i18nFormat} initialContent={state}>
+                    <TopToolbar />
+                    <EditorComponent />
+                    <EmojiPopupComponent />
+                    <MentionComponent users={props.users} tags={props.tags} />
+                    <TableComponents />
+                    <BubbleMenu />
+                    {props.children}
+                </Remirror>
+            </ThemeProvider>
+        </AllStyledComponent>
+    );
+}
 
 interface CollaborativeTextAreaProps {
     maxLineLength: number;
     textBlockId: TextBlockId;
     fontSize?: number;
-    showOwnCursorAsCustom?: boolean; // should the cursor be a custom one (T) or the default browser one (F/u).
     textColor: string;
     backgroundColor: string;
-    markdown?: boolean;
     placeholder: string;
 }
 
-const MilkdownEditor = () => {
-    const [editor, setEditor] = useState<Editor | undefined>(undefined);
-    const [collabService, setCollabService] = useState<CollabService | undefined>(undefined);
-    const [doc, setDoc] = useState<Doc | null>(null);
-    const [provider, setProvider] = useState<SocketIOProvider | null>(null);
-    const [status, setStatus] = useState<string>('disconnected');
-    const [clients, setClients] = useState<string[]>([]);
-
-    const { get } = useEditor((root) =>
-        Editor.make()
-        .config(nord)
-        .config((ctx) => {
-            ctx.set(rootCtx, root);
-        })
-        .use(commonmark)
-        .use(collab)
-        .use(cursor)
-    );
-
-    useEffect(()=>{
-        async function setup(ed: Editor) {
-            setEditor(ed);
-
-            const doc = new Doc();
-            
-            const url = process.env.SOCKET_URL;
-            if (!url)
-                throw new Error("SOCKET_URL environment variable is not set");
-            const socketIOProvider = new SocketIOProvider(url, 'testing-doc', doc,
-                {
-                    autoConnect: true,
-                },
-                {
-                    path: "/socket"
-                }
-            );
-            socketIOProvider.awareness.on('change', () => setClients(Array.from(socketIOProvider.awareness.getStates().keys()).map(key => `${key}`)))
-            socketIOProvider.awareness.setLocalState({ id: Math.random(), name: 'Perico' });
-            socketIOProvider.on('sync', (isSync: boolean) => console.log('websocket sync', isSync))
-            socketIOProvider.on('status', ({ status: _status }: { status: string }) => {
-                setStatus(_status);
-            })
-            setProvider(socketIOProvider);
-
-            ed.action((ctx) => {
-                const clbServ = ctx.get(collabServiceCtx);
-                setCollabService(clbServ);
-                clbServ.bindDoc(doc).setAwareness(socketIOProvider.awareness).connect();
-            });
-        }
-
-        if (get && !editor) {
-            const ed = get();
-            if (ed) {
-                setEditor(ed);
-                setup(ed);
-            }
-        }
-
-    }, [get]);
-
-
-    const onChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-        if (!doc) return;
-        const yMap = doc.getMap('data');
-        yMap.set('input', e.target.value ?? '')
-    }
-
-    const handleConnect = () => {
-        provider?.connect();
-        collabService?.connect();
-    }
-
-    const handleDisconnect = () => {
-        provider?.disconnect();
-        collabService?.disconnect();
-    }
-
-    return (
-        <div>
-            <div style={{ color: 'white' }}>
-                <div>
-                    <p>State: {status}</p>
-                    <button onClick={status === 'connected' ? handleDisconnect : handleConnect}>
-                        {status === 'connected' ? 'Disconnect' : 'Connect'}
-                    </button>
-                </div>
-                <pre>
-                    {JSON.stringify(clients, null, 4)}
-                </pre>
-                <Milkdown />
-            </div>
-        </div>
-    )
-};
-
 export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
     return (
-        <MilkdownProvider>
-            <MilkdownEditor />
-        </MilkdownProvider>
+        <EditorWrapper
+            editable={true}
+            {...props}
+        />
     );
 };
+
+const BubbleMenu: FC = () => <FloatingToolbar />;
+const TopToolbar: FC = () => <WysiwygToolbar />;
