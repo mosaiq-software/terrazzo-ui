@@ -127,6 +127,17 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 
 	const joinedCard = !!usr.userData && card?.assignees.includes(usr.userData.id)
 
+    if(!card){
+        return (
+            <Center>
+                <Stack align="center">
+                    <Loader type="bars"/>
+                    <Text ta="center">Loading...</Text>
+                </Stack>
+            </Center>
+        )
+    }
+
 	return (
 		<Modal.Root
 			opened
@@ -219,7 +230,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 				<Modal.Body
 					p={20}
 				>
-					{card &&<Group 
+					<Group 
 						grow 
 						preventGrowOverflow={false}
 						wrap='nowrap'
@@ -301,6 +312,11 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
                                 name={fullName(usr.userData)}
                                 avatarUrl={usr.userData?.profilePicture}
 							/>
+                            <Stack>
+                                <Text>
+                                    Created at {new Date(card.createdAt).toLocaleString()} by {fullName(card.createdBy)}
+                                </Text>
+                            </Stack>
 						</Stack>
 						<Stack justify='flex-start' align='stretch' pt="md" maw="140px">
 							<Button 
@@ -424,15 +440,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
                                 </Button>
 							}
 						</Stack>
-					</Group>}
-					{!card &&
-						<Center>
-							<Stack align="center">
-								<Loader type="bars"/>
-								<Text ta="center">Loading...</Text>
-							</Stack>
-						</Center>
-					}
+					</Group>
 				</Modal.Body>
 			</Modal.Content>
 		</Modal.Root>
