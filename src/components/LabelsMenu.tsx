@@ -1,0 +1,99 @@
+import { Box, Button, Checkbox, Menu, Pill, Stack, Text } from '@mantine/core';
+import { Card } from '@mosaiq/terrazzo-common/types';
+import { useSocket } from '@trz/contexts/socket-context';
+import { useTRZ } from '@trz/contexts/TRZ-context';
+import { updateCardsLabels } from '@trz/emitters/all';
+import { colorIsDarkAdvanced } from '@trz/util/colorUtils';
+import React, { useMemo } from 'react';
+import { MdAddCircleOutline, MdCheck } from 'react-icons/md';
+
+interface LabelsMenuProps {
+    card: Card;
+}
+
+export const LabelsMenu = (props: LabelsMenuProps) => {
+    const trzCtx = useTRZ();
+    const sockCtx = useSocket();
+    
+    return (
+        <Menu
+            position='bottom-start'
+            withArrow
+            arrowPosition="side"
+            withOverlay={true}
+            closeOnClickOutside={true}
+        >
+            <Menu.Target>
+                {
+                trzCtx.boardData?.labels.length && (
+                    <Button
+                        bg={"red"}
+                        justify={"flex-start"}
+                    >
+                            <Pill.Group
+                                pt="xs"
+                            >
+                                {
+                                    props.card.labels.map(labelId=>{
+                                        const label = trzCtx.boardData?.labels.filter(l=>l.id===labelId)[0];
+                                        if(!label)return null;
+                                        const textColor = colorIsDarkAdvanced(label.color) ? "#fff" : "#000";
+                                        return (
+                                            <Pill
+                                                key={label.id}
+                                                size="md"
+                                                bg={label.color}
+                                                c={textColor}
+                                            >
+                                                {label.name}
+                                            </Pill>
+                                        )
+                                    })
+                                }
+                                <MdAddCircleOutline size="1.5rem"/>
+                            </Pill.Group>
+                       </Button>
+                    )
+                }
+            </Menu.Target>
+            <Menu.Dropdown ta='center' miw="10rem">
+                <Menu.Label>Labels</Menu.Label>
+                <Stack gap={1}>
+                {
+                    trzCtx.boardData?.labels.map(label=>{
+                        const textColor = colorIsDarkAdvanced(label.color) ? "#fff" : "#000";
+                        return (
+                            <Button
+                                key={label.id}
+                                bg={label.color}
+                                ta='left'
+                                c={textColor}
+                                style={{
+                                    borderRadius:"4px",
+                                }}
+                                rightSection={
+                                    <MdCheck style = {{
+                                        visibility: props.card.labels.includes(label.id) ? "visible" : "hidden"
+                                    }}/>
+                                }
+                                onClick={()=>{
+                                    const labels = props.card.labels;
+                                    if(labels.includes(label.id)){
+                                        labels.splice(labels.indexOf(label.id), 1);
+                                    } else {
+                                        labels.push(label.id);
+                                    }
+                                    updateCardsLabels(sockCtx, props.card.id, labels);
+                                }}
+                            >
+                                {label.name}
+                            </Button>
+                        )
+                    })
+                }
+                </Stack>
+            </Menu.Dropdown>
+        </Menu>
+    )
+}
+

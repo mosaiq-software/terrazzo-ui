@@ -22,6 +22,8 @@ import { colorIsDarkAdvanced } from "@trz/util/colorUtils";
 import { useIdle } from "@mantine/hooks";
 import { IDLE_TIMEOUT_MS } from "@trz/util/textUtils";
 import { fullName } from "@mosaiq/terrazzo-common/utils/textUtils";
+import { LabelsMenu } from "./LabelsMenu";
+
 interface CardDetailsProps {
 	cardId: CardId;
 	boardCode: string;
@@ -254,55 +256,8 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 										</Stack>
 									</Grid.Col>
 								}
-
-								{ card.storyPoints !=null && card.storyPoints >-1 &&
-									<Grid.Col span={4}>
-										<Text fz="sm">Story Points</Text>
-										<Stack
-											align='left'
-											pt="xs"
-										>
-											<Box bg='#f2bb6e' w='35' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
-												<Text c='white' ta='center'>{card.storyPoints}</Text>
-											</Box>
-										</Stack>
-									</Grid.Col>
-								}
-
-								{ card.priority != null &&
-									<Grid.Col span={4}>
-										<Text fz="sm">Priority</Text>
-										<Stack
-											align='left'
-											pt="xs"
-										>
-											<Box bg={priorityColors[card.priority - 1]} w='35' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
-												<Text c='white' ta='center'>{unicodeMap[card.priority]}</Text>
-											</Box>
-										</Stack>
-									</Grid.Col>
-								}
-								<Grid.Col span={4}>
-									<Pill.Group
-										pt="xs"
-									>
-										{
-											card.labels.map(labelId=>{
-												const label = trzCtx.boardData?.labels.filter(l=>l.id===labelId)[0];
-												if(!label)return null;
-												const textColor = colorIsDarkAdvanced(label.color) ? "#fff" : "#000";
-												return (
-													<Pill
-														key={label.id}
-														size="md"
-														bg={label.color}
-														c={textColor}
-													>{label.name}</Pill>
-												)
-											})
-										}
-									</Pill.Group>
-								</Grid.Col>
+                                <PriorityButtons card={card} />
+								<LabelsMenu card={card} />
 							</Grid>
 							<CollaborativeTextArea
 								textBlockId={card.descriptionTextBlockId}
@@ -362,72 +317,6 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 									</Combobox.Options>
 								</Combobox.Dropdown>
 							</Combobox> */}
-                            <PriorityButtons 
-                                onChange={async (priority)=>{
-                                    console.log("prio", priority)
-                                    if(!props.cardId){
-                                        notify(NoteType.CARD_UPDATE_ERROR);
-                                        return;
-                                    }
-                                    try{
-                                        await updateCardField(sockCtx, props.cardId, {priority: priority});
-                                    }catch (e){
-                                        notify(NoteType.CARD_UPDATE_ERROR);
-                                        return;
-                                    }
-                                }}
-                            />
-							<Menu
-								position='right-start'
-								withArrow
-								arrowPosition="center"
-								withOverlay={true}
-								closeOnClickOutside={true}
-							>
-								<Menu.Target>
-									<Button
-										bg={"red"}
-										justify={"flex-start"}
-									>
-                                        Labels
-                                    </Button>
-								</Menu.Target>
-								<Menu.Dropdown ta='center' miw="10rem">
-									<Menu.Label>Labels</Menu.Label>
-									{
-										trzCtx.boardData?.labels.map(label=>{
-											const textColor = colorIsDarkAdvanced(label.color) ? "#fff" : "#000";
-											return (
-												<Box
-													key={label.id}
-													bg={label.color}
-													ta='left'
-													c={textColor}
-													my={4}
-													style={{
-														borderRadius:"4px",
-													}}
-												>
-													<Checkbox
-														label={label.name}
-														checked={card.labels.includes(label.id)}
-														p={4}
-														onChange={()=>{
-															const labels = card.labels;
-															if(labels.includes(label.id)){
-																labels.splice(labels.indexOf(label.id), 1);
-															} else {
-																labels.push(label.id);
-															}
-															updateCardsLabels(sockCtx, card.id, labels);
-														}
-													}/>
-												</Box>
-											)
-										})
-									}
-								</Menu.Dropdown>
-							</Menu>
 							{
 								<Button 
                                     key={card.archived ? "Unarchive" : "Archive"}
