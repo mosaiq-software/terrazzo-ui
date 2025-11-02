@@ -24,7 +24,7 @@ const modals = {
 
 const App = () => {
 	return (
-		<MantineProvider theme={theme} defaultColorScheme="dark">
+		<MantineProvider theme={theme} forceColorScheme="dark">
             <BrowserRouter>
                 <Notifications/>
                 <UserProvider>

@@ -235,6 +235,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
                                     <Tooltip label="Copy card ID">
                                         <Button
                                             variant="subtle"
+                                            c="white"
                                             onClick={()=>{
                                                 clipboard.copy(getCardNumber(props.boardCode, card.cardNumber));
                                             }}

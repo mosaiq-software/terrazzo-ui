@@ -58,7 +58,7 @@ const LandingPage = () => {
             <Group gap="xs">
                 {userData ? (
                     <>
-                        <Anchor component={Link} to="/dashboard">
+                        <Anchor component={Link} to="/dashboard" c={"white"}>
                             Dashboard
                         </Anchor>
                         <UserProfileIcon />
