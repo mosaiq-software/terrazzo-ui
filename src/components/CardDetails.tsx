@@ -19,6 +19,9 @@ import { getCardData, updateCardField, updateCardsLabels } from "@trz/emitters/a
 import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
 import { colorIsDarkAdvanced } from "@trz/util/colorUtils";
+import { useIdle } from "@mantine/hooks";
+import { IDLE_TIMEOUT_MS } from "@trz/util/textUtils";
+import { fullName } from "@mosaiq/terrazzo-common/utils/textUtils";
 interface CardDetailsProps {
 	cardId: CardId;
 	boardCode: string;
@@ -32,6 +35,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 	const combobox = useCombobox({
 	  onDropdownClose: () => combobox.resetSelectedOption(),
 	});
+    const idle = useIdle(IDLE_TIMEOUT_MS);
 
 	useEffect(()=>{
 		let strictIgnore = false;
@@ -301,7 +305,9 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 								textColor={textColor}
 								backgroundColor={bgDarkColor}
 								placeholder="Double click to edit!"
-								markdown
+                                idle={idle}
+                                name={fullName(usr.userData)}
+                                avatarUrl={usr.userData?.profilePicture}
 							/>
 						</Stack>
 						<Stack justify='flex-start' align='stretch' pt="md" maw="140px">

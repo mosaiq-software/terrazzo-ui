@@ -29,6 +29,7 @@ import { YjsExtension } from '@remirror/extension-yjs';
 import { ProviderConfiguration, SocketIOProvider } from "@trz/util/yjsSocketProvier";
 import { Doc } from "yjs";
 import { ManagerOptions, SocketOptions } from 'socket.io-client';
+import { useImageColor } from '@trz/hooks/useImageColor';
 
 export interface ReactEditorProps
     extends Pick<CreateEditorStateProps, 'stringHandler'>,
@@ -85,16 +86,11 @@ function MentionComponent({ users, tags }: MentionComponentProps) {
     return <MentionAtomPopupComponent onChange={setMentionState} items={items} />;
 }
 
-interface EditorWrapperProps extends PropsWithChildren<SocialEditorProps> {
-    maxLineLength: number;
-    textBlockId: TextBlockId;
-    fontSize?: number;
-    textColor: string;
-    backgroundColor: string;
-    placeholder: string;
-}
+interface EditorWrapperProps extends PropsWithChildren<SocialEditorProps>, SharedCollaborativeTextAreaProps {}
 
 const EditorWrapper = (props: EditorWrapperProps) => {
+    const IDLE_COLOR = "#afafaf";
+    const imgColor = useImageColor(props.avatarUrl);
     const [socketIOProvider, setSocketIOProvider] = useState<SocketIOProvider | undefined>();
     const [status, setStatus] = useState<string>('disconnected');
     const [clients, setClients] = useState<string[]>([]);
@@ -114,12 +110,6 @@ const EditorWrapper = (props: EditorWrapperProps) => {
                 path: "/socket"
             };
             _socketIOProvider = new SocketIOProvider(url, textBlockId, doc, pConf, sockConf);
-            _socketIOProvider.awareness.on('change', () => setClients(Array.from(_socketIOProvider.awareness.getStates().keys()).map(key => `${key}`)))
-            _socketIOProvider.awareness.setLocalState({ id: Math.random(), name: 'Perico' });
-            _socketIOProvider.on('sync', (isSync: boolean) => console.log('websocket sync', isSync))
-            _socketIOProvider.on('status', ({ status: _status }: { status: string }) => {
-                setStatus(_status);
-            })
             setSocketIOProvider(_socketIOProvider);
         };
         init();
@@ -128,6 +118,21 @@ const EditorWrapper = (props: EditorWrapperProps) => {
             _socketIOProvider?.destroy();
         };
     }, [])
+
+    useEffect(()=>{
+        if(!socketIOProvider){
+            return;
+        }
+        socketIOProvider.awareness.on('change', () => setClients(Array.from(socketIOProvider.awareness.getStates().keys()).map(key => `${key}`)))
+        socketIOProvider.awareness.setLocalStateField('user', {
+            name: props.name || 'Unknown User',
+            color: props.idle ? IDLE_COLOR : imgColor ?? props.color ?? "black",
+        });
+        socketIOProvider.on('sync', (isSync: boolean) => console.log('websocket sync', isSync))
+        socketIOProvider.on('status', ({ status: _status }: { status: string }) => {
+            setStatus(_status);
+        })
+    }, [socketIOProvider, imgColor, props.color, props.idle, props.name])
 
     if (!socketIOProvider) {
         return <div>Loading editor...</div>;
@@ -186,16 +191,20 @@ const Editor = (props:EditorProps) => {
     );
 }
 
-interface CollaborativeTextAreaProps {
+interface SharedCollaborativeTextAreaProps {
     maxLineLength: number;
     textBlockId: TextBlockId;
     fontSize?: number;
     textColor: string;
     backgroundColor: string;
-    placeholder: string;
+    placeholder?: string;
+    name? : string;
+    color?: string;
+    avatarUrl?: string;
+    idle: boolean;
 }
 
-export const CollaborativeTextArea = (props: CollaborativeTextAreaProps) => {
+export const CollaborativeTextArea = (props: SharedCollaborativeTextAreaProps) => {
     return (
         <EditorWrapper
             editable={true}
