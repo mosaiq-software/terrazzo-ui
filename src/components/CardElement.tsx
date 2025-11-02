@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import {Box, Group, Paper, Pill, Text, Title} from "@mantine/core";
 import {Card, CardId} from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from "@trz/components/AvatarRow";
-import {priorityColors, unicodeMap} from "@trz/components/PriorityButtons";
+import {PriorityChip, priorityColors, unicodeMap} from "@trz/components/CardDetails/PriorityButtons";
 import { CARD_CACHE_PREFIX, getCardNumber } from "@trz/util/boardUtils";
 import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
@@ -13,6 +13,7 @@ import { NoteType, notify } from "@trz/util/notifications";
 import { useInViewport, useSessionStorage } from "@mantine/hooks";
 import { colorIsDarkAdvanced } from "@trz/util/colorUtils";
 import { useTRZ } from "@trz/contexts/TRZ-context";
+import { LabelDisplay } from "./CardDetails/LabelsMenu";
 
 interface CardElementProps {
 	cardId: CardId;
@@ -124,27 +125,12 @@ const CardElement = (props: CardElementProps) => {
 			onClick={onOpenCardModal}
 		>
 			{process.env.DEBUG==="true" && <Text fz="6pt">{props.cardId}</Text>}
-			{card && inViewport && <React.Fragment>
-				<Pill.Group>
-					{
-						card.labels.map(labelId=>{
-							const label = trzCtx.boardData?.labels.filter(l=>l.id===labelId)[0];
-							if(!label)return null;
-							const textColor = colorIsDarkAdvanced(label.color) ? "#fff" : "#000";
-							return (
-								<Pill
-									style={{
-										userSelect: "none"
-									}}
-									key={label.id}
-									size="xs"
-									bg={label.color}
-									c={textColor}
-								>{label.name}</Pill>
-							)
-						})
-					}
-				</Pill.Group>
+			{card && inViewport && 
+            <React.Fragment>
+				<LabelDisplay
+                    labels={card.labels}
+                    size="xs"
+                />
 				<Text 
 					lineClamp={7} 
 					c="#ffffff"
@@ -167,11 +153,7 @@ const CardElement = (props: CardElementProps) => {
 					{card.assignees != undefined && card.assignees.length > 0 &&
 						<AvatarRow users={card.assignees} maxUsers={3}/>
 					}
-					{card.priority &&
-						<Box w='35' bg={priorityColors[card.priority ]}  style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
-							<Text c="white" ta='center'>{unicodeMap[card.priority]}</Text>
-						</Box>
-					}
+					<PriorityChip priority={card.priority} />
 				</Group>
 			</React.Fragment>}
 		</Paper>

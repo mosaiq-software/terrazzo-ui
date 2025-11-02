@@ -66,9 +66,7 @@ export const PriorityButtons = (props: PriorityButtonsProps): React.JSX.Element 
                         bg={"red"}
                         justify={"flex-start"}
                     >
-                        <Box bg={priorityColors[priority]} w='35' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
-                            <Text c='white' ta='center'>{unicodeMap[priority]}</Text>
-                        </Box>
+                        <PriorityChip priority={priority} />
                     </Button>
                 </Tooltip>
             </Menu.Target>
@@ -99,3 +97,17 @@ export const PriorityButtons = (props: PriorityButtonsProps): React.JSX.Element 
         </Menu>
     );
 };
+
+interface PriorityChipProps {
+    priority: number | null | undefined;
+}
+export const PriorityChip = (props: PriorityChipProps) => {
+    if(!props.priority || props.priority >= priorityColors.length || props.priority < 0){
+        return null;
+    }
+    return (
+        <Box bg={priorityColors[props.priority]} w='35' style={{ '--radius': '0.3rem', borderRadius: 'var(--radius)' }}>
+            <Text c='white' ta='center'>{unicodeMap[props.priority]}</Text>
+        </Box>
+    )
+}

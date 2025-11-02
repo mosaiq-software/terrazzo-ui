@@ -1,5 +1,5 @@
-import { Box, Button, Checkbox, Menu, Pill, Stack, Text } from '@mantine/core';
-import { Card } from '@mosaiq/terrazzo-common/types';
+import { Box, Button, Checkbox, MantineSize, Menu, Pill, Stack, Text } from '@mantine/core';
+import { Card, LabelId } from '@mosaiq/terrazzo-common/types';
 import { useSocket } from '@trz/contexts/socket-context';
 import { useTRZ } from '@trz/contexts/TRZ-context';
 import { updateCardsLabels } from '@trz/emitters/all';
@@ -30,28 +30,11 @@ export const LabelsMenu = (props: LabelsMenuProps) => {
                         bg={"red"}
                         justify={"flex-start"}
                     >
-                            <Pill.Group
-                                pt="xs"
-                            >
-                                {
-                                    props.card.labels.map(labelId=>{
-                                        const label = trzCtx.boardData?.labels.filter(l=>l.id===labelId)[0];
-                                        if(!label)return null;
-                                        const textColor = colorIsDarkAdvanced(label.color) ? "#fff" : "#000";
-                                        return (
-                                            <Pill
-                                                key={label.id}
-                                                size="md"
-                                                bg={label.color}
-                                                c={textColor}
-                                            >
-                                                {label.name}
-                                            </Pill>
-                                        )
-                                    })
-                                }
-                                <MdAddCircleOutline size="1.5rem"/>
-                            </Pill.Group>
+                            <LabelDisplay
+                                labels={props.card.labels}
+                                showAdd
+                                size="sm"
+                            />
                        </Button>
                     )
                 }
@@ -97,3 +80,36 @@ export const LabelsMenu = (props: LabelsMenuProps) => {
     )
 }
 
+
+interface LabelDisplayProps {
+    labels: LabelId[];
+    showAdd?: boolean;
+    size?: MantineSize;
+}
+export const LabelDisplay = (props: LabelDisplayProps) => {
+    const trzCtx = useTRZ();
+    return (
+        <Pill.Group
+            pt="xs"
+        >
+            {
+                props.labels.map(labelId=>{
+                    const label = trzCtx.boardData?.labels.filter(l=>l.id===labelId)[0];
+                    if(!label)return null;
+                    const textColor = colorIsDarkAdvanced(label.color) ? "#fff" : "#000";
+                    return (
+                        <Pill
+                            key={label.id}
+                            size={props.size}
+                            bg={label.color}
+                            c={textColor}
+                        >
+                            {label.name}
+                        </Pill>
+                    )
+                })
+            }
+            {props.showAdd && <MdAddCircleOutline size="1.5rem"/>}
+        </Pill.Group>
+    )
+}

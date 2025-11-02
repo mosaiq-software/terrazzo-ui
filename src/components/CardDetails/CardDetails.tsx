@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Box, Button, Center, Checkbox, Combobox, Grid, Group, Loader, Menu, Modal, Pill, Stack, Text, useCombobox} from "@mantine/core";
+import {Box, Button, Center, Grid, Group, Loader, Modal, Stack, Text, Tooltip, useCombobox} from "@mantine/core";
 import {CollaborativeTextArea} from "@trz/components/CollaborativeTextArea/CollaborativeTextArea";
 import {AvatarRow} from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
@@ -8,18 +8,15 @@ import {NoteType, notify} from "@trz/util/notifications";
 import { useTRZ } from "@trz/contexts/TRZ-context";
 import { getCardNumber } from "@trz/util/boardUtils";
 import {FaArchive, FaUserPlus} from "react-icons/fa";
-import {MdLabel, MdOutlinePriorityHigh} from "react-icons/md";
-import {PriorityButtons, priorityColors, unicodeMap} from "@trz/components/PriorityButtons";
-import {Priority} from "@mosaiq/terrazzo-common/constants";
-import {StoryPointButtons} from "@trz/components/StoryPointButtons";
-import { Card, CardId, UserId } from "@mosaiq/terrazzo-common/types";
+import {MdFileCopy} from "react-icons/md";
+import {PriorityButtons} from "@trz/components/CardDetails/PriorityButtons";
+import { Card, CardId } from "@mosaiq/terrazzo-common/types";
 import { useUser } from "@trz/contexts/user-context";
 import { ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
-import { getCardData, updateCardField, updateCardsLabels } from "@trz/emitters/all";
+import { getCardData, updateCardField } from "@trz/emitters/all";
 import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
-import { colorIsDarkAdvanced } from "@trz/util/colorUtils";
-import { useIdle } from "@mantine/hooks";
+import { useClipboard, useIdle } from "@mantine/hooks";
 import { IDLE_TIMEOUT_MS } from "@trz/util/textUtils";
 import { fullName } from "@mosaiq/terrazzo-common/utils/textUtils";
 import { LabelsMenu } from "./LabelsMenu";
@@ -38,6 +35,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 	  onDropdownClose: () => combobox.resetSelectedOption(),
 	});
     const idle = useIdle(IDLE_TIMEOUT_MS);
+    const clipboard = useClipboard({ timeout: 500 });
 
 	useEffect(()=>{
 		let strictIgnore = false;
@@ -174,7 +172,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 								gap="xs"
 							>
 								{
-									card?.archived &&
+									card.archived &&
 									<Box
 										bg="yellow"
 										p="sm"
@@ -186,34 +184,52 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 										</Group>
 									</Box>
 								}
-								{card && <Stack
-									gap="xs"
-									align="flex-start"
-									justify="flex-start"
-									pt="lg"
-									pl="lg"
-									pr="lg"
-								>
-									<EditableTextbox
-										value={card.name}
-										onChange={onTitleChange}
-										type="title"
-										placeholder="Card name.."
-										titleProps={{
-											order:3,
-											textWrap: "nowrap",
+                                <Stack
+                                    gap="xs"
+                                    align="flex-start"
+                                    justify="flex-start"
+                                    pt="lg"
+                                    pl="lg"
+                                    pr="lg"
+                                >
+
+                                    <EditableTextbox
+                                        value={card.name}
+                                        onChange={onTitleChange}
+                                        type="title"
+                                        placeholder="Card name.."
+                                        titleProps={{
+                                            order:3,
+                                            textWrap: "nowrap",
                                             fw: 400,
-										}}
-										inputProps={{
-											w:"100%",
-											bg: "red",
-										}}
-										style={{
-											width: "95%",
-										}}
-									/>
-									<Text fz="sm">{getCardNumber(props.boardCode, card.cardNumber)}</Text>
-								</Stack>}
+                                        }}
+                                        inputProps={{
+                                            w:"100%",
+                                            bg: "red",
+                                        }}
+                                        style={{
+                                            width: "95%",
+                                        }}
+                                    />
+                                    <Tooltip label="Copy card ID">
+                                        <Button
+                                            variant="subtle"
+                                            onClick={()=>{
+                                                clipboard.copy(getCardNumber(props.boardCode, card.cardNumber));
+                                            }}
+                                        >
+                                            {
+                                                clipboard.copied ? (
+                                                    <MdFileCopy color="white" size="1rem"/>
+                                                ) : (
+                                                    <Text fz="sm">
+                                                        {getCardNumber(props.boardCode, card.cardNumber)}
+                                                    </Text>
+                                                )
+                                            }
+                                        </Button>
+                                    </Tooltip>
+                                </Stack>
 							</Stack>
 						</Group>
 						<Modal.CloseButton
@@ -226,7 +242,6 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 								hover: "green",
 							}}
 						/>
-
 					</Modal.Title>
 				</Modal.Header>
 				<Modal.Body
@@ -241,7 +256,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 					>
 						<Stack style={{
 						}}>
-							<Grid
+							<Group
 								pb="lg"
 								pr="lg"
 							>
@@ -258,7 +273,61 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 								}
                                 <PriorityButtons card={card} />
 								<LabelsMenu card={card} />
-							</Grid>
+                                <Button 
+                                    bg={"red"}
+                                    leftSection={<FaUserPlus />}
+                                    justify={"flex-start"}
+                                    onClick={()=>{
+                                        if(usr.userData){
+                                            // updateCardAssignee(card.id, usr.userData.id, !joinedCard);
+                                        }
+                                    }}
+                                >
+                                    {joinedCard ? "Leave" : "Join"} Card
+                                </Button>
+                                {/* <Combobox
+                                    store={combobox}
+                                    width={550}
+                                    position="bottom-start"
+                                    withArrow
+                                    withinPortal={false}
+                                    onOptionSubmit={async (val) => {
+                                        await sockCtx.updateCardAssignee(card.id, val as UserId, card.assignees.includes(card.id));
+                                    }}
+                                >
+                                    <Combobox.Target>
+                                        <Button bg={buttonColor}
+                                            leftSection={<FaUserGroup />}
+                                            justify={"flex-start"}
+                                            onClick={()=>{
+                                                combobox.toggleDropdown();
+                                            }}
+                                        >Members</Button>
+                                    </Combobox.Target>
+
+                                    <Combobox.Dropdown>
+                                        <Combobox.Options>
+                                            
+                                                {sockCtx.orgData?.members.map(m=>(
+                                                    <Combobox.Option value={m.user.id} key={m.user.id}>
+                                                        {m.user.username}
+                                                    </Combobox.Option>
+                                                ))}
+                                        </Combobox.Options>
+                                    </Combobox.Dropdown>
+                                </Combobox> */}
+                                {
+                                    <Button 
+                                        key={card.archived ? "Unarchive" : "Archive"}
+                                        bg={"red"}
+                                        leftSection={<FaArchive />}
+                                        justify={"flex-start"}
+                                        onClick={() => onArchiveCard(!card.archived)}
+                                    >
+                                        {card.archived ? "Unarchive" : "Archive"} card
+                                    </Button>
+                                }
+							</Group>
 							<CollaborativeTextArea
 								textBlockId={card.descriptionTextBlockId}
 								maxLineLength={60}
@@ -272,62 +341,6 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
                                     Created at {new Date(card.createdAt).toLocaleString()} by {fullName(card.createdBy)}
                                 </Text>
                             </Stack>
-						</Stack>
-						<Stack justify='flex-start' align='stretch' pt="md" maw="140px">
-							<Button 
-                                bg={"red"}
-                                leftSection={<FaUserPlus />}
-                                justify={"flex-start"}
-                                onClick={()=>{
-                                    if(usr.userData){
-                                        // updateCardAssignee(card.id, usr.userData.id, !joinedCard);
-                                    }
-                                }}
-							>
-                                {joinedCard ? "Leave" : "Join"} Card
-                            </Button>
-							{/* <Combobox
-								store={combobox}
-								width={550}
-								position="bottom-start"
-								withArrow
-								withinPortal={false}
-								onOptionSubmit={async (val) => {
-									await sockCtx.updateCardAssignee(card.id, val as UserId, card.assignees.includes(card.id));
-								}}
-							>
-								<Combobox.Target>
-									<Button bg={buttonColor}
-										leftSection={<FaUserGroup />}
-										justify={"flex-start"}
-										onClick={()=>{
-											combobox.toggleDropdown();
-										}}
-									>Members</Button>
-								</Combobox.Target>
-
-								<Combobox.Dropdown>
-									<Combobox.Options>
-										
-											{sockCtx.orgData?.members.map(m=>(
-												<Combobox.Option value={m.user.id} key={m.user.id}>
-													{m.user.username}
-												</Combobox.Option>
-											))}
-									</Combobox.Options>
-								</Combobox.Dropdown>
-							</Combobox> */}
-							{
-								<Button 
-                                    key={card.archived ? "Unarchive" : "Archive"}
-                                    bg={"red"}
-                                    leftSection={<FaArchive />}
-                                    justify={"flex-start"}
-                                    onClick={() => onArchiveCard(!card.archived)}
-								>
-                                    {card.archived ? "Unarchive" : "Archive"} card
-                                </Button>
-							}
 						</Stack>
 					</Group>
 				</Modal.Body>
