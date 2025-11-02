@@ -30,6 +30,7 @@ export const AvatarRow = (props: AvatarRowProps) => {
                     list.push(uObj);
                 }
             }
+            setUsers(list);
         }
         loadUsers();
     }, [props.users])

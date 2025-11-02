@@ -26,18 +26,16 @@ export const LabelsMenu = (props: LabelsMenuProps) => {
         >
             <Menu.Target>
                 {trzCtx.boardData?.labels.length && (
-                    <Tooltip label="Edit Labels">
-                        <Button
-                            variant='subtle'
-                            justify={"flex-start"}
-                        >
-                            <LabelDisplay
-                                labels={props.card.labels}
-                                showAdd
-                                size="sm"
-                            />
-                        </Button>
-                    </Tooltip>
+                    <Button
+                        variant='subtle'
+                        justify={"flex-start"}
+                    >
+                        <LabelDisplay
+                            labels={props.card.labels}
+                            showAdd
+                            size="sm"
+                        />
+                    </Button>
                 )}
             </Menu.Target>
             <Menu.Dropdown ta='center' miw="10rem">

@@ -27,17 +27,15 @@ export const AssigneeMenu = (props: AssigneeMenuProps) => {
             closeDelay={200}
         >
             <Menu.Target>
-                <Tooltip label="Edit Assignees">
-                    <Button
-                        variant='subtle'
-                        justify={"flex-start"}
-                    >
-                        <AvatarRow
-                            users={props.card.assignees}
-                            maxUsers={3}
-                        />
-                    </Button>
-                </Tooltip>
+                <Button
+                    variant='subtle'
+                    justify={"flex-start"}
+                >
+                    <AvatarRow
+                        users={props.card.assignees}
+                        maxUsers={3}
+                    />
+                </Button>
             </Menu.Target>
             <Menu.Dropdown ta='center' miw="10rem">
                 <Menu.Label>Assignees</Menu.Label>

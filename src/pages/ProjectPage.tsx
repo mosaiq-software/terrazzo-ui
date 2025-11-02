@@ -146,7 +146,7 @@ const ProjectPage = (): React.JSX.Element => {
                                 })
                             }
                             <Flex ml='auto' align='center'>
-                                <AvatarRow users={projectData.externalMembers.map(m=>m.user)} maxUsers={5}/>
+                                <AvatarRow users={projectData.members.map(m=>m.user)} maxUsers={5}/>
                             </Flex>
                         </Tabs.List>
                     </Tabs>

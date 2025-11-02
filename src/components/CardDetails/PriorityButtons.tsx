@@ -62,14 +62,12 @@ export const PriorityButtons = (props: PriorityButtonsProps): React.JSX.Element 
             closeDelay={200}
         >
             <Menu.Target>
-                <Tooltip label="Set Priority" position="top" withArrow>
-                    <Button
-                        variant="subtle"
-                        justify={"flex-start"}
-                    >
-                        <PriorityChip priority={priority} />
-                    </Button>
-                </Tooltip>
+                <Button
+                    variant="subtle"
+                    justify={"flex-start"}
+                >
+                    <PriorityChip priority={priority} />
+                </Button>
             </Menu.Target>
             <Menu.Dropdown>
                 <Flex direction="column-reverse" align="center">

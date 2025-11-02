@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import {Box, Button, Center, Grid, Group, Loader, Modal, Stack, Text, Tooltip, useCombobox} from "@mantine/core";
+import {ActionIcon, Box, Button, Center, Grid, Group, Loader, Modal, Stack, Text, Tooltip, useCombobox} from "@mantine/core";
 import {CollaborativeTextArea} from "@trz/components/CollaborativeTextArea/CollaborativeTextArea";
 import {AvatarRow} from '@trz/components/AvatarRow';
 import EditableTextbox from "@trz/components/EditableTextbox";
@@ -7,13 +7,13 @@ import {useSocket} from "@trz/contexts/socket-context";
 import {NoteType, notify} from "@trz/util/notifications";
 import { useTRZ } from "@trz/contexts/TRZ-context";
 import { getCardNumber } from "@trz/util/boardUtils";
-import {FaArchive, FaUserPlus} from "react-icons/fa";
+import {FaArchive, FaUserMinus, FaUserPlus} from "react-icons/fa";
 import {MdFileCopy} from "react-icons/md";
 import {PriorityButtons} from "@trz/components/CardDetails/PriorityButtons";
 import { Card, CardId } from "@mosaiq/terrazzo-common/types";
 import { useUser } from "@trz/contexts/user-context";
 import { ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
-import { getCardData, updateCardField } from "@trz/emitters/all";
+import { getCardData, updateCardAssignee, updateCardField } from "@trz/emitters/all";
 import { useSocketListener } from "@trz/hooks/useSocketListener";
 import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
 import { useClipboard, useIdle } from "@mantine/hooks";
@@ -88,7 +88,28 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 	});
 	
 	useSocketListener<ServerSE.UPDATE_CARD_ASSIGNEE>(ServerSE.UPDATE_CARD_ASSIGNEE, (payload)=>{
-
+        if(payload.cardId !== props.cardId){
+            return;
+        }
+        setCard((prev)=>{
+            if(!prev){
+                return prev;
+            }
+            const assigned = prev.assignees.includes(payload.userId);
+            if(payload.assigned && !assigned){
+                return {
+                    ...prev,
+                    assignees: [...prev.assignees, payload.userId]
+                };
+            }
+            if(!payload.assigned && assigned){
+                return {
+                    ...prev,
+                    assignees: prev.assignees.filter((a)=> a !== payload.userId)
+                };
+            }
+            return prev;
+        });
 	});
 
 	const onCloseModal = () => {
@@ -254,35 +275,22 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
                         pb="8rem"
                     >
                         <Group>
-                            {card.assignees != undefined && card.assignees.length > 0 &&
-                                <Grid.Col span={4}>
-                                    <Text fz="sm">Members</Text>
-                                    <Stack
-                                        align='left'
-                                        pt="xs"
-                                    >
-                                        <AvatarRow users={card.assignees} maxUsers={3}/>
-                                    </Stack>
-                                </Grid.Col>
-                            }
                             <PriorityButtons card={card} />
                             <LabelsMenu card={card} />
                             <AssigneeMenu card={card} />
-                            {/* <Tooltip label="Assign yourself to this card">
-                                <Button 
+                            <Tooltip label={`${joinedCard ? "Leave" : "Join"} Card`}>
+                                <ActionIcon 
                                     variant="subtle"
                                     c="white"
-                                    leftSection={<FaUserPlus />}
-                                    justify={"flex-start"}
                                     onClick={()=>{
                                         if(usr.userData){
-                                            // updateCardAssignee(card.id, usr.userData.id, !joinedCard);
+                                            updateCardAssignee(sockCtx, card.id, usr.userData.id, !joinedCard);
                                         }
                                     }}
                                     >
-                                    {joinedCard ? "Leave" : "Join"} Card
-                                </Button>
-                            </Tooltip> */}
+                                    {joinedCard ? <FaUserMinus/> : <FaUserPlus />}
+                                </ActionIcon>
+                            </Tooltip>
                         </Group>
                         <CollaborativeTextArea
                             textBlockId={card.descriptionTextBlockId}

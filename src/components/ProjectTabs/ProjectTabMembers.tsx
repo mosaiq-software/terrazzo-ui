@@ -51,7 +51,7 @@ export const ProjectTabMembers = (props: ProjectTabMembersProps) => {
                     color:"white",
                     gap: "lg"
                 }}>
-                    <Tabs.Tab value="members" leftSection={<MdOutlinePerson size={18} />}>Members ({props.projectData.externalMembers.length})</Tabs.Tab>
+                    <Tabs.Tab value="members" leftSection={<MdOutlinePerson size={18} />}>Members ({props.projectData.members.length})</Tabs.Tab>
                     <Tabs.Tab value="invites" leftSection={<MdOutlineMailOutline size={18} />}>Invites ({props.projectData.invites.length})</Tabs.Tab>
                 </Tabs.List>
                 <Tabs.Panel value="members">
@@ -63,9 +63,9 @@ export const ProjectTabMembers = (props: ProjectTabMembersProps) => {
                             justifyContent: "center",
                         }}
                     >
-                        <Title order={4} c="#fff">External Members</Title>
+                        <Title order={4} c="#fff">Members</Title>
                         {
-                            props.projectData.externalMembers.map((member)=>(
+                            props.projectData.members.map((member)=>(
                                 <MembershipRow
                                     key={member.user.id}
                                     user={member.user}
@@ -85,21 +85,6 @@ export const ProjectTabMembers = (props: ProjectTabMembersProps) => {
                                             notify(NoteType.UNAUTHORIZED);
                                         }
                                     }}
-                                />
-                            ))
-                        }
-                        <Divider c="#ddd" />
-                        <Title order={4} c="#fff">Organization Members</Title>
-                        {
-                            props.projectData.orgMembers.map((member)=>(
-                                <MembershipRow
-                                    readonly
-                                    key={member.user.id}
-                                    user={member.user}
-                                    record={member.record}
-                                    editorsRecord={props.myMembershipRecord}
-                                    onEditRole={(recordId, role)=>{}}
-                                    onRemoveMember={()=>{}}
                                 />
                             ))
                         }
