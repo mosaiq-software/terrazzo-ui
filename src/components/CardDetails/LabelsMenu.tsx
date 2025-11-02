@@ -1,4 +1,4 @@
-import { Box, Button, Checkbox, MantineSize, Menu, Pill, Stack, Text } from '@mantine/core';
+import { Box, Button, Checkbox, MantineSize, Menu, Pill, Stack, Text, Tooltip } from '@mantine/core';
 import { Card, LabelId } from '@mosaiq/terrazzo-common/types';
 import { useSocket } from '@trz/contexts/socket-context';
 import { useTRZ } from '@trz/contexts/TRZ-context';
@@ -20,24 +20,25 @@ export const LabelsMenu = (props: LabelsMenuProps) => {
             position='bottom-start'
             withArrow
             arrowPosition="side"
-            withOverlay={true}
             closeOnClickOutside={true}
+            trigger="hover"
+            closeDelay={200}
         >
             <Menu.Target>
-                {
-                trzCtx.boardData?.labels.length && (
-                    <Button
-                        bg={"red"}
-                        justify={"flex-start"}
-                    >
+                {trzCtx.boardData?.labels.length && (
+                    <Tooltip label="Edit Labels">
+                        <Button
+                            variant='subtle'
+                            justify={"flex-start"}
+                        >
                             <LabelDisplay
                                 labels={props.card.labels}
                                 showAdd
                                 size="sm"
                             />
-                       </Button>
-                    )
-                }
+                        </Button>
+                    </Tooltip>
+                )}
             </Menu.Target>
             <Menu.Dropdown ta='center' miw="10rem">
                 <Menu.Label>Labels</Menu.Label>
@@ -50,11 +51,12 @@ export const LabelsMenu = (props: LabelsMenuProps) => {
                                 key={label.id}
                                 bg={label.color}
                                 ta='left'
+                                justify='start'
                                 c={textColor}
                                 style={{
                                     borderRadius:"4px",
                                 }}
-                                rightSection={
+                                leftSection={
                                     <MdCheck style = {{
                                         visibility: props.card.labels.includes(label.id) ? "visible" : "hidden"
                                     }}/>
@@ -89,9 +91,7 @@ interface LabelDisplayProps {
 export const LabelDisplay = (props: LabelDisplayProps) => {
     const trzCtx = useTRZ();
     return (
-        <Pill.Group
-            pt="xs"
-        >
+        <Pill.Group>
             {
                 props.labels.map(labelId=>{
                     const label = trzCtx.boardData?.labels.filter(l=>l.id===labelId)[0];

@@ -57,13 +57,14 @@ export const PriorityButtons = (props: PriorityButtonsProps): React.JSX.Element 
             position="bottom"
             withArrow
             arrowPosition="center"
-            withOverlay={true}
             closeOnClickOutside={true}
+            trigger="hover"
+            closeDelay={200}
         >
             <Menu.Target>
                 <Tooltip label="Set Priority" position="top" withArrow>
                     <Button
-                        bg={"red"}
+                        variant="subtle"
                         justify={"flex-start"}
                     >
                         <PriorityChip priority={priority} />

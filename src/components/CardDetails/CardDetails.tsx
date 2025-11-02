@@ -28,7 +28,6 @@ interface CardDetailsProps {
 }
 const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 	const [card, setCard] = useState<Card | undefined>(undefined);
-	const trzCtx = useTRZ();
 	const sockCtx = useSocket();
 	const usr = useUser();
 	const combobox = useCombobox({
@@ -152,8 +151,8 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 			/>
 			<Modal.Content
 				h={"90vh"}
-				bg={"red"}
-				c={"red"}
+				bg={"#1d2022"}
+				c={"white"}
 				style={{
 					overflowX: "hidden",
 					overflowY: "scroll"
@@ -161,7 +160,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 			>
 				<Modal.Header
 					p="0"
-					bg={"red"}
+					bg={"#1d2022"}
 				>
 					<Modal.Title
 						w={"100%"}
@@ -205,7 +204,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
                                         }}
                                         inputProps={{
                                             w:"100%",
-                                            bg: "red",
+                                            bg: "transparent",
                                         }}
                                         style={{
                                             width: "95%",
@@ -234,12 +233,12 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 						</Group>
 						<Modal.CloseButton
 							variant="transparent"
-							c={"red"}
+							c={"white"}
 							style={{
 								position: "absolute",
 								top: "0.75rem",
 								right: "0.75rem",
-								hover: "green",
+                                backdropFilter: "blur(5px)"
 							}}
 						/>
 					</Modal.Title>
@@ -247,38 +246,30 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 				<Modal.Body
 					p={20}
 				>
-					<Group 
-						grow 
-						preventGrowOverflow={false}
-						wrap='nowrap'
-						align="flex-start"
-						justify="space-between"
-					>
-						<Stack 
-                            style={{
-                                position:"relative",
-						    }}  
-                            pb="8rem"
-                        >
-							<Group
-								pb="lg"
-								pr="lg"
-							>
-								{card.assignees != undefined && card.assignees.length > 0 &&
-									<Grid.Col span={4}>
-										<Text fz="sm">Members</Text>
-										<Stack
-											align='left'
-											pt="xs"
-										>
-											<AvatarRow users={card.assignees} maxUsers={3}/>
-										</Stack>
-									</Grid.Col>
-								}
-                                <PriorityButtons card={card} />
-								<LabelsMenu card={card} />
+                    <Stack 
+                        style={{
+                            position:"relative",
+                        }}  
+                        pb="8rem"
+                    >
+                        <Group>
+                            {card.assignees != undefined && card.assignees.length > 0 &&
+                                <Grid.Col span={4}>
+                                    <Text fz="sm">Members</Text>
+                                    <Stack
+                                        align='left'
+                                        pt="xs"
+                                    >
+                                        <AvatarRow users={card.assignees} maxUsers={3}/>
+                                    </Stack>
+                                </Grid.Col>
+                            }
+                            <PriorityButtons card={card} />
+                            <LabelsMenu card={card} />
+                            <Tooltip label="Assign yourself to this card">
                                 <Button 
-                                    bg={"red"}
+                                    variant="subtle"
+                                    c="white"
                                     leftSection={<FaUserPlus />}
                                     justify={"flex-start"}
                                     onClick={()=>{
@@ -286,68 +277,71 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
                                             // updateCardAssignee(card.id, usr.userData.id, !joinedCard);
                                         }
                                     }}
-                                >
+                                    >
                                     {joinedCard ? "Leave" : "Join"} Card
                                 </Button>
-                                {/* <Combobox
-                                    store={combobox}
-                                    width={550}
-                                    position="bottom-start"
-                                    withArrow
-                                    withinPortal={false}
-                                    onOptionSubmit={async (val) => {
-                                        await sockCtx.updateCardAssignee(card.id, val as UserId, card.assignees.includes(card.id));
-                                    }}
-                                >
-                                    <Combobox.Target>
-                                        <Button bg={buttonColor}
-                                            leftSection={<FaUserGroup />}
-                                            justify={"flex-start"}
-                                            onClick={()=>{
-                                                combobox.toggleDropdown();
-                                            }}
-                                        >Members</Button>
-                                    </Combobox.Target>
+                            </Tooltip>
+                            {/* <Combobox
+                                store={combobox}
+                                width={550}
+                                position="bottom-start"
+                                withArrow
+                                withinPortal={false}
+                                onOptionSubmit={async (val) => {
+                                    await sockCtx.updateCardAssignee(card.id, val as UserId, card.assignees.includes(card.id));
+                                }}
+                            >
+                                <Combobox.Target>
+                                    <Button bg={buttonColor}
+                                        leftSection={<FaUserGroup />}
+                                        justify={"flex-start"}
+                                        onClick={()=>{
+                                            combobox.toggleDropdown();
+                                        }}
+                                    >Members</Button>
+                                </Combobox.Target>
 
-                                    <Combobox.Dropdown>
-                                        <Combobox.Options>
-                                            
-                                                {sockCtx.orgData?.members.map(m=>(
-                                                    <Combobox.Option value={m.user.id} key={m.user.id}>
-                                                        {m.user.username}
-                                                    </Combobox.Option>
-                                                ))}
-                                        </Combobox.Options>
-                                    </Combobox.Dropdown>
-                                </Combobox> */}
-							</Group>
-							<CollaborativeTextArea
-								textBlockId={card.descriptionTextBlockId}
-								maxLineLength={60}
-								placeholder="Add a more detailed description..."
-                                idle={idle}
-                                name={fullName(usr.userData)}
-                                avatarUrl={usr.userData?.profilePicture}
-							/>
-                            <Stack style={{
-                                position:"absolute",
-                                bottom: 0,
-                            }}>
-                                <Text>
-                                    Created at {new Date(card.createdAt).toLocaleString()} by {fullName(card.createdBy)}
-                                </Text>
+                                <Combobox.Dropdown>
+                                    <Combobox.Options>
+                                        
+                                            {sockCtx.orgData?.members.map(m=>(
+                                                <Combobox.Option value={m.user.id} key={m.user.id}>
+                                                    {m.user.username}
+                                                </Combobox.Option>
+                                            ))}
+                                    </Combobox.Options>
+                                </Combobox.Dropdown>
+                            </Combobox> */}
+                        </Group>
+                        <CollaborativeTextArea
+                            textBlockId={card.descriptionTextBlockId}
+                            maxLineLength={60}
+                            placeholder="Add a more detailed description..."
+                            idle={idle}
+                            name={fullName(usr.userData)}
+                            avatarUrl={usr.userData?.profilePicture}
+                        />
+                        <Stack style={{
+                            position:"absolute",
+                            bottom: 0,
+                        }}>
+                            <Text>
+                                Created at {new Date(card.createdAt).toLocaleString()} by {fullName(card.createdBy)}
+                            </Text>
+                            <Tooltip label="Archived cards can be restored later">
                                 <Button 
+                                    variant="subtle"
+                                    c="white"
                                     key={card.archived ? "Unarchive" : "Archive"}
-                                    bg={"red"}
                                     leftSection={<FaArchive />}
                                     justify={"flex-start"}
                                     onClick={() => onArchiveCard(!card.archived)}
-                                >
-                                    {card.archived ? "Unarchive" : "Archive"} card
+                                    >
+                                    {card.archived ? "Unarchive" : "Archive"}
                                 </Button>
-                            </Stack>
-						</Stack>
-					</Group>
+                            </Tooltip>
+                        </Stack>
+                    </Stack>
 				</Modal.Body>
 			</Modal.Content>
 		</Modal.Root>

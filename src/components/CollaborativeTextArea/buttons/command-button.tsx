@@ -59,19 +59,15 @@ export const CommandButton: FC<CommandButtonProps> = ({
       <Box component='span' style={{ marginLeft: '-1px' }}>
         <Button
           aria-label={labelText}
-          variant={active ? 'filled' : 'outline'}
+          variant={active ? 'filled' : 'subtle'}
           disabled={!enabled}
           onMouseDown={handleMouseDown}
           onClick={handleClick}
-          color='blue'
           size='xs'
+          color="white"
           style={{
             opacity: enabled ? 1 : 0.5,
-            backgroundColor: active ? '#228be6' : "#323a40",
-            borderTopLeftRadius: 0,
-            borderBottomLeftRadius: 0,
-            borderTopRightRadius: 0,
-            borderBottomRightRadius: 0,
+            backgroundColor: active ? '#3f84c0ff' : "#323a40",
           }}
           {...rest}
         >

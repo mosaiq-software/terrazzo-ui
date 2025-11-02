@@ -12,19 +12,12 @@ import { CreateTableButton } from './buttons';
 
 export const CollabTextAreaToolbar = () => {
   return (
-    <Group gap={0}>
-        <HistoryButtonGroup />
-        <VerticalDivider />
-        <DataTransferButtonGroup />
-        <VerticalDivider />
+    <Group gap={6}>
         <HeadingLevelButtonGroup showAll/>
-        <VerticalDivider />
         <BasicFormattingButtonGroup />
-        <VerticalDivider />
         <ListButtonGroup>
             <CreateTableButton />
         </ListButtonGroup>
-        <VerticalDivider />
         <CalloutTypeButtonGroup />
     </Group>
     );
