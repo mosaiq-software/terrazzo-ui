@@ -10,10 +10,11 @@ import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils"
 import { useSocket } from "@trz/contexts/socket-context";
 import { getCardData } from "@trz/emitters/all";
 import { NoteType, notify } from "@trz/util/notifications";
-import { useInViewport, useSessionStorage } from "@mantine/hooks";
-import { colorIsDarkAdvanced } from "@trz/util/colorUtils";
+import { useInViewport } from "@mantine/hooks";
 import { useTRZ } from "@trz/contexts/TRZ-context";
 import { LabelDisplay } from "./CardDetails/LabelsMenu";
+import { useContextMenu } from 'mantine-contextmenu';
+import {CardContextMenu} from "./CardContextMenu"
 
 interface CardElementProps {
 	cardId: CardId;
@@ -27,6 +28,7 @@ const CardElement = (props: CardElementProps) => {
 	const trzCtx = useTRZ();
 	const [card, setCard] = useState<Card | undefined>(undefined);
 	const {ref: viewportRef, inViewport} = useInViewport();
+    const { showContextMenu } = useContextMenu();
 
 	useEffect(()=>{
 		let strictIgnore = false;
@@ -144,6 +146,13 @@ const CardElement = (props: CardElementProps) => {
 			} : undefined)
 			}}
 			onClick={onOpenCardModal}
+            onContextMenuCapture={
+                showContextMenu((close) => (
+                    <CardContextMenu
+                        onClose={close}
+                    />
+                ))
+            }
 		>
 			{process.env.DEBUG==="true" && <Text fz="6pt">{props.cardId}</Text>}
 			{card && inViewport && 

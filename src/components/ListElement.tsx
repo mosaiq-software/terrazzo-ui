@@ -155,6 +155,9 @@ function ListElement(props: ListElementProps): React.JSX.Element {
                     zIndex: 10,
                 } : undefined)
             }}
+            onContextMenuCapture={(e)=>{
+                e.preventDefault()
+            }}
         >
             { process.env.DEBUG==="true" && <Text fz="6pt">{props.listId}</Text>}
             <Group
