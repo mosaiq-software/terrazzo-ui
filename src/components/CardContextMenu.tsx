@@ -8,11 +8,12 @@ import { colorIsDarkAdvanced } from "@trz/util/colorUtils";
 import React from "react";
 import { FaArchive, FaUserPlus } from "react-icons/fa";
 import { IoMdInformationCircleOutline } from "react-icons/io";
-import { MdAccountBox, MdBarChart, MdCheck, MdDocumentScanner, MdLabel } from "react-icons/md";
+import { MdAccountBox, MdBarChart, MdCheck, MdDocumentScanner, MdLabel, MdLink } from "react-icons/md";
 import { prioNames, PriorityChip, priorityColors, unicodeMap } from "./CardDetails/PriorityButtons";
 import { Priority } from "@mosaiq/terrazzo-common/constants";
 import { NoteType, notify } from "@trz/util/notifications";
 import { fullName } from "@mosaiq/terrazzo-common/utils/textUtils";
+import { useClipboard } from "@mantine/hooks";
 
 interface CardContextMenuProps {
     cardId: CardId;
@@ -22,6 +23,7 @@ export const CardContextMenu = (props: CardContextMenuProps) => {
     const trzCtx = useTRZ();
     const sockCtx = useSocket();
     const card = useCard(props.cardId, false, true);
+    const clipboard = useClipboard();
     if(!card){
         console.error("No card in context menu");
         return null;
@@ -74,6 +76,16 @@ export const CardContextMenu = (props: CardContextMenuProps) => {
                 text="Duplicate"
                 onClick={async () => {
                     await createDuplicateCard(sockCtx, card.id);
+                    props.onClose();
+                }}
+            />
+            <CtxMenuButton
+                icon={<MdLink size={16} />}
+                text="Copy Link"
+                onClick={async () => {
+                    const topDomain = window.location.origin;
+                    const cardLink = `${topDomain}/card/${card.id}`;
+                    clipboard.copy(cardLink);
                     props.onClose();
                 }}
             />
