@@ -3,7 +3,7 @@ import { BoardRes } from '@mosaiq/terrazzo-common/types';
 import { useSocketListener } from '@trz/hooks/useSocketListener';
 import { ServerSE } from '@mosaiq/terrazzo-common/socketTypes';
 
-type TRZContextType = {
+export type TRZContextType = {
     navbarHeight: number;
     boardData: BoardRes | undefined;
     setBoardData: React.Dispatch<React.SetStateAction<BoardRes | undefined>>;

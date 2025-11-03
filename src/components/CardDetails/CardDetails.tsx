@@ -21,6 +21,7 @@ import { IDLE_TIMEOUT_MS } from "@trz/util/textUtils";
 import { fullName } from "@mosaiq/terrazzo-common/utils/textUtils";
 import { LabelsMenu } from "./LabelsMenu";
 import {AssigneeMenu} from "./AssigneeMenu";
+import { useCard } from "@trz/hooks/useCard";
 
 interface CardDetailsProps {
 	cardId: CardId;
@@ -28,7 +29,6 @@ interface CardDetailsProps {
 	onClose: ()=>void;
 }
 const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
-	const [card, setCard] = useState<Card | undefined>(undefined);
 	const sockCtx = useSocket();
 	const usr = useUser();
 	const combobox = useCombobox({
@@ -36,81 +36,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
 	});
     const idle = useIdle(IDLE_TIMEOUT_MS);
     const clipboard = useClipboard({ timeout: 500 });
-
-	useEffect(()=>{
-		let strictIgnore = false;
-		const fetchCardData = async () => {
-			await new Promise((resolve)=>setTimeout(resolve, 0));
-			if(strictIgnore || !props.cardId || !sockCtx.connected){
-				return;
-			}
-			try{
-				const cardRes = await getCardData(sockCtx, props.cardId);
-				if(!cardRes) {
-					notify(NoteType.CARD_DATA_ERROR, "Not found");
-					props.onClose();
-				}
-				setCard(cardRes);
-			} catch(err) {
-				notify(NoteType.CARD_DATA_ERROR, err);
-				return;
-			}
-		};
-		fetchCardData();
-		return ()=>{
-			strictIgnore = true;
-		}
-	}, [props.cardId, sockCtx.connected]);
-	
-	useSocketListener<ServerSE.UPDATE_CARD_FIELD>(ServerSE.UPDATE_CARD_FIELD, (payload)=>{
-		if(payload.id !== props.cardId){
-			return;
-		}
-		setCard((prev)=>{
-			if(!prev){
-				return prev;
-			}
-			return {...updateBaseFromPartial<Card>(prev, payload)};
-		});
-    });
-
-	useSocketListener<ServerSE.UPDATE_CARDS_LABELS>(ServerSE.UPDATE_CARDS_LABELS, (payload)=>{
-		if(payload.cardId !== props.cardId){
-			return;
-		}
-		setCard((prev)=>{
-			if(!prev){
-				return prev;
-			}
-			prev.labels = payload.labelIds;
-			return {...prev};
-		});
-	});
-	
-	useSocketListener<ServerSE.UPDATE_CARD_ASSIGNEE>(ServerSE.UPDATE_CARD_ASSIGNEE, (payload)=>{
-        if(payload.cardId !== props.cardId){
-            return;
-        }
-        setCard((prev)=>{
-            if(!prev){
-                return prev;
-            }
-            const assigned = prev.assignees.includes(payload.userId);
-            if(payload.assigned && !assigned){
-                return {
-                    ...prev,
-                    assignees: [...prev.assignees, payload.userId]
-                };
-            }
-            if(!payload.assigned && assigned){
-                return {
-                    ...prev,
-                    assignees: prev.assignees.filter((a)=> a !== payload.userId)
-                };
-            }
-            return prev;
-        });
-	});
+    const card = useCard(props.cardId, false, true);
 
 	const onCloseModal = () => {
 		props.onClose();

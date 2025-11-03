@@ -74,16 +74,20 @@ export const createBoard = async (sockCtx:SocketContextType, name: string, board
     return await sockCtx.emit<ClientSE.CREATE_BOARD>(ClientSE.CREATE_BOARD, {name, boardCode, projectId});
 }
 
-export const createList = async (sockCtx:SocketContextType, boardID:BoardId, listName:string):Promise<undefined> => {
-    await sockCtx.emit<ClientSE.CREATE_LIST>(ClientSE.CREATE_LIST, {boardID, listName});
+export const createList = async (sockCtx:SocketContextType, boardID:BoardId, listName:string):Promise<ListId | undefined> => {
+    return await sockCtx.emit<ClientSE.CREATE_LIST>(ClientSE.CREATE_LIST, {boardID, listName});
 }
 
-export const createCard = async (sockCtx:SocketContextType, listID:ListId, cardName:string):Promise<undefined> => {
-    await sockCtx.emit<ClientSE.CREATE_CARD>(ClientSE.CREATE_CARD, {listID, cardName});
+export const createCard = async (sockCtx:SocketContextType, listID:ListId, cardName:string):Promise<CardId | undefined> => {
+    return await sockCtx.emit<ClientSE.CREATE_CARD>(ClientSE.CREATE_CARD, {listID, cardName});
 }
 
-export const createBoardLabel = async (sockCtx:SocketContextType, boardId:BoardId, name:string, color:string):Promise<undefined> => {
-    await sockCtx.emit<ClientSE.CREATE_BOARD_LABEL>(ClientSE.CREATE_BOARD_LABEL, {boardId, name, color});
+export const createBoardLabel = async (sockCtx:SocketContextType, boardId:BoardId, name:string, color:string):Promise<LabelId | undefined> => {
+    return await sockCtx.emit<ClientSE.CREATE_BOARD_LABEL>(ClientSE.CREATE_BOARD_LABEL, {boardId, name, color});
+}
+
+export const createDuplicateCard = async (sockCtx:SocketContextType, cardId:CardId):Promise<CardId | undefined> => {
+    return await sockCtx.emit<ClientSE.CREATE_DUPLICATE_CARD>(ClientSE.CREATE_DUPLICATE_CARD, {cardId});
 }
 
 export async function updateField<T extends (CardHeader | ListHeader | BoardHeader | ProjectHeader | OrganizationHeader | MembershipRecord)>(

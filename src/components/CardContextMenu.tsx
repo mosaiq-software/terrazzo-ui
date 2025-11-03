@@ -1,78 +1,83 @@
-import { ActionIcon, Button, Divider, Menu, Portal, Stack, Tooltip } from "@mantine/core";
-import { Card } from "@mosaiq/terrazzo-common/types";
-import { useSocket } from "@trz/contexts/socket-context";
-import { useTRZ } from "@trz/contexts/TRZ-context";
-import { updateCardsLabels } from "@trz/emitters/all";
+import { ActionIcon, Avatar, Button, Divider, Flex, Menu, Portal, Stack, Tooltip } from "@mantine/core";
+import { Card, CardId } from "@mosaiq/terrazzo-common/types";
+import { SocketContextType, useSocket } from "@trz/contexts/socket-context";
+import { TRZContextType, useTRZ } from "@trz/contexts/TRZ-context";
+import { createCard, createDuplicateCard, updateCardAssignee, updateCardField, updateCardsLabels } from "@trz/emitters/all";
+import { useCard } from "@trz/hooks/useCard";
 import { colorIsDarkAdvanced } from "@trz/util/colorUtils";
 import React from "react";
-import { FaArchive } from "react-icons/fa";
+import { FaArchive, FaUserPlus } from "react-icons/fa";
 import { IoMdInformationCircleOutline } from "react-icons/io";
-import { MdAccountBox, MdCheck, MdLabel } from "react-icons/md";
-import { useNavigate } from "react-router";
-import { LabelDisplay } from "./CardDetails/LabelsMenu";
+import { MdAccountBox, MdBarChart, MdCheck, MdDocumentScanner, MdLabel } from "react-icons/md";
+import { prioNames, PriorityChip, priorityColors, unicodeMap } from "./CardDetails/PriorityButtons";
+import { Priority } from "@mosaiq/terrazzo-common/constants";
+import { NoteType, notify } from "@trz/util/notifications";
+import { fullName } from "@mosaiq/terrazzo-common/utils/textUtils";
 
 interface CardContextMenuProps {
-    card: Card;
-    open: boolean;
+    cardId: CardId;
     onClose: () => void;
-    x?: number;
-    y?: number;
 }
 export const CardContextMenu = (props: CardContextMenuProps) => {
-    if (!props.open) {
+    const trzCtx = useTRZ();
+    const sockCtx = useSocket();
+    const card = useCard(props.cardId, false, true);
+    if(!card){
+        console.error("No card in context menu");
         return null;
     }
-
+    console.log("Rendering context menu for card", card.id);
     return (
-        <Portal>
-            {/* Invisible backdrop to capture clicks outside the menu */}
-            <div
-                style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    zIndex: 9998,
-                }}
-                onClick={(e)=>{
-                    e.preventDefault();
-                    e.stopPropagation();
+        <Flex
+            direction={"column"}
+            gap="0"
+            justify="start"
+            style={{
+                overflow: "visible"
+            }}
+        >
+            <CtxLabelsMenu
+                card={card}
+                sockCtx={sockCtx}
+                trzCtx={trzCtx}
+            />
+            <CtxPriorityMenu 
+                card={card}
+                sockCtx={sockCtx}
+                trzCtx={trzCtx}
+            />
+            <CtxAssigneesMenu
+                card={card}
+                sockCtx={sockCtx}
+                trzCtx={trzCtx}
+            />
+            <Divider />
+            <CtxMenuButton
+                icon={<FaArchive size={16} />}
+                text="Archive"
+                onClick={async () => {
+                    if(!card){
+                        notify(NoteType.CARD_UPDATE_ERROR);
+                        return;
+                    }
+                    const archive = !card.archived;
+                    if(archive){
+                        await updateCardField(sockCtx, card.id, {archived: archive, order: -1});
+                    }else {
+                        await updateCardField(sockCtx, card.id, {archived: archive, order: 0});
+                    }
                     props.onClose();
                 }}
             />
-            
-            {/* The actual context menu */}
-            <div
-                style={{
-                    position: 'fixed',
-                    left: props.x || 0,
-                    top: props.y || 0,
-                    zIndex: 9999,
-                    background: 'white',
-                    border: '1px solid #e9ecef',
-                    borderRadius: '8px',
-                    padding: '4px',
-                    minWidth: '150px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
+            <CtxMenuButton
+                icon={<MdDocumentScanner size={16} />}
+                text="Duplicate"
+                onClick={async () => {
+                    await createDuplicateCard(sockCtx, card.id);
+                    props.onClose();
                 }}
-                onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }}
-            >
-                <Stack gap="0" justify="start">
-                    <CtxLabelsMenu card={props.card} />
-                    <CtxMenuButton
-                        icon={<FaArchive size={16} />}
-                        text="Archive"
-                        onClick={() => {
-                            props.onClose();
-                        }}
-                    />
-                </Stack>
-            </div>
-        </Portal>
+            />
+        </Flex>
     );
 }
 
@@ -100,41 +105,47 @@ const CtxMenuButton = (props: CtxMenuButtonProps)=>{
     )
 }
 
-interface CtxLabelsMenuProps {
+interface CtxMenuItemProps {
     card: Card;
+    sockCtx: SocketContextType;
+    trzCtx: TRZContextType;
 }
 
-export const CtxLabelsMenu = (props: CtxLabelsMenuProps) => {
-    const trzCtx = useTRZ();
-    const sockCtx = useSocket();
-
-    if(!trzCtx.boardData?.labels.length){
+export const CtxLabelsMenu = (props: CtxMenuItemProps) => {
+    if(!props.trzCtx.boardData?.labels.length){
         return null;
     }
     
     return (
-        <Menu
-            position='right'
-            withArrow
-            arrowPosition="side"
-            closeOnClickOutside={true}
-            trigger="hover"
-            closeDelay={200}
-        >
+            <Menu
+                position='right-start'
+                withArrow
+                arrowPosition="side"
+                closeOnClickOutside={true}
+                trigger="hover"
+                closeDelay={200}
+                withinPortal={false}
+            >
             <Menu.Target>
-                <CtxMenuButton
-                    icon={<MdLabel size={16}/>}
-                    text="Labels"
-                    onClick={()=>{
-
+                <Button
+                    w="100%"
+                    fullWidth
+                    justify="start"
+                    variant="subtle"
+                    leftSection={<MdLabel size={16}/>}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
                     }}
-                />
+                >
+                    Labels
+                </Button>
             </Menu.Target>
-            <Menu.Dropdown ta='center' miw="10rem">
+            <Menu.Dropdown left={"105%"}>
                 <Menu.Label>Labels</Menu.Label>
                 <Stack gap={1}>
                 {
-                    trzCtx.boardData?.labels.map(label=>{
+                    props.trzCtx.boardData?.labels.map(label=>{
                         const textColor = colorIsDarkAdvanced(label.color) ? "#fff" : "#000";
                         return (
                             <Button
@@ -151,17 +162,160 @@ export const CtxLabelsMenu = (props: CtxLabelsMenuProps) => {
                                         visibility: props.card.labels.includes(label.id) ? "visible" : "hidden"
                                     }}/>
                                 }
-                                onClick={()=>{
+                                onClick={(e)=>{
+                                    e.preventDefault();
+                                    e.stopPropagation();
                                     const labels = props.card.labels;
                                     if(labels.includes(label.id)){
                                         labels.splice(labels.indexOf(label.id), 1);
                                     } else {
                                         labels.push(label.id);
                                     }
-                                    updateCardsLabels(sockCtx, props.card.id, labels);
+                                    updateCardsLabels(props.sockCtx, props.card.id, labels);
                                 }}
                             >
                                 {label.name}
+                            </Button>
+                        )
+                    })
+                }
+                </Stack>
+            </Menu.Dropdown>
+        </Menu>
+    )
+}
+
+export const CtxPriorityMenu = (props: CtxMenuItemProps) => {
+    const priority = props.card.priority ?? 0;
+
+    const handleOnChange = async (newPriority: Priority) => {
+        if(!props.card.id){
+            return;
+        }
+        try{
+            await updateCardField(props.sockCtx, props.card.id, {priority: newPriority});
+        }catch (e){
+            notify(NoteType.CARD_UPDATE_ERROR);
+            return;
+        }
+    };
+
+    if(!props.trzCtx.boardData?.labels.length){
+        return null;
+    }
+    
+    return (
+            <Menu
+                position='right-start'
+                withArrow
+                arrowPosition="side"
+                closeOnClickOutside={true}
+                trigger="hover"
+                closeDelay={200}
+                withinPortal={false}
+            >
+            <Menu.Target>
+                <Button
+                    w="100%"
+                    fullWidth
+                    justify="start"
+                    variant="subtle"
+                    leftSection={<MdBarChart size={16}/>}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }}
+                >
+                    Priority
+                </Button>
+            </Menu.Target>
+            <Menu.Dropdown left={"105%"}>
+                <Flex direction="column-reverse" align="center">
+                {
+                    priorityColors.map((_, index) => {
+                        return (
+                            <Tooltip key={index} label={prioNames[index]} position="right" withArrow>
+                                <Menu.Item
+                                    key={index}
+                                    bg={priorityColors[index]}
+                                    ta='center'
+                                    c='white'
+                                    onClick={(e)=>{
+                                        handleOnChange(index);
+                                    }}
+                                >
+                                    {`${unicodeMap[index]}`}
+                                </Menu.Item>
+                            </Tooltip>
+                        )
+                    })
+                }
+                <Menu.Label>Card Priority</Menu.Label>
+                </Flex>
+            </Menu.Dropdown>
+        </Menu>
+    )
+}
+
+export const CtxAssigneesMenu = (props: CtxMenuItemProps) => {
+    if(!props.trzCtx.boardData?.labels.length){
+        return null;
+    }
+    
+    return (
+            <Menu
+                position='right-start'
+                withArrow
+                arrowPosition="side"
+                closeOnClickOutside={true}
+                trigger="hover"
+                closeDelay={200}
+                withinPortal={false}
+            >
+            <Menu.Target>
+                <Button
+                    w="100%"
+                    fullWidth
+                    justify="start"
+                    variant="subtle"
+                    leftSection={<FaUserPlus size={16}/>}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }}
+                >
+                    Assignees
+                </Button>
+            </Menu.Target>
+            <Menu.Dropdown ta='center' miw="10rem" left="105%">
+                <Menu.Label>Assignees</Menu.Label>
+                <Stack gap={1}>
+                {
+                    props.trzCtx.boardData?.members.map(memRec=>{
+                        const isMember = props.card.assignees.includes(memRec.user.id);
+                        return (
+                            <Button
+                                key={memRec.user.id}
+                                bg={isMember ? "blue" : "transparent"}
+                                ta='left'
+                                justify='start'
+                                c={"white"}
+                                style={{
+                                    borderRadius:"4px",
+                                }}
+                                leftSection={
+                                    <Avatar
+                                        src={memRec.user.profilePicture}
+                                        size={24}
+                                    />
+                                }
+                                onClick={(e)=>{
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    updateCardAssignee(props.sockCtx, props.card.id, memRec.user.id, !isMember);
+                                }}
+                            >
+                                {fullName(memRec.user)}
                             </Button>
                         )
                     })

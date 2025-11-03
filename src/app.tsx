@@ -2,6 +2,7 @@
 import React from "react";
 import "@mantine/core/styles.css";
 import '@mantine/notifications/styles.css';
+import 'mantine-contextmenu/styles.layer.css';
 import {Button, createTheme, MantineProvider} from "@mantine/core";
 import { TRZProvider } from "@trz/contexts/TRZ-context";
 import { SocketProvider } from "@trz/contexts/socket-context";
@@ -13,6 +14,8 @@ import { ModalsProvider } from "@mantine/modals";
 import {CreateBoardModal} from "@trz/components/Modals/CreateBoard";
 import {CreateProjectModal} from "@trz/components/Modals/CreateProject";
 import {CreateOrganizationModal} from "@trz/components/Modals/CreateOrganization";
+import { ContextMenuProvider } from 'mantine-contextmenu';
+
 
 const theme = createTheme({});
 
@@ -31,7 +34,9 @@ const App = () => {
                     <SocketProvider>
                         <TRZProvider>
                             <ModalsProvider modals={modals}>
-                                <Router/>
+                                <ContextMenuProvider>
+                                    <Router/>
+                                </ContextMenuProvider>
                             </ModalsProvider>
                         </TRZProvider>
                     </SocketProvider>

@@ -6,7 +6,7 @@ import { updateCardsLabels } from '@trz/emitters/all';
 import { colorIsDarkAdvanced } from '@trz/util/colorUtils';
 import React, { useMemo } from 'react';
 import { IoMdInformationCircleOutline } from 'react-icons/io';
-import { MdAddCircleOutline, MdCheck } from 'react-icons/md';
+import { MdAddCircleOutline, MdCheck, MdLabel, MdLabelOutline } from 'react-icons/md';
 import { useNavigate } from 'react-router';
 
 interface LabelsMenuProps {
@@ -123,7 +123,7 @@ export const LabelDisplay = (props: LabelDisplayProps) => {
                     )
                 })
             }
-            {props.showAdd && <MdAddCircleOutline size="1.5rem"/>}
+            {props.showAdd && !props.labels.length && <MdLabel size="1.5rem" color="white"/>}
         </Pill.Group>
     )
 }

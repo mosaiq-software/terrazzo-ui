@@ -1,20 +1,14 @@
-import React, { useEffect, useState } from "react";
-import {Box, Group, Paper, Pill, Text, Title} from "@mantine/core";
-import {Card, CardId} from "@mosaiq/terrazzo-common/types";
+import React from "react";
+import { Group, Paper, Text} from "@mantine/core";
+import { CardId} from "@mosaiq/terrazzo-common/types";
 import { AvatarRow } from "@trz/components/AvatarRow";
-import {PriorityChip, priorityColors, unicodeMap} from "@trz/components/CardDetails/PriorityButtons";
-import { CARD_CACHE_PREFIX, getCardNumber } from "@trz/util/boardUtils";
-import { useSocketListener } from "@trz/hooks/useSocketListener";
-import { ServerSE } from "@mosaiq/terrazzo-common/socketTypes";
-import { updateBaseFromPartial } from "@mosaiq/terrazzo-common/utils/arrayUtils";
-import { useSocket } from "@trz/contexts/socket-context";
-import { getCardData } from "@trz/emitters/all";
-import { NoteType, notify } from "@trz/util/notifications";
+import {PriorityChip } from "@trz/components/CardDetails/PriorityButtons";
+import { getCardNumber } from "@trz/util/boardUtils";
 import { useInViewport } from "@mantine/hooks";
-import { useTRZ } from "@trz/contexts/TRZ-context";
 import { LabelDisplay } from "./CardDetails/LabelsMenu";
 import { useContextMenu } from 'mantine-contextmenu';
 import {CardContextMenu} from "./CardContextMenu"
+import { useCard } from "../hooks/useCard";
 
 interface CardElementProps {
 	cardId: CardId;
@@ -24,96 +18,10 @@ interface CardElementProps {
 	onClick: ()=>void;
 }
 const CardElement = (props: CardElementProps) => {
-	const sockCtx = useSocket();
-	const trzCtx = useTRZ();
-	const [card, setCard] = useState<Card | undefined>(undefined);
 	const {ref: viewportRef, inViewport} = useInViewport();
+    const card = useCard(props.cardId, props.dragging || props.isOverlay, inViewport);
     const { showContextMenu } = useContextMenu();
 
-	useEffect(()=>{
-		let strictIgnore = false;
-		const fetchCardData = async () => {
-			await new Promise((resolve)=>setTimeout(resolve, 0));
-			if(strictIgnore || !props.cardId || !sockCtx.connected || !inViewport){
-				return;
-			}
-			if(inViewport && card && card.id === props.cardId){
-				return;
-			}
-			try{
-				const cachedCardRes = sessionStorage.getItem(`${CARD_CACHE_PREFIX}${props.cardId}`);
-				if((props.dragging || props.isOverlay) && cachedCardRes){
-					setCard(JSON.parse(cachedCardRes));
-				} else {
-					const cardRes = await getCardData(sockCtx, props.cardId);
-					setCard(cardRes);
-					if(cardRes){
-						sessionStorage.setItem(`${CARD_CACHE_PREFIX}${props.cardId}`, JSON.stringify(cardRes))
-					} else {
-						sessionStorage.removeItem(`${CARD_CACHE_PREFIX}${props.cardId}`);
-					}
-				}
-			} catch(err) {
-				notify(NoteType.CARD_DATA_ERROR, err);
-				return;
-			}
-		};
-		fetchCardData();
-		return ()=>{
-			strictIgnore = true;
-		}
-	}, [props.cardId, sockCtx.connected, inViewport]);
-	
-	useSocketListener<ServerSE.UPDATE_CARD_FIELD>(ServerSE.UPDATE_CARD_FIELD, (payload)=>{
-        if(payload.id !== props.cardId){
-            return;
-		}
-		setCard((prev)=>{
-			if(!prev){
-				return prev;
-			}
-			return {...updateBaseFromPartial<Card>(prev, payload)};
-		});
-	});
-
-	useSocketListener<ServerSE.UPDATE_CARDS_LABELS>(ServerSE.UPDATE_CARDS_LABELS, (payload)=>{
-		if(payload.cardId !== props.cardId){
-			return;
-		}
-		setCard((prev)=>{
-			if(!prev){
-				return prev;
-			}
-			prev.labels = payload.labelIds;
-			return {...prev};
-		});
-	});
-
-	useSocketListener<ServerSE.UPDATE_CARD_ASSIGNEE>(ServerSE.UPDATE_CARD_ASSIGNEE, (payload)=>{
-        if(payload.cardId !== props.cardId){
-            return;
-        }
-        setCard((prev)=>{
-            if(!prev){
-                return prev;
-            }
-            const assigned = prev.assignees.includes(payload.userId);
-            if(payload.assigned && !assigned){
-                return {
-                    ...prev,
-                    assignees: [...prev.assignees, payload.userId]
-                };
-            }
-            if(!payload.assigned && assigned){
-                return {
-                    ...prev,
-                    assignees: prev.assignees.filter((a)=> a !== payload.userId)
-                };
-            }
-            return prev;
-        });
-	});
-	
 	const onOpenCardModal = () => {
 		if(!card || props.dragging || props.isOverlay){
 			return;
@@ -149,6 +57,7 @@ const CardElement = (props: CardElementProps) => {
             onContextMenuCapture={
                 showContextMenu((close) => (
                     <CardContextMenu
+                        cardId={props.cardId}
                         onClose={close}
                     />
                 ))

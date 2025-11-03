@@ -5,7 +5,7 @@ import { useTRZ } from '@trz/contexts/TRZ-context';
 import { updateCardAssignee, updateCardsLabels } from '@trz/emitters/all';
 import { colorIsDarkAdvanced } from '@trz/util/colorUtils';
 import React, { useMemo } from 'react';
-import { MdAddCircleOutline, MdCheck } from 'react-icons/md';
+import { MdAddCircleOutline, MdCheck, MdOutlineAddCircle } from 'react-icons/md';
 import { AvatarRow } from '../AvatarRow';
 import { fullName } from '@mosaiq/terrazzo-common/utils/textUtils';
 
@@ -31,10 +31,17 @@ export const AssigneeMenu = (props: AssigneeMenuProps) => {
                     variant='subtle'
                     justify={"flex-start"}
                 >
-                    <AvatarRow
-                        users={props.card.assignees}
-                        maxUsers={3}
-                    />
+                    {
+                        props.card.assignees.length ? (
+
+                            <AvatarRow
+                            users={props.card.assignees}
+                            maxUsers={3}
+                            />
+                        ) : (
+                            <MdOutlineAddCircle size="1.5rem" color="white"/>
+                        )
+                    }
                 </Button>
             </Menu.Target>
             <Menu.Dropdown ta='center' miw="10rem">
@@ -56,6 +63,7 @@ export const AssigneeMenu = (props: AssigneeMenuProps) => {
                                 leftSection={
                                     <Avatar
                                         src={memRec.user.profilePicture}
+                                        size={24}
                                     />
                                 }
                                 onClick={()=>{
