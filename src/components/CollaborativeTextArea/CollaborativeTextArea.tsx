@@ -1,12 +1,15 @@
 import React, { FC, PropsWithChildren, useCallback, useEffect, useMemo, useState } from 'react';
 import { IdentifierSchemaAttributes } from 'remirror';
 import {
-  EmojiExtension,
-  MentionAtomExtension,
-  MentionAtomNodeAttributes,
-  PlaceholderExtension,
-  wysiwygPreset,
-  AnnotationExtension
+    EmojiExtension,
+    MentionAtomExtension,
+    MentionAtomNodeAttributes,
+    PlaceholderExtension,
+    wysiwygPreset,
+    AnnotationExtension,
+    CalloutExtension,
+    ImageExtension,
+    DropCursorExtension 
 } from 'remirror/extensions';
 import data from 'svgmoji/emoji.json';
 import { TableComponents, TableExtension } from '@remirror/extension-react-tables';
@@ -30,8 +33,6 @@ import { Doc } from "yjs";
 import { ManagerOptions, SocketOptions } from 'socket.io-client';
 import { useImageColor } from '@trz/hooks/useImageColor';
 import { CollabTextAreaToolbar } from './Toolbar';
-import { CalloutExtension } from 'remirror/extensions';
-
 
 import "./CollaborativeTextAreaStyle.css";
 import { Alert } from '@mantine/core';
@@ -178,6 +179,8 @@ const Editor = (props:EditorProps) => {
             new EmojiExtension({ plainText: false, data: data as any, moji: 'noto' }),
             new YjsExtension({ getProvider: () => props.socketIOProvider }),
             new CalloutExtension({}),
+            new ImageExtension({ enableResizing: true }),
+            new DropCursorExtension({}),
             ...wysiwygPreset()
         ];
         return extensions;
