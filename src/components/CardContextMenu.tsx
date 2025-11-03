@@ -120,10 +120,10 @@ export const CtxLabelsMenu = (props: CtxMenuItemProps) => {
             <Menu
                 position='right-start'
                 withArrow
-                arrowPosition="side"
+                arrowPosition="center"
                 closeOnClickOutside={true}
                 trigger="hover"
-                closeDelay={200}
+                closeDelay={100}
                 withinPortal={false}
             >
             <Menu.Target>
@@ -208,10 +208,10 @@ export const CtxPriorityMenu = (props: CtxMenuItemProps) => {
             <Menu
                 position='right-start'
                 withArrow
-                arrowPosition="side"
+                arrowPosition="center"
                 closeOnClickOutside={true}
                 trigger="hover"
-                closeDelay={200}
+                closeDelay={100}
                 withinPortal={false}
             >
             <Menu.Target>
@@ -250,7 +250,7 @@ export const CtxPriorityMenu = (props: CtxMenuItemProps) => {
                         )
                     })
                 }
-                <Menu.Label>Card Priority</Menu.Label>
+                <Menu.Label>Priority</Menu.Label>
                 </Flex>
             </Menu.Dropdown>
         </Menu>
@@ -266,10 +266,10 @@ export const CtxAssigneesMenu = (props: CtxMenuItemProps) => {
             <Menu
                 position='right-start'
                 withArrow
-                arrowPosition="side"
+                arrowPosition="center"
                 closeOnClickOutside={true}
                 trigger="hover"
-                closeDelay={200}
+                closeDelay={100}
                 withinPortal={false}
             >
             <Menu.Target>

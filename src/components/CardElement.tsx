@@ -88,10 +88,7 @@ const CardElement = (props: CardElementProps) => {
 					}}
 				>{getCardNumber(props.boardCode, card.cardNumber)}</Text>
 				<Group justify='space-between' style={{flexDirection: "row-reverse"}}>
-					{/* icons for info abt the card */}
-					{card.assignees != undefined && card.assignees.length > 0 &&
-						<AvatarRow users={card.assignees} maxUsers={3}/>
-					}
+                    <AvatarRow users={card.assignees} maxUsers={3}/>
 					<PriorityChip priority={card.priority} />
 				</Group>
 			</React.Fragment>}
