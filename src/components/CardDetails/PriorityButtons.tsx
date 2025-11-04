@@ -84,7 +84,7 @@ export const PriorityButtons = (props: PriorityButtonsProps): React.JSX.Element 
                                         handleOnChange(index);
                                     }}
                                 >
-                                    {`${unicodeMap[index]}`}
+                                    {priority === index ? `[ ${unicodeMap[index]} ]` : unicodeMap[index]}
                                 </Menu.Item>
                             </Tooltip>
                         );

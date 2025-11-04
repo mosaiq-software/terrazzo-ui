@@ -6,7 +6,7 @@ import { createCard, createDuplicateCard, updateCardAssignee, updateCardField, u
 import { useCard } from '@trz/hooks/useCard';
 import { colorIsDarkAdvanced } from '@trz/util/colorUtils';
 import React from 'react';
-import { FaArchive, FaUserPlus } from 'react-icons/fa';
+import { FaArchive, FaUserMinus, FaUserPlus } from 'react-icons/fa';
 import { IoMdInformationCircleOutline } from 'react-icons/io';
 import { MdAccountBox, MdBarChart, MdCheck, MdDocumentScanner, MdLabel, MdLink } from 'react-icons/md';
 import { prioNames, PriorityChip, priorityColors, unicodeMap } from './CardDetails/PriorityButtons';
@@ -14,6 +14,10 @@ import { Priority } from '@mosaiq/terrazzo-common/constants';
 import { NoteType, notify } from '@trz/util/notifications';
 import { fullName } from '@mosaiq/terrazzo-common/utils/textUtils';
 import { useClipboard } from '@mantine/hooks';
+import { useUser } from '@trz/contexts/user-context';
+
+const OPEN_DELAY = 100;
+const CLOSE_DELAY = 100;
 
 interface CardContextMenuProps {
     cardId: CardId;
@@ -22,6 +26,7 @@ interface CardContextMenuProps {
 export const CardContextMenu = (props: CardContextMenuProps) => {
     const trzCtx = useTRZ();
     const sockCtx = useSocket();
+    const userCtx = useUser();
     const card = useCard(props.cardId, false, true);
     const clipboard = useClipboard();
     if (!card) {
@@ -54,23 +59,23 @@ export const CardContextMenu = (props: CardContextMenuProps) => {
                 trzCtx={trzCtx}
             />
             <Divider />
-            <CtxMenuButton
-                icon={<FaArchive size={16} />}
-                text="Archive"
-                onClick={async () => {
-                    if (!card) {
-                        notify(NoteType.CARD_UPDATE_ERROR);
-                        return;
-                    }
-                    const archive = !card.archived;
-                    if (archive) {
-                        await updateCardField(sockCtx, card.id, { archived: archive, order: -1 });
-                    } else {
-                        await updateCardField(sockCtx, card.id, { archived: archive, order: 0 });
-                    }
-                    props.onClose();
-                }}
-            />
+            {userCtx.userData && (
+                <>
+                    <CtxMenuButton
+                        icon={card.assignees.includes(userCtx.userData.id) ? <FaUserMinus size={16} /> : <FaUserPlus size={16} />}
+                        text={card.assignees.includes(userCtx.userData.id) ? 'Leave' : 'Join'}
+                        onClick={async () => {
+                            if (!card) {
+                                notify(NoteType.CARD_UPDATE_ERROR);
+                                return;
+                            }
+                            const isMember = card.assignees.includes(userCtx.userData!.id);
+                            updateCardAssignee(sockCtx, card.id, userCtx.userData!.id, !isMember);
+                        }}
+                    />
+                    <Divider />
+                </>
+            )}
             <CtxMenuButton
                 icon={<MdDocumentScanner size={16} />}
                 text="Duplicate"
@@ -86,6 +91,22 @@ export const CardContextMenu = (props: CardContextMenuProps) => {
                     const topDomain = window.location.origin;
                     const cardLink = `${topDomain}/card/${card.id}`;
                     clipboard.copy(cardLink);
+                }}
+            />
+            <CtxMenuButton
+                icon={<FaArchive size={16} />}
+                text="Archive"
+                onClick={async () => {
+                    if (!card) {
+                        notify(NoteType.CARD_UPDATE_ERROR);
+                        return;
+                    }
+                    const archive = !card.archived;
+                    if (archive) {
+                        await updateCardField(sockCtx, card.id, { archived: archive, order: -1 });
+                    } else {
+                        await updateCardField(sockCtx, card.id, { archived: archive, order: 0 });
+                    }
                     props.onClose();
                 }}
             />
@@ -105,6 +126,7 @@ const CtxMenuButton = (props: CtxMenuButtonProps) => {
             fullWidth
             justify="start"
             variant="subtle"
+            c="white"
             leftSection={props.icon}
             onClick={(e) => {
                 e.preventDefault();
@@ -135,7 +157,8 @@ export const CtxLabelsMenu = (props: CtxMenuItemProps) => {
             arrowPosition="center"
             closeOnClickOutside={true}
             trigger="hover"
-            closeDelay={100}
+            openDelay={OPEN_DELAY}
+            closeDelay={CLOSE_DELAY}
             withinPortal={false}
         >
             <Menu.Target>
@@ -144,6 +167,7 @@ export const CtxLabelsMenu = (props: CtxMenuItemProps) => {
                     fullWidth
                     justify="start"
                     variant="subtle"
+                    c="white"
                     leftSection={<MdLabel size={16} />}
                     onClick={(e) => {
                         e.preventDefault();
@@ -223,7 +247,8 @@ export const CtxPriorityMenu = (props: CtxMenuItemProps) => {
             arrowPosition="center"
             closeOnClickOutside={true}
             trigger="hover"
-            closeDelay={100}
+            openDelay={OPEN_DELAY}
+            closeDelay={CLOSE_DELAY}
             withinPortal={false}
         >
             <Menu.Target>
@@ -232,6 +257,7 @@ export const CtxPriorityMenu = (props: CtxMenuItemProps) => {
                     fullWidth
                     justify="start"
                     variant="subtle"
+                    c="white"
                     leftSection={<MdBarChart size={16} />}
                     onClick={(e) => {
                         e.preventDefault();
@@ -259,11 +285,13 @@ export const CtxPriorityMenu = (props: CtxMenuItemProps) => {
                                     bg={priorityColors[index]}
                                     ta="center"
                                     c="white"
-                                    onClick={(e) => {
+                                    onClickCapture={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
                                         handleOnChange(index);
                                     }}
                                 >
-                                    {`${unicodeMap[index]}`}
+                                    {priority === index ? `[ ${unicodeMap[index]} ]` : unicodeMap[index]}
                                 </Menu.Item>
                             </Tooltip>
                         );
@@ -287,7 +315,8 @@ export const CtxAssigneesMenu = (props: CtxMenuItemProps) => {
             arrowPosition="center"
             closeOnClickOutside={true}
             trigger="hover"
-            closeDelay={100}
+            openDelay={OPEN_DELAY}
+            closeDelay={CLOSE_DELAY}
             withinPortal={false}
         >
             <Menu.Target>
@@ -296,6 +325,7 @@ export const CtxAssigneesMenu = (props: CtxMenuItemProps) => {
                     fullWidth
                     justify="start"
                     variant="subtle"
+                    c="white"
                     leftSection={<FaUserPlus size={16} />}
                     onClick={(e) => {
                         e.preventDefault();
@@ -307,7 +337,6 @@ export const CtxAssigneesMenu = (props: CtxMenuItemProps) => {
             </Menu.Target>
             <Menu.Dropdown
                 ta="center"
-                miw="10rem"
                 left="105%"
             >
                 <Menu.Label>Assignees</Menu.Label>
@@ -321,9 +350,6 @@ export const CtxAssigneesMenu = (props: CtxMenuItemProps) => {
                                 ta="left"
                                 justify="start"
                                 c={'white'}
-                                style={{
-                                    borderRadius: '4px',
-                                }}
                                 leftSection={
                                     <Avatar
                                         src={memRec.user.profilePicture}
