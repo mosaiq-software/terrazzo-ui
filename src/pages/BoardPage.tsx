@@ -59,60 +59,66 @@ const BoardPage = (): React.JSX.Element => {
     useEffect(() => {
         const fetchBoardData = async () => {
             if (!boardId && !cardId) {
+                console.error('No boardId or cardId found in url');
                 return;
             }
             try {
-                if (!boardId) {
+                let boardIdToUse = boardId;
+                if (!boardIdToUse) {
+                    // If no boardId, fetch it from the cardId
                     const cardRes = await getCardData(sockCtx, cardId);
                     if (!cardRes) {
+                        console.error('No card data found for cardId in url:', cardId);
                         return;
                     }
-
                     const listRes = await getListData(sockCtx, cardRes.listId);
                     if (!listRes) {
+                        console.error('No list data found for listId of card:', cardRes.listId);
                         return;
                     }
-
-                    setBoardId(listRes.boardId as BoardId);
+                    boardIdToUse = listRes.boardId;
+                    setBoardId(listRes.boardId);
                 }
 
-                const boardRes = await getBoardData(sockCtx, boardId);
+                const boardRes = await getBoardData(sockCtx, boardIdToUse);
                 setBoardData(boardRes);
 
-                if (boardRes) {
-                    const tempListMap = new Map<ListId, CardId[]>();
-                    const tempCardMap = new Map<CardId, ListId>();
-                    for (const list of boardRes.lists) {
-                        const cardIds: CardId[] = [];
-                        for (const card of list.cardIds) {
-                            tempCardMap.set(card, list.listId);
-                            cardIds.push(card);
-
-                            // Opens corresponding card if url contains the cardId
-                            if (card === cardId) {
-                                setOpenedCard(card);
-                            }
-                        }
-                        tempListMap.set(list.listId, cardIds);
-                    }
-                    setListMap(tempListMap);
-                    setCardMap(tempCardMap);
-
-                    // clear the previous cached boards
-                    const toRemove: string[] = [];
-                    for (let i = 0; i < sessionStorage.length; i++) {
-                        const key = sessionStorage.key(i);
-                        if (key?.startsWith(CARD_CACHE_PREFIX) || key?.startsWith(LIST_CACHE_PREFIX)) {
-                            toRemove.push(key);
-                        }
-                    }
-                    for (const key of toRemove) {
-                        sessionStorage.removeItem(key);
-                    }
-
-                    // set the board header in the TRZ context
-                    trz.setBoardData(boardRes);
+                if (!boardRes) {
+                    console.error('No board data found for boardId:', boardIdToUse);
+                    return;
                 }
+                const tempListMap = new Map<ListId, CardId[]>();
+                const tempCardMap = new Map<CardId, ListId>();
+                for (const list of boardRes.lists) {
+                    const cardIds: CardId[] = [];
+                    for (const card of list.cardIds) {
+                        tempCardMap.set(card, list.listId);
+                        cardIds.push(card);
+
+                        // Opens corresponding card if url contains the cardId
+                        if (card === cardId) {
+                            setOpenedCard(card);
+                        }
+                    }
+                    tempListMap.set(list.listId, cardIds);
+                }
+                setListMap(tempListMap);
+                setCardMap(tempCardMap);
+
+                // clear the previous cached boards
+                const toRemove: string[] = [];
+                for (let i = 0; i < sessionStorage.length; i++) {
+                    const key = sessionStorage.key(i);
+                    if (key?.startsWith(CARD_CACHE_PREFIX) || key?.startsWith(LIST_CACHE_PREFIX)) {
+                        toRemove.push(key);
+                    }
+                }
+                for (const key of toRemove) {
+                    sessionStorage.removeItem(key);
+                }
+
+                // set the board header in the TRZ context
+                trz.setBoardData(boardRes);
             } catch (err) {
                 notify(NoteType.BOARD_DATA_ERROR, err);
                 return;
