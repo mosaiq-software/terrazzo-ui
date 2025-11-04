@@ -45,10 +45,6 @@ const Router = () => {
                     element={<BoardPage />}
                 />
                 <Route
-                    path="/board/:boardId/card/:cardId"
-                    element={<BoardPage />}
-                />
-                <Route
                     path="/card/:cardId"
                     element={<BoardPage />}
                 />

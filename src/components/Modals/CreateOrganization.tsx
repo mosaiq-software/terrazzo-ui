@@ -36,7 +36,6 @@ const CreateOrganization = (props: ContextModalProps<{ modalBody: string }>): Re
             navigate(`/org/${ordId}`);
         } catch (e) {
             notify(NoteType.ORG_CREATION_ERROR, e);
-            navigate(`/dashboard`);
         }
         props.context.closeModal(props.id);
     }

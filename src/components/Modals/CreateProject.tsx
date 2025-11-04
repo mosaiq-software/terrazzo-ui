@@ -31,7 +31,6 @@ const CreateProject = (props: ContextModalProps<{ modalBody: string; orgId: Orga
             navigate(`/project/${projectId}`);
         } catch (e) {
             notify(NoteType.PROJECT_CREATION_ERROR, e);
-            navigate(`/dashboard`);
         }
         props.context.closeModal(props.id);
     }

@@ -67,8 +67,8 @@ const UserProvider: React.FC<any> = ({ children }) => {
         setGithubAuthToken(authToken);
         setUser(user);
 
+        //Account not set up yet
         if (!user.firstName?.length || !user.lastName?.length) {
-            //Account not set up yet
             setLoginRouteDestination(DEFAULT_AUTHED_ROUTE);
             navigate(FINISH_ACCOUNT_CREATION_ROUTE);
             return;
@@ -77,7 +77,7 @@ const UserProvider: React.FC<any> = ({ children }) => {
         // Account is set up and logged in
         const route = readSessionStorageValue<string | null>({ key: 'loginRouteDestination' });
         setLoginRouteDestination(null);
-        if (route !== null || code) {
+        if (route || code) {
             navigate(route || DEFAULT_AUTHED_ROUTE);
         }
     };

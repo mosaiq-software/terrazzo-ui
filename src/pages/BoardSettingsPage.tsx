@@ -325,7 +325,7 @@ const BoardSettingsPage = (): React.JSX.Element => {
                                 try {
                                     updateBoardField(sockCtx, boardId, { archived: true });
                                     notify(NoteType.CHANGES_SAVED);
-                                    navigate(DEFAULT_AUTHED_ROUTE);
+                                    navigate(`/project/${boardData.projectId}`);
                                 } catch (e) {
                                     notify(NoteType.BOARD_DATA_ERROR, e);
                                 }

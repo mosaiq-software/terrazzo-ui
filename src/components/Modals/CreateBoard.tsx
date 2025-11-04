@@ -38,7 +38,6 @@ const CreateBoard = (props: ContextModalProps<{ modalBody: string; projectId: Pr
             navigate(`/board/${board}`);
         } catch (e) {
             notify(NoteType.BOARD_CREATION_ERROR, e);
-            navigate(`/dashboard`);
         }
         props.context.closeModal(props.id);
     }
