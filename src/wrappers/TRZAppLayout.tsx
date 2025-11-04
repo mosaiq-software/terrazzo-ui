@@ -120,14 +120,14 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                     >
                         <TerrazzoLogo
                             style={{
-                                fill: '#fafafa',
+                                fill: '#282836',
                                 width: 16,
                                 height: 20,
                             }}
                         />
                         <Title
                             order={3}
-                            c="#fafafa"
+                            c="#282836"
                             fw={700}
                             style={{
                                 letterSpacing: 1,
@@ -295,7 +295,21 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                     }}
                 >
                     <Group>
-                        {trz.boardData && <Text pl="lg">{trz.boardData?.name}</Text>}
+                        {trz.boardData && (
+                            <Text
+                                pl="lg"
+                                c="#fff"
+                                onClick={() => {
+                                    navigate(`/board/${trz.boardData?.id}`);
+                                }}
+                                style={{
+                                    cursor: 'pointer',
+                                }}
+                            >
+                                {trz.boardData?.boardCode ? `[${trz.boardData?.boardCode}] ` : ''}
+                                {trz.boardData?.name}
+                            </Text>
+                        )}
                         {boardId && (
                             <Tooltip
                                 label="Board Settings"
