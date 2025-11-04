@@ -10,6 +10,7 @@ import ProjectPage from '@trz/pages/ProjectPage';
 import BoardPage from '@trz/pages/BoardPage';
 import BoardSettingsPage from '@trz/pages/BoardSettingsPage';
 import LoginPage from '@trz/pages/auth/LoginPage';
+import { NotFound, PageErrors } from './components/NotFound';
 
 const Router = () => {
     return (
@@ -65,7 +66,12 @@ const Router = () => {
             {/* A catch-all route to redirect to the error page */}
             <Route
                 path="*"
-                element={<></>}
+                element={
+                    <NotFound
+                        error={PageErrors.NOT_FOUND}
+                        itemType="page"
+                    />
+                }
             />
         </Routes>
     );
