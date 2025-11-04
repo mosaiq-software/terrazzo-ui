@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Box, ScrollArea, Title, Flex, Divider, Text, Loader, Center, Kbd, Button, Tooltip, Avatar, Group, Stack, HoverCard, UnstyledButton } from '@mantine/core';
 import { BOARD_CARD_WIDTH, BoardListCard } from '@trz/components/BoardListCards';
 import { useNavigate } from 'react-router-dom';
-import { useSocket } from '@trz/contexts/socket-context';
 import { useUser } from '@trz/contexts/user-context';
 import { useClipboard } from '@mantine/hooks';
 import { modals } from '@mantine/modals';
@@ -12,16 +11,13 @@ import { useDashboard } from '@trz/contexts/dashboard-context';
 
 const HomePage = (): React.JSX.Element => {
     const usr = useUser();
-    const sockCtx = useSocket();
     const trz = useTRZ();
     const navigate = useNavigate();
     const clipboard = useClipboard();
     const { userDash, updateUserDash } = useDashboard();
 
-    const orgs = userDash?.organizations.filter((e) => !e.archived);
-    const orgsArch = userDash?.organizations.filter((e) => e.archived);
-    const projects = userDash?.standaloneProjects.filter((e) => !e.archived);
-    const projectsArch = userDash?.standaloneProjects.filter((e) => e.archived);
+    const orgs = useMemo(() => userDash?.organizations.filter((e) => !e.archived), [userDash?.organizations]);
+    const projects = useMemo(() => userDash?.standaloneProjects.filter((e) => !e.archived), [userDash?.standaloneProjects]);
 
     return (
         <ScrollArea
@@ -159,21 +155,23 @@ const HomePage = (): React.JSX.Element => {
                                                 maxWidth: '100%',
                                             }}
                                         >
-                                            {org.projects &&
-                                                org.projects.map((project) => {
-                                                    return (
-                                                        <BoardListCard
-                                                            key={project.id}
-                                                            title={project.name}
-                                                            bgColor="#4b598c"
-                                                            bgImage={project.logoUrl}
-                                                            color="white"
-                                                            onClick={() => {
-                                                                navigate('/project/' + project.id);
-                                                            }}
-                                                        />
-                                                    );
-                                                })}
+                                            {org.projects.filter((p) => !p.archived) &&
+                                                org.projects
+                                                    .filter((p) => !p.archived)
+                                                    .map((project) => {
+                                                        return (
+                                                            <BoardListCard
+                                                                key={project.id}
+                                                                title={project.name}
+                                                                bgColor="#4b598c"
+                                                                bgImage={project.logoUrl}
+                                                                color="white"
+                                                                onClick={() => {
+                                                                    navigate('/project/' + project.id);
+                                                                }}
+                                                            />
+                                                        );
+                                                    })}
                                         </Box>
                                         <Divider
                                             color="#5b5857"

@@ -2,9 +2,11 @@ import { Avatar, Menu, UnstyledButton } from '@mantine/core';
 import { fullName } from '@mosaiq/terrazzo-common/utils/textUtils';
 import { useUser } from '@trz/contexts/user-context';
 import React from 'react';
+import { useNavigate } from 'react-router';
 
 export const UserProfileIcon = () => {
     const usr = useUser();
+    const navigate = useNavigate();
 
     return (
         <Menu
@@ -29,6 +31,13 @@ export const UserProfileIcon = () => {
                 </UnstyledButton>
             </Menu.Target>
             <Menu.Dropdown>
+                <Menu.Item
+                    onClick={() => {
+                        navigate('/settings');
+                    }}
+                >
+                    Settings
+                </Menu.Item>
                 <Menu.Item
                     color="red"
                     onClick={() => {

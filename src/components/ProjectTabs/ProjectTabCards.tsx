@@ -1,17 +1,14 @@
 import React from 'react';
 import { Box, Title, Center, Loader } from '@mantine/core';
 import { BOARD_CARD_WIDTH, BoardListCard } from '@trz/components/BoardListCards';
-import { useSocket } from '@trz/contexts/socket-context';
-import { BoardId, Project } from '@mosaiq/terrazzo-common/types';
+import { Board, BoardHeader, BoardId, Project } from '@mosaiq/terrazzo-common/types';
 
 interface ProjectTabCardsProps {
-    projectData: Project;
+    boards: BoardHeader[];
     onClickBoard: (boardId: BoardId) => void;
     onClickCreate: () => void;
 }
 export const ProjectTabCards = (props: ProjectTabCardsProps) => {
-    const sockCtx = useSocket();
-
     return (
         <Box
             style={{
@@ -45,7 +42,7 @@ export const ProjectTabCards = (props: ProjectTabCardsProps) => {
                         maxWidth: '100%',
                     }}
                 >
-                    {props.projectData.boards.map((board) => (
+                    {props.boards.map((board) => (
                         <BoardListCard
                             key={board.id}
                             bgColor={'#121314'}

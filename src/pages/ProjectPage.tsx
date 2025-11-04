@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Avatar, Group, Flex, Title, Text, Tabs, ScrollArea, Center, Stack, Button, Loader } from '@mantine/core';
 import { AvatarRow } from '@trz/components/AvatarRow';
 import { Project, ProjectId } from '@mosaiq/terrazzo-common/types';
@@ -57,6 +57,10 @@ const ProjectPage = (): React.JSX.Element => {
         });
     });
 
+    const nonArchivedBoards = useMemo(() => {
+        return projectData?.boards.filter((board) => !board.archived) ?? [];
+    }, [projectData?.boards]);
+
     if (projectData === undefined) {
         return <Loader />;
     }
@@ -88,7 +92,7 @@ const ProjectPage = (): React.JSX.Element => {
     const tabs = {
         Boards: (
             <ProjectTabCards
-                projectData={projectData}
+                boards={nonArchivedBoards}
                 onClickCreate={() => {
                     modals.openContextModal({
                         modal: 'board',

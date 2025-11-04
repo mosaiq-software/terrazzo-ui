@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Avatar, Group, Flex, Title, Text, Tabs, ScrollArea, Center, Stack, Button, Loader } from '@mantine/core';
 import { AvatarRow } from '@trz/components/AvatarRow';
 import { Organization, OrganizationId } from '@mosaiq/terrazzo-common/types';
@@ -57,6 +57,10 @@ const OrganizationPage = (): React.JSX.Element => {
         });
     });
 
+    const nonArchivedProjects = useMemo(() => {
+        return orgData?.projects.filter((project) => !project.archived) ?? [];
+    }, [orgData?.projects]);
+
     if (orgData === undefined) {
         return <Loader />;
     }
@@ -80,7 +84,7 @@ const OrganizationPage = (): React.JSX.Element => {
     const tabs: any = {
         Projects: (
             <OrgTabCards
-                projects={orgData.projects}
+                projects={nonArchivedProjects}
                 onClickCreate={() => {
                     modals.openContextModal({
                         modal: 'project',

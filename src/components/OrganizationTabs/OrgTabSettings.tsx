@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Title, Stack, TextInput, Textarea, Group, Button, Divider, Space } from '@mantine/core';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Box, Title, Stack, TextInput, Textarea, Group, Button, Divider, Space, Fieldset, Anchor, Text } from '@mantine/core';
 import { Role } from '@mosaiq/terrazzo-common/constants';
 import { DEFAULT_AUTHED_ROUTE } from '@trz/contexts/user-context';
 import { notify, NoteType } from '@trz/util/notifications';
@@ -20,6 +20,10 @@ export const OrgTabSettings = (props: OrgTabSettingsProps) => {
     useEffect(() => {
         if (props.orgData) setEditedSettings(props.orgData);
     }, [props.orgData]);
+
+    const archivedProjects = useMemo(() => {
+        return props.orgData.projects.filter((p) => p.archived);
+    }, [props.orgData.projects]);
 
     return (
         <Box
@@ -163,6 +167,25 @@ export const OrgTabSettings = (props: OrgTabSettingsProps) => {
                             Archive Organization
                         </Button>
                     </Group>
+                    <Fieldset
+                        legend="Archive"
+                        bg="transparent"
+                    >
+                        {archivedProjects.length === 0 ? (
+                            <Text>Nothing archived yet!</Text>
+                        ) : (
+                            <Stack>
+                                {archivedProjects.map((project) => (
+                                    <Anchor
+                                        key={project.id}
+                                        href={`/project/${project.id}`}
+                                    >
+                                        {project.name}
+                                    </Anchor>
+                                ))}
+                            </Stack>
+                        )}
+                    </Fieldset>
                 </Stack>
             </Box>
         </Box>

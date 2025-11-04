@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Title, Stack, TextInput, Textarea, Group, Button, Divider, Space } from '@mantine/core';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Box, Title, Stack, TextInput, Textarea, Group, Button, Divider, Space, Anchor, Fieldset, Text } from '@mantine/core';
 import { Role } from '@mosaiq/terrazzo-common/constants';
 import { DEFAULT_AUTHED_ROUTE } from '@trz/contexts/user-context';
 import { notify, NoteType } from '@trz/util/notifications';
@@ -20,6 +20,10 @@ export const ProjectTabSettings = (props: ProjectTabSettingsProps) => {
     useEffect(() => {
         if (props.projectData) setEditedSettings(props.projectData);
     }, [props.projectData]);
+
+    const archivedBoards = useMemo(() => {
+        return props.projectData.boards.filter((b) => b.archived);
+    }, [props.projectData.boards]);
 
     return (
         <Box
@@ -163,6 +167,25 @@ export const ProjectTabSettings = (props: ProjectTabSettingsProps) => {
                             Archive Project
                         </Button>
                     </Group>
+                    <Fieldset
+                        legend="Archive"
+                        bg="transparent"
+                    >
+                        {archivedBoards.length === 0 ? (
+                            <Text>Nothing archived yet!</Text>
+                        ) : (
+                            <Stack>
+                                {archivedBoards.map((board) => (
+                                    <Anchor
+                                        key={board.id}
+                                        href={`/board/${board.id}/settings`}
+                                    >
+                                        {board.name}
+                                    </Anchor>
+                                ))}
+                            </Stack>
+                        )}
+                    </Fieldset>
                 </Stack>
             </Box>
         </Box>

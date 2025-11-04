@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useSocket } from '@trz/contexts/socket-context';
 import { BoardHeader, BoardId, CardId, Label, LabelId, ListId, UID } from '@mosaiq/terrazzo-common/types';
 import { useTRZ } from '@trz/contexts/TRZ-context';
-import { ActionIcon, Badge, Box, Button, ColorInput, Divider, Fieldset, Group, Pill, ScrollArea, Select, Space, Stack, Text, Textarea, TextInput, Title, Tooltip } from '@mantine/core';
+import { ActionIcon, Alert, Badge, Box, Button, ColorInput, Divider, Fieldset, Group, Pill, ScrollArea, Select, Space, Stack, Text, Textarea, TextInput, Title, Tooltip } from '@mantine/core';
 import { RoomType, ServerSE } from '@mosaiq/terrazzo-common/socketTypes';
 import { useRoom } from '@trz/hooks/useRoom';
 import { createBoardLabel, deleteBoardLabel, getBoardData, updateBoardField, updateBoardLabel } from '@trz/emitters/all';
@@ -125,6 +125,25 @@ const BoardSettingsPage = (): React.JSX.Element => {
                             paddingTop: '2rem',
                         }}
                     >
+                        {boardData.archived && (
+                            <Alert
+                                title="Archived Board"
+                                color="yellow"
+                            >
+                                <Stack>
+                                    <Text>This board is archived and can only be viewed.</Text>
+                                    <Button
+                                        variant="subtle"
+                                        onClick={() => {
+                                            updateBoardField(sockCtx, boardId, { archived: false });
+                                            notify(NoteType.CHANGES_SAVED);
+                                        }}
+                                    >
+                                        Unarchive Board
+                                    </Button>
+                                </Stack>
+                            </Alert>
+                        )}
                         <Group>
                             <ActionIcon
                                 onClick={() => navigate(`/board/${boardId}`)}
