@@ -64,7 +64,7 @@ const ProjectPage = (): React.JSX.Element => {
     if (projectData === null || !projectId) {
         return (
             <NotFound
-                itemType="Project"
+                itemType="project"
                 error={PageErrors.NOT_FOUND}
             />
         );
@@ -79,7 +79,7 @@ const ProjectPage = (): React.JSX.Element => {
     if (!myMembershipRecord) {
         return (
             <NotFound
-                itemType="Project"
+                itemType="project"
                 error={PageErrors.FORBIDDEN}
             />
         );

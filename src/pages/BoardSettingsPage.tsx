@@ -41,7 +41,6 @@ const BoardSettingsPage = (): React.JSX.Element => {
                 trz.setBoardData(boardRes);
             } catch (err) {
                 notify(NoteType.BOARD_DATA_ERROR, err);
-                navigate('/dashboard');
                 return;
             }
         };
@@ -99,7 +98,7 @@ const BoardSettingsPage = (): React.JSX.Element => {
     if (!boardId || !boardData) {
         return (
             <NotFound
-                itemType="Board"
+                itemType="board"
                 error={PageErrors.NOT_FOUND}
             />
         );

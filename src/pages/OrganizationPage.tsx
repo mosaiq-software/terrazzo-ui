@@ -63,7 +63,7 @@ const OrganizationPage = (): React.JSX.Element => {
     if (orgData === null || !orgId) {
         return (
             <NotFound
-                itemType="Organization"
+                itemType="organization"
                 error={PageErrors.NOT_FOUND}
             />
         );
@@ -71,7 +71,7 @@ const OrganizationPage = (): React.JSX.Element => {
     if (!myMembershipRecord) {
         return (
             <NotFound
-                itemType="Organization"
+                itemType="organization"
                 error={PageErrors.FORBIDDEN}
             />
         );
