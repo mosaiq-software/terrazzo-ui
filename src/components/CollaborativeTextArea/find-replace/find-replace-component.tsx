@@ -9,91 +9,90 @@ import { ReplaceInput } from './replace-input';
 import { useFindReplace } from './use-find-replace';
 
 export interface FindReplaceComponentProps {
-  canToggleReplace?: boolean;
-  onDismiss?: () => void;
+    canToggleReplace?: boolean;
+    onDismiss?: () => void;
 }
 
-export const FindReplaceComponent: FC<FindReplaceComponentProps> = ({
-  canToggleReplace = false,
-  onDismiss,
-}) => {
-  const [isReplaceVisible, setIsReplaceVisible] = useState<boolean>(!canToggleReplace);
-  const {
-    query,
-    setQuery,
-    activeIndex,
-    total,
-    caseSensitive,
-    replacement,
-    setReplacement,
-    toggleCaseSensitive,
-    findNext,
-    findPrev,
-    stopFind,
-    replace,
-    replaceAll,
-  } = useFindReplace();
+export const FindReplaceComponent: FC<FindReplaceComponentProps> = ({ canToggleReplace = false, onDismiss }) => {
+    const [isReplaceVisible, setIsReplaceVisible] = useState<boolean>(!canToggleReplace);
+    const { query, setQuery, activeIndex, total, caseSensitive, replacement, setReplacement, toggleCaseSensitive, findNext, findPrev, stopFind, replace, replaceAll } = useFindReplace();
 
-  const handleToggleReplace = useCallback(() => {
-    setIsReplaceVisible((bool) => !bool);
-  }, []);
+    const handleToggleReplace = useCallback(() => {
+        setIsReplaceVisible((bool) => !bool);
+    }, []);
 
-  useEffect(() => {
-    if (!isReplaceVisible) {
-      setReplacement('');
-    }
-  }, [isReplaceVisible, setReplacement]);
+    useEffect(() => {
+        if (!isReplaceVisible) {
+            setReplacement('');
+        }
+    }, [isReplaceVisible, setReplacement]);
 
-  useEffect(() => {
-    return () => {
-      stopFind();
-    };
-  }, [stopFind]);
+    useEffect(() => {
+        return () => {
+            stopFind();
+        };
+    }, [stopFind]);
 
-  const label = isReplaceVisible ? 'Hide replace field' : 'Show replace field';
+    const label = isReplaceVisible ? 'Hide replace field' : 'Show replace field';
 
-  return (
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: canToggleReplace ? 'max-content 1fr max-content' : '1fr max-content',
-          gridTemplateRows: isReplaceVisible ? '32px 32px' : '32px',
-          rowGap: 1,
-          columnGap: 1,
-          alignItems: 'center',
-        }}
-      >
-        {canToggleReplace && (
-          <Box>
-            <IconButton onClick={handleToggleReplace} size='small' title={label} aria-label={label}>
-              <Icon name={'arrowRightSFill'} />
-            </IconButton>
-          </Box>
-        )}
-        <Box>
-          <FindInput query={query} setQuery={setQuery} total={total} activeIndex={activeIndex} />
-        </Box>
-        <Box sx={{ justifySelf: 'end' }}>
-          <FindController
-            findPrev={findPrev}
-            findNext={findNext}
-            toggleCaseSensitive={toggleCaseSensitive}
-            caseSensitive={caseSensitive}
-            stopFind={stopFind}
-            onDismiss={onDismiss}
-          />
-        </Box>
-        {isReplaceVisible && (
-          <>
-            {canToggleReplace && <Box />}
+    return (
+        <Box
+            sx={{
+                display: 'grid',
+                gridTemplateColumns: canToggleReplace ? 'max-content 1fr max-content' : '1fr max-content',
+                gridTemplateRows: isReplaceVisible ? '32px 32px' : '32px',
+                rowGap: 1,
+                columnGap: 1,
+                alignItems: 'center',
+            }}
+        >
+            {canToggleReplace && (
+                <Box>
+                    <IconButton
+                        onClick={handleToggleReplace}
+                        size="small"
+                        title={label}
+                        aria-label={label}
+                    >
+                        <Icon name={'arrowRightSFill'} />
+                    </IconButton>
+                </Box>
+            )}
             <Box>
-              <ReplaceInput replacement={replacement} setReplacement={setReplacement} />
+                <FindInput
+                    query={query}
+                    setQuery={setQuery}
+                    total={total}
+                    activeIndex={activeIndex}
+                />
             </Box>
             <Box sx={{ justifySelf: 'end' }}>
-              <ReplaceController replace={replace} replaceAll={replaceAll} />
+                <FindController
+                    findPrev={findPrev}
+                    findNext={findNext}
+                    toggleCaseSensitive={toggleCaseSensitive}
+                    caseSensitive={caseSensitive}
+                    stopFind={stopFind}
+                    onDismiss={onDismiss}
+                />
             </Box>
-          </>
-        )}
-      </Box>
-  );
+            {isReplaceVisible && (
+                <>
+                    {canToggleReplace && <Box />}
+                    <Box>
+                        <ReplaceInput
+                            replacement={replacement}
+                            setReplacement={setReplacement}
+                        />
+                    </Box>
+                    <Box sx={{ justifySelf: 'end' }}>
+                        <ReplaceController
+                            replace={replace}
+                            replaceAll={replaceAll}
+                        />
+                    </Box>
+                </>
+            )}
+        </Box>
+    );
 };

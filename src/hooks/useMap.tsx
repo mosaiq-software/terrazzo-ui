@@ -1,28 +1,28 @@
 /**
-* Adapted from Mantine's use-map hook
-*/
+ * Adapted from Mantine's use-map hook
+ */
 import { useRef } from 'react';
 import { useForceUpdate } from '@mantine/hooks';
 
 export function useMap<T, V>(initialState?: [T, V][]): [Map<T, V>, (map: Map<T, V> | [T, V][]) => void] {
     const mapRef = useRef(new Map<T, V>(initialState));
     const forceUpdate = useForceUpdate();
-    
+
     mapRef.current.set = (...args) => {
         Map.prototype.set.apply(mapRef.current, args);
         forceUpdate();
         return mapRef.current;
     };
-    
+
     mapRef.current.clear = (...args) => {
         Map.prototype.clear.apply(mapRef.current, args);
         forceUpdate();
     };
-    
+
     mapRef.current.delete = (...args) => {
         const res = Map.prototype.delete.apply(mapRef.current, args);
         forceUpdate();
-        
+
         return res;
     };
 
@@ -51,10 +51,10 @@ export function useMap<T, V>(initialState?: [T, V][]): [Map<T, V>, (map: Map<T, 
         return res;
     };
 
-    const setMap = ((map: Map<T, V> | [T, V][]) => {
+    const setMap = (map: Map<T, V> | [T, V][]) => {
         mapRef.current = new Map(map);
         forceUpdate();
-    });
-    
+    };
+
     return [mapRef.current, setMap];
 }

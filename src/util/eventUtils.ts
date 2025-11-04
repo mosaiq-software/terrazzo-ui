@@ -1,11 +1,11 @@
-export const captureEvent = (e:any) => {
+export const captureEvent = (e: any) => {
     e.preventDefault();
     e.stopPropagation();
     e.nativeEvent.stopImmediatePropagation();
-}
+};
 
-export const captureAllEvents = (cb:any, overrides:any) => {
-    return{
+export const captureAllEvents = (cb: any, overrides: any) => {
+    return {
         onCopy: cb,
         onCopyCapture: cb,
         onCut: cb,
@@ -167,12 +167,12 @@ export const captureAllEvents = (cb:any, overrides:any) => {
         onTransitionEnd: cb,
         onTransitionEndCapture: cb,
 
-        ...overrides
-    }
-}
+        ...overrides,
+    };
+};
 
-export const captureDraggableEvents = (cb:any, overrides:any) => {
-    return{
+export const captureDraggableEvents = (cb: any, overrides: any) => {
+    return {
         onDrag: cb,
         onDragCapture: cb,
         onDragEnd: cb,
@@ -190,24 +190,24 @@ export const captureDraggableEvents = (cb:any, overrides:any) => {
         onDrop: cb,
         onDropCapture: cb,
         onPointerDown: cb,
-        ...overrides
-    }
-}
+        ...overrides,
+    };
+};
 
-export const forAllClickEvents = (cb:any) => {
+export const forAllClickEvents = (cb: any) => {
     return {
         onPointerDown: cb,
         onClick: cb,
         onMouseDown: cb,
         onTouchStart: cb,
-    }
-}
+    };
+};
 
-export const forAllReleaseEvents = (cb:any) => {
+export const forAllReleaseEvents = (cb: any) => {
     return {
         onMouseUp: cb,
         onMouseLeave: cb,
         onPointerLeave: cb,
         onPointerUp: cb,
-    }
-}
+    };
+};

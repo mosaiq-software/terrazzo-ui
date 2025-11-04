@@ -44,8 +44,8 @@ export const NoteType = {
         color: NoteColor.SUCCESS,
     },
     SOCKET_ROOM_ERROR: {
-        title: "Room Error",
-        message: "There was an error connecting you to the room $"
+        title: 'Room Error',
+        message: 'There was an error connecting you to the room $',
     },
     GITHUB_AUTH_ERROR: {
         title: 'GitHub Authentication Error',
@@ -68,10 +68,10 @@ export const NoteType = {
         message: 'An error occurred while creating a new list',
     },
     LIST_DATA_ERROR: {
-        title: "There was an error getting a list"
+        title: 'There was an error getting a list',
     },
     CARD_DATA_ERROR: {
-        title: "There was an error getting a card"
+        title: 'There was an error getting a card',
     },
     CARD_CREATION_ERROR: {
         title: 'Card Creation Error',
@@ -94,102 +94,101 @@ export const NoteType = {
         message: 'Make sure the browser has this permission enabled',
     },
     TEXT_BLOCK_INIT_ERROR: {
-        title: "Error initializing text block"
+        title: 'Error initializing text block',
     },
     TEXT_EVENT_WARN: {
-        title: "Error updating text block",
-        color: NoteColor.WARNING
+        title: 'Error updating text block',
+        color: NoteColor.WARNING,
     },
     ORG_CREATION_ERROR: {
-        title: "Error creating the organization"
+        title: 'Error creating the organization',
     },
     ORG_DATA_ERROR: {
-        title: "Error getting the organization"
+        title: 'Error getting the organization',
     },
     PROJECT_CREATION_ERROR: {
-        title: "Error creating the project"
+        title: 'Error creating the project',
     },
     PROJECT_DATA_ERROR: {
-        title: "There was an error getting the project's data"
+        title: "There was an error getting the project's data",
     },
     DASH_ERROR: {
-        title: "There was an error loading the dashboard"
+        title: 'There was an error loading the dashboard',
     },
     API_ERROR: {
-        title: "API Error",
-        message: "There was an issue with the API server"
+        title: 'API Error',
+        message: 'There was an issue with the API server',
     },
     USER_CREATION_ERROR: {
-        title: "Error creating the user"
+        title: 'Error creating the user',
     },
     UNAUTHORIZED: {
-        title: "Unauthorized",
-        message: "You don't have permission to do this!"
+        title: 'Unauthorized',
+        message: "You don't have permission to do this!",
     },
     MEMBERSHIP_UPDATE_ERROR: {
-        title: "Membership Update Error",
+        title: 'Membership Update Error',
     },
     CHANGES_SAVED: {
-        title: "Changes Saved",
-        color: NoteColor.SUCCESS
+        title: 'Changes Saved',
+        color: NoteColor.SUCCESS,
     },
     INVITE_SENT_SUCCESS: {
-        title: "Invitation sent!",
+        title: 'Invitation sent!',
         color: NoteColor.SUCCESS,
     },
     INVITE_RECEIVED: {
-        title: "New Invitation!",
-        message: "$ has invited you to join $.",
+        title: 'New Invitation!',
+        message: '$ has invited you to join $.',
         timeout: LONG_NOTIFICATION_TIMEOUT,
         color: NoteColor.INFO,
-        primary: "Accept",
-        secondary: "Decline"
+        primary: 'Accept',
+        secondary: 'Decline',
     },
     GENERIC_ERROR: {
-        title: "An error occurred!",
-        message: "See console for details",
+        title: 'An error occurred!',
+        message: 'See console for details',
     },
     NOT_LOGGED_IN: {
-        title: "You must be logged into to do that!"
+        title: 'You must be logged into to do that!',
     },
     INVITE_REVOKED: {
-        title: "Invite to $ revoked",
-        color: NoteColor.INFO
+        title: 'Invite to $ revoked',
+        color: NoteColor.INFO,
     },
     JOINED_ENTITY: {
-        title: "Welcome to $",
-        color: NoteColor.SUCCESS
+        title: 'Welcome to $',
+        color: NoteColor.SUCCESS,
     },
     LEFT_ENTITY: {
-        title: "You left $",
-        color: NoteColor.INFO
+        title: 'You left $',
+        color: NoteColor.INFO,
     },
     ADD_TO_PERSONAL_ORG_ERROR: {
-        title: "Personal Organization",
-        message: "You can't invite users to your personal organization"
+        title: 'Personal Organization',
+        message: "You can't invite users to your personal organization",
     },
     ACK_AUTOSAVE: {
-        title: "Autosaved!",
+        title: 'Autosaved!',
         message: "Don't worry, your changes are automatically saved!",
-        color: NoteColor.INFO
-    }
-
-}
+        color: NoteColor.INFO,
+    },
+};
 
 /**
- * 
+ *
  * @param note The NoteType to send
  * @param data Any data to be replaced into the text (Will replace each $ in the text in order of vars)
  */
-export const notify = (note: Note, data?:any, actions?:{primary?:()=>void, secondary?:()=>void}) => {
-    if(!note.color || note.color === NoteColor.ERROR){
+export const notify = (note: Note, data?: any, actions?: { primary?: () => void; secondary?: () => void }) => {
+    if (!note.color || note.color === NoteColor.ERROR) {
         console.error(note.title, note.message, data);
     }
-    if(note.color === NoteColor.WARNING){
+    if (note.color === NoteColor.WARNING) {
         console.warn(note.title, note.message, data);
     }
     try {
-        const {title, message} = replaceVars(note, data);
+        const { title, message } = replaceVars(note, data);
         note.title = title;
         note.message = message;
     } catch (e) {
@@ -201,30 +200,30 @@ export const notify = (note: Note, data?:any, actions?:{primary?:()=>void, secon
         <Box>
             <Text c={note.color}>{note.message ?? ''}</Text>
             <Group gap={3}>
-            {
-                note.primary && actions?.primary &&
-                <Button size={"compact-sm"} variant="filled" 
-                    onClick={()=>{
-                        if(actions.primary)
-                            actions.primary();
-                        notifications.hide(noteId)
-                    }}
-                >
-                    {note.primary}
-                </Button>
-            }
-            {
-                note.secondary && actions?.secondary &&
-                <Button size={"compact-sm"} variant="outline" 
-                    onClick={()=>{
-                        if(actions.secondary)
-                            actions.secondary();
-                        notifications.hide(noteId)
-                    }}
-                >
-                    {note.secondary}
-                </Button>
-            }
+                {note.primary && actions?.primary && (
+                    <Button
+                        size={'compact-sm'}
+                        variant="filled"
+                        onClick={() => {
+                            if (actions.primary) actions.primary();
+                            notifications.hide(noteId);
+                        }}
+                    >
+                        {note.primary}
+                    </Button>
+                )}
+                {note.secondary && actions?.secondary && (
+                    <Button
+                        size={'compact-sm'}
+                        variant="outline"
+                        onClick={() => {
+                            if (actions.secondary) actions.secondary();
+                            notifications.hide(noteId);
+                        }}
+                    >
+                        {note.secondary}
+                    </Button>
+                )}
             </Group>
         </Box>
     );
@@ -235,54 +234,53 @@ export const notify = (note: Note, data?:any, actions?:{primary?:()=>void, secon
         color: note.color || NoteColor.ERROR,
         autoClose: note.persist ? false : AUTO_CLOSE_TIMEOUT,
     });
-}
+};
 
-const replaceVars = (note:Note, data:any) => {
-    const vars:any[] = [];
-    if("number bigint string boolean".includes(typeof data)){
+const replaceVars = (note: Note, data: any) => {
+    const vars: any[] = [];
+    if ('number bigint string boolean'.includes(typeof data)) {
         vars.push(data);
-    } else if(typeof data === "object") {
-        if(Array.isArray(data)){
+    } else if (typeof data === 'object') {
+        if (Array.isArray(data)) {
             vars.push(...data);
         } else {
             try {
                 vars.push(...Object.keys(data));
             } catch (e) {
-                throw new Error("Cant determine data type");
+                throw new Error('Cant determine data type');
             }
         }
     }
 
     let varIndex = 0;
-    const titleSegments = note.title.split("$");
-    if(titleSegments.length - 1 > vars.length){
-        throw new Error("Not enough variables for title");
+    const titleSegments = note.title.split('$');
+    if (titleSegments.length - 1 > vars.length) {
+        throw new Error('Not enough variables for title');
     }
     let title = '';
-    let message:string|undefined = undefined;
-    for(let i = 0; i < titleSegments.length; i++){
+    let message: string | undefined = undefined;
+    for (let i = 0; i < titleSegments.length; i++) {
         title += titleSegments[i];
-        if(i < titleSegments.length - 1){
+        if (i < titleSegments.length - 1) {
             title += vars[varIndex];
             varIndex++;
         }
     }
-    
 
-    if(note.message) {
-        const messageSegments = note.message.split("$");
+    if (note.message) {
+        const messageSegments = note.message.split('$');
         message = '';
-        if(messageSegments.length - 1 > vars.length - varIndex){
-            throw new Error("Not enough variables for message");
+        if (messageSegments.length - 1 > vars.length - varIndex) {
+            throw new Error('Not enough variables for message');
         }
-        for(let i = 0; i < messageSegments.length; i++){
+        for (let i = 0; i < messageSegments.length; i++) {
             message += messageSegments[i];
-            if(i < messageSegments.length - 1){
+            if (i < messageSegments.length - 1) {
                 message += vars[varIndex];
                 varIndex++;
             }
         }
     }
 
-    return {title, message};
-}
+    return { title, message };
+};

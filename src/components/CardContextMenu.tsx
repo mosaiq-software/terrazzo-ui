@@ -1,19 +1,19 @@
-import { ActionIcon, Avatar, Button, Divider, Flex, Menu, Portal, Stack, Tooltip } from "@mantine/core";
-import { Card, CardId } from "@mosaiq/terrazzo-common/types";
-import { SocketContextType, useSocket } from "@trz/contexts/socket-context";
-import { TRZContextType, useTRZ } from "@trz/contexts/TRZ-context";
-import { createCard, createDuplicateCard, updateCardAssignee, updateCardField, updateCardsLabels } from "@trz/emitters/all";
-import { useCard } from "@trz/hooks/useCard";
-import { colorIsDarkAdvanced } from "@trz/util/colorUtils";
-import React from "react";
-import { FaArchive, FaUserPlus } from "react-icons/fa";
-import { IoMdInformationCircleOutline } from "react-icons/io";
-import { MdAccountBox, MdBarChart, MdCheck, MdDocumentScanner, MdLabel, MdLink } from "react-icons/md";
-import { prioNames, PriorityChip, priorityColors, unicodeMap } from "./CardDetails/PriorityButtons";
-import { Priority } from "@mosaiq/terrazzo-common/constants";
-import { NoteType, notify } from "@trz/util/notifications";
-import { fullName } from "@mosaiq/terrazzo-common/utils/textUtils";
-import { useClipboard } from "@mantine/hooks";
+import { ActionIcon, Avatar, Button, Divider, Flex, Menu, Portal, Stack, Tooltip } from '@mantine/core';
+import { Card, CardId } from '@mosaiq/terrazzo-common/types';
+import { SocketContextType, useSocket } from '@trz/contexts/socket-context';
+import { TRZContextType, useTRZ } from '@trz/contexts/TRZ-context';
+import { createCard, createDuplicateCard, updateCardAssignee, updateCardField, updateCardsLabels } from '@trz/emitters/all';
+import { useCard } from '@trz/hooks/useCard';
+import { colorIsDarkAdvanced } from '@trz/util/colorUtils';
+import React from 'react';
+import { FaArchive, FaUserPlus } from 'react-icons/fa';
+import { IoMdInformationCircleOutline } from 'react-icons/io';
+import { MdAccountBox, MdBarChart, MdCheck, MdDocumentScanner, MdLabel, MdLink } from 'react-icons/md';
+import { prioNames, PriorityChip, priorityColors, unicodeMap } from './CardDetails/PriorityButtons';
+import { Priority } from '@mosaiq/terrazzo-common/constants';
+import { NoteType, notify } from '@trz/util/notifications';
+import { fullName } from '@mosaiq/terrazzo-common/utils/textUtils';
+import { useClipboard } from '@mantine/hooks';
 
 interface CardContextMenuProps {
     cardId: CardId;
@@ -24,18 +24,18 @@ export const CardContextMenu = (props: CardContextMenuProps) => {
     const sockCtx = useSocket();
     const card = useCard(props.cardId, false, true);
     const clipboard = useClipboard();
-    if(!card){
-        console.error("No card in context menu");
+    if (!card) {
+        console.error('No card in context menu');
         return null;
     }
-    console.log("Rendering context menu for card", card.id);
+    console.log('Rendering context menu for card', card.id);
     return (
         <Flex
-            direction={"column"}
+            direction={'column'}
             gap="0"
             justify="start"
             style={{
-                overflow: "visible"
+                overflow: 'visible',
             }}
         >
             <CtxLabelsMenu
@@ -43,7 +43,7 @@ export const CardContextMenu = (props: CardContextMenuProps) => {
                 sockCtx={sockCtx}
                 trzCtx={trzCtx}
             />
-            <CtxPriorityMenu 
+            <CtxPriorityMenu
                 card={card}
                 sockCtx={sockCtx}
                 trzCtx={trzCtx}
@@ -58,15 +58,15 @@ export const CardContextMenu = (props: CardContextMenuProps) => {
                 icon={<FaArchive size={16} />}
                 text="Archive"
                 onClick={async () => {
-                    if(!card){
+                    if (!card) {
                         notify(NoteType.CARD_UPDATE_ERROR);
                         return;
                     }
                     const archive = !card.archived;
-                    if(archive){
-                        await updateCardField(sockCtx, card.id, {archived: archive, order: -1});
-                    }else {
-                        await updateCardField(sockCtx, card.id, {archived: archive, order: 0});
+                    if (archive) {
+                        await updateCardField(sockCtx, card.id, { archived: archive, order: -1 });
+                    } else {
+                        await updateCardField(sockCtx, card.id, { archived: archive, order: 0 });
                     }
                     props.onClose();
                 }}
@@ -91,14 +91,14 @@ export const CardContextMenu = (props: CardContextMenuProps) => {
             />
         </Flex>
     );
-}
+};
 
 interface CtxMenuButtonProps {
     icon: any;
     text: string;
-    onClick: ()=>void;
+    onClick: () => void;
 }
-const CtxMenuButton = (props: CtxMenuButtonProps)=>{
+const CtxMenuButton = (props: CtxMenuButtonProps) => {
     return (
         <Button
             w="100%"
@@ -109,13 +109,13 @@ const CtxMenuButton = (props: CtxMenuButtonProps)=>{
             onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                props.onClick()
+                props.onClick();
             }}
         >
             {props.text}
         </Button>
-    )
-}
+    );
+};
 
 interface CtxMenuItemProps {
     card: Card;
@@ -124,27 +124,27 @@ interface CtxMenuItemProps {
 }
 
 export const CtxLabelsMenu = (props: CtxMenuItemProps) => {
-    if(!props.trzCtx.boardData?.labels.length){
+    if (!props.trzCtx.boardData?.labels.length) {
         return null;
     }
-    
+
     return (
-            <Menu
-                position='right-start'
-                withArrow
-                arrowPosition="center"
-                closeOnClickOutside={true}
-                trigger="hover"
-                closeDelay={100}
-                withinPortal={false}
-            >
+        <Menu
+            position="right-start"
+            withArrow
+            arrowPosition="center"
+            closeOnClickOutside={true}
+            trigger="hover"
+            closeDelay={100}
+            withinPortal={false}
+        >
             <Menu.Target>
                 <Button
                     w="100%"
                     fullWidth
                     justify="start"
                     variant="subtle"
-                    leftSection={<MdLabel size={16}/>}
+                    leftSection={<MdLabel size={16} />}
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -153,32 +153,33 @@ export const CtxLabelsMenu = (props: CtxMenuItemProps) => {
                     Labels
                 </Button>
             </Menu.Target>
-            <Menu.Dropdown left={"105%"}>
+            <Menu.Dropdown left={'105%'}>
                 <Menu.Label>Labels</Menu.Label>
                 <Stack gap={1}>
-                {
-                    props.trzCtx.boardData?.labels.map(label=>{
-                        const textColor = colorIsDarkAdvanced(label.color) ? "#fff" : "#000";
+                    {props.trzCtx.boardData?.labels.map((label) => {
+                        const textColor = colorIsDarkAdvanced(label.color) ? '#fff' : '#000';
                         return (
                             <Button
                                 key={label.id}
                                 bg={label.color}
-                                ta='left'
-                                justify='start'
+                                ta="left"
+                                justify="start"
                                 c={textColor}
                                 style={{
-                                    borderRadius:"4px",
+                                    borderRadius: '4px',
                                 }}
                                 leftSection={
-                                    <MdCheck style = {{
-                                        visibility: props.card.labels.includes(label.id) ? "visible" : "hidden"
-                                    }}/>
+                                    <MdCheck
+                                        style={{
+                                            visibility: props.card.labels.includes(label.id) ? 'visible' : 'hidden',
+                                        }}
+                                    />
                                 }
-                                onClick={(e)=>{
+                                onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
                                     const labels = props.card.labels;
-                                    if(labels.includes(label.id)){
+                                    if (labels.includes(label.id)) {
                                         labels.splice(labels.indexOf(label.id), 1);
                                     } else {
                                         labels.push(label.id);
@@ -188,51 +189,50 @@ export const CtxLabelsMenu = (props: CtxMenuItemProps) => {
                             >
                                 {label.name}
                             </Button>
-                        )
-                    })
-                }
+                        );
+                    })}
                 </Stack>
             </Menu.Dropdown>
         </Menu>
-    )
-}
+    );
+};
 
 export const CtxPriorityMenu = (props: CtxMenuItemProps) => {
     const priority = props.card.priority ?? 0;
 
     const handleOnChange = async (newPriority: Priority) => {
-        if(!props.card.id){
+        if (!props.card.id) {
             return;
         }
-        try{
-            await updateCardField(props.sockCtx, props.card.id, {priority: newPriority});
-        }catch (e){
+        try {
+            await updateCardField(props.sockCtx, props.card.id, { priority: newPriority });
+        } catch (e) {
             notify(NoteType.CARD_UPDATE_ERROR);
             return;
         }
     };
 
-    if(!props.trzCtx.boardData?.labels.length){
+    if (!props.trzCtx.boardData?.labels.length) {
         return null;
     }
-    
+
     return (
-            <Menu
-                position='right-start'
-                withArrow
-                arrowPosition="center"
-                closeOnClickOutside={true}
-                trigger="hover"
-                closeDelay={100}
-                withinPortal={false}
-            >
+        <Menu
+            position="right-start"
+            withArrow
+            arrowPosition="center"
+            closeOnClickOutside={true}
+            trigger="hover"
+            closeDelay={100}
+            withinPortal={false}
+        >
             <Menu.Target>
                 <Button
                     w="100%"
                     fullWidth
                     justify="start"
                     variant="subtle"
-                    leftSection={<MdBarChart size={16}/>}
+                    leftSection={<MdBarChart size={16} />}
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -241,56 +241,62 @@ export const CtxPriorityMenu = (props: CtxMenuItemProps) => {
                     Priority
                 </Button>
             </Menu.Target>
-            <Menu.Dropdown left={"105%"}>
-                <Flex direction="column-reverse" align="center">
-                {
-                    priorityColors.map((_, index) => {
+            <Menu.Dropdown left={'105%'}>
+                <Flex
+                    direction="column-reverse"
+                    align="center"
+                >
+                    {priorityColors.map((_, index) => {
                         return (
-                            <Tooltip key={index} label={prioNames[index]} position="right" withArrow>
+                            <Tooltip
+                                key={index}
+                                label={prioNames[index]}
+                                position="right"
+                                withArrow
+                            >
                                 <Menu.Item
                                     key={index}
                                     bg={priorityColors[index]}
-                                    ta='center'
-                                    c='white'
-                                    onClick={(e)=>{
+                                    ta="center"
+                                    c="white"
+                                    onClick={(e) => {
                                         handleOnChange(index);
                                     }}
                                 >
                                     {`${unicodeMap[index]}`}
                                 </Menu.Item>
                             </Tooltip>
-                        )
-                    })
-                }
-                <Menu.Label>Priority</Menu.Label>
+                        );
+                    })}
+                    <Menu.Label>Priority</Menu.Label>
                 </Flex>
             </Menu.Dropdown>
         </Menu>
-    )
-}
+    );
+};
 
 export const CtxAssigneesMenu = (props: CtxMenuItemProps) => {
-    if(!props.trzCtx.boardData?.labels.length){
+    if (!props.trzCtx.boardData?.labels.length) {
         return null;
     }
-    
+
     return (
-            <Menu
-                position='right-start'
-                withArrow
-                arrowPosition="center"
-                closeOnClickOutside={true}
-                trigger="hover"
-                closeDelay={100}
-                withinPortal={false}
-            >
+        <Menu
+            position="right-start"
+            withArrow
+            arrowPosition="center"
+            closeOnClickOutside={true}
+            trigger="hover"
+            closeDelay={100}
+            withinPortal={false}
+        >
             <Menu.Target>
                 <Button
                     w="100%"
                     fullWidth
                     justify="start"
                     variant="subtle"
-                    leftSection={<FaUserPlus size={16}/>}
+                    leftSection={<FaUserPlus size={16} />}
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
@@ -299,21 +305,24 @@ export const CtxAssigneesMenu = (props: CtxMenuItemProps) => {
                     Assignees
                 </Button>
             </Menu.Target>
-            <Menu.Dropdown ta='center' miw="10rem" left="105%">
+            <Menu.Dropdown
+                ta="center"
+                miw="10rem"
+                left="105%"
+            >
                 <Menu.Label>Assignees</Menu.Label>
                 <Stack gap={1}>
-                {
-                    props.trzCtx.boardData?.members.map(memRec=>{
+                    {props.trzCtx.boardData?.members.map((memRec) => {
                         const isMember = props.card.assignees.includes(memRec.user.id);
                         return (
                             <Button
                                 key={memRec.user.id}
-                                bg={isMember ? "blue" : "transparent"}
-                                ta='left'
-                                justify='start'
-                                c={"white"}
+                                bg={isMember ? 'blue' : 'transparent'}
+                                ta="left"
+                                justify="start"
+                                c={'white'}
                                 style={{
-                                    borderRadius:"4px",
+                                    borderRadius: '4px',
                                 }}
                                 leftSection={
                                     <Avatar
@@ -321,7 +330,7 @@ export const CtxAssigneesMenu = (props: CtxMenuItemProps) => {
                                         size={24}
                                     />
                                 }
-                                onClick={(e)=>{
+                                onClick={(e) => {
                                     e.preventDefault();
                                     e.stopPropagation();
                                     updateCardAssignee(props.sockCtx, props.card.id, memRec.user.id, !isMember);
@@ -329,11 +338,10 @@ export const CtxAssigneesMenu = (props: CtxMenuItemProps) => {
                             >
                                 {fullName(memRec.user)}
                             </Button>
-                        )
-                    })
-                }
+                        );
+                    })}
                 </Stack>
             </Menu.Dropdown>
         </Menu>
-    )
-}
+    );
+};

@@ -16,10 +16,10 @@ interface AssigneeMenuProps {
 export const AssigneeMenu = (props: AssigneeMenuProps) => {
     const trzCtx = useTRZ();
     const sockCtx = useSocket();
-    
+
     return (
         <Menu
-            position='bottom-start'
+            position="bottom-start"
             withArrow
             arrowPosition="side"
             closeOnClickOutside={true}
@@ -28,37 +28,39 @@ export const AssigneeMenu = (props: AssigneeMenuProps) => {
         >
             <Menu.Target>
                 <Button
-                    variant='subtle'
-                    justify={"flex-start"}
+                    variant="subtle"
+                    justify={'flex-start'}
                 >
-                    {
-                        props.card.assignees.length ? (
-
-                            <AvatarRow
+                    {props.card.assignees.length ? (
+                        <AvatarRow
                             users={props.card.assignees}
                             maxUsers={3}
-                            />
-                        ) : (
-                            <MdOutlineAddCircle size="1.5rem" color="white"/>
-                        )
-                    }
+                        />
+                    ) : (
+                        <MdOutlineAddCircle
+                            size="1.5rem"
+                            color="white"
+                        />
+                    )}
                 </Button>
             </Menu.Target>
-            <Menu.Dropdown ta='center' miw="10rem">
+            <Menu.Dropdown
+                ta="center"
+                miw="10rem"
+            >
                 <Menu.Label>Assignees</Menu.Label>
                 <Stack gap={1}>
-                {
-                    trzCtx.boardData?.members.map(memRec=>{
+                    {trzCtx.boardData?.members.map((memRec) => {
                         const isMember = props.card.assignees.includes(memRec.user.id);
                         return (
                             <Button
                                 key={memRec.user.id}
-                                bg={isMember ? "blue" : "transparent"}
-                                ta='left'
-                                justify='start'
-                                c={"white"}
+                                bg={isMember ? 'blue' : 'transparent'}
+                                ta="left"
+                                justify="start"
+                                c={'white'}
                                 style={{
-                                    borderRadius:"4px",
+                                    borderRadius: '4px',
                                 }}
                                 leftSection={
                                     <Avatar
@@ -66,17 +68,16 @@ export const AssigneeMenu = (props: AssigneeMenuProps) => {
                                         size={24}
                                     />
                                 }
-                                onClick={()=>{
+                                onClick={() => {
                                     updateCardAssignee(sockCtx, props.card.id, memRec.user.id, !isMember);
                                 }}
                             >
                                 {fullName(memRec.user)}
                             </Button>
-                        )
-                    })
-                }
+                        );
+                    })}
                 </Stack>
             </Menu.Dropdown>
         </Menu>
-    )
-}
+    );
+};

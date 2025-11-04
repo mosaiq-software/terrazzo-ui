@@ -6,16 +6,16 @@ import { IfExtensionPresent } from '../if-extension-present';
 import { CommandButtonGroup } from './command-button-group';
 
 export interface ListButtonGroupProps {
-  children?: ReactNode | ReactNode[];
+    children?: ReactNode | ReactNode[];
 }
 
 export const ListButtonGroup: FC<ListButtonGroupProps> = ({ children }) => (
-  <CommandButtonGroup>
-    <ToggleBulletListButton />
-    <ToggleOrderedListButton />
-    <IfExtensionPresent extension={TaskListExtension}>
-      <ToggleTaskListButton />
-    </IfExtensionPresent>
-    {children}
-  </CommandButtonGroup>
+    <CommandButtonGroup>
+        <ToggleBulletListButton />
+        <ToggleOrderedListButton />
+        <IfExtensionPresent extension={TaskListExtension}>
+            <ToggleTaskListButton />
+        </IfExtensionPresent>
+        {children}
+    </CommandButtonGroup>
 );

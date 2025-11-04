@@ -4,14 +4,14 @@ import { ToggleBoldButton, ToggleItalicButton, ToggleUnderlineButton } from '../
 import { CommandButtonGroup } from './command-button-group';
 
 export interface BasicFormattingButtonGroupProps {
-  children?: ReactNode | ReactNode[];
+    children?: ReactNode | ReactNode[];
 }
 
 export const BasicFormattingButtonGroup: FC<BasicFormattingButtonGroupProps> = ({ children }) => (
-  <CommandButtonGroup>
-    <ToggleBoldButton />
-    <ToggleItalicButton />
-    <ToggleUnderlineButton />
-    {children}
-  </CommandButtonGroup>
+    <CommandButtonGroup>
+        <ToggleBoldButton />
+        <ToggleItalicButton />
+        <ToggleUnderlineButton />
+        {children}
+    </CommandButtonGroup>
 );

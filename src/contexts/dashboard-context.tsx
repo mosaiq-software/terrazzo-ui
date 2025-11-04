@@ -8,7 +8,7 @@ import { NoteType, notify } from '@trz/util/notifications';
 type DashboardContextType = {
     userDash: UserDash | undefined;
     updateUserDash: () => Promise<void>;
-}
+};
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
@@ -18,29 +18,32 @@ const DashboardProvider: React.FC<any> = ({ children }) => {
     const [userDash, setUserDash] = useState<UserDash | undefined>();
 
     const updateUserDash = async () => {
-        if(!sockCtx.connected || !usr.userData?.id){
+        if (!sockCtx.connected || !usr.userData?.id) {
             return;
         }
-        try{
+        try {
             const dash = await getUsersDash(sockCtx, usr.userData.id);
             setUserDash(dash);
-        } catch(err) {
+        } catch (err) {
             notify(NoteType.DASH_ERROR, err);
             return;
         }
-    }
+    };
 
     useEffect(() => {
         updateUserDash();
     }, [sockCtx.connected, usr.userData?.id]);
 
     return (
-        <DashboardContext.Provider value={{
-            userDash, updateUserDash,
-        }}>
+        <DashboardContext.Provider
+            value={{
+                userDash,
+                updateUserDash,
+            }}
+        >
             {children}
         </DashboardContext.Provider>
-    )
+    );
 };
 
 const useDashboard = () => {
@@ -49,6 +52,6 @@ const useDashboard = () => {
         throw new Error('useDashboard must be used within a DashboardProvider');
     }
     return context;
-}
+};
 
 export { DashboardProvider, useDashboard };
