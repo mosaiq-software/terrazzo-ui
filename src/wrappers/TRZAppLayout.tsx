@@ -284,7 +284,13 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                         );
                     })}
             </Stack>
-            <Stack flex={1}>
+            <Stack
+                flex={1}
+                gap={0}
+                style={{
+                    overflow: 'hidden',
+                }}
+            >
                 <Group
                     style={{
                         justifyContent: 'space-between',
