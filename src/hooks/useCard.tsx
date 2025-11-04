@@ -14,11 +14,9 @@ export const useCard = (cardId: CardId, cacheCard: boolean, shouldFetch: boolean
     const sockCtx = useSocket();
 
     useEffect(() => {
-        let strictIgnore = false;
         const fetchCardData = async () => {
-            await new Promise((resolve) => setTimeout(resolve, 0));
             // Early exit conditions if data is missing
-            if (strictIgnore || !cardId || !sockCtx.connected || !shouldFetch) {
+            if (!cardId || !sockCtx.connected || !shouldFetch) {
                 return;
             }
             // Avoid redundant fetches
@@ -44,9 +42,6 @@ export const useCard = (cardId: CardId, cacheCard: boolean, shouldFetch: boolean
             }
         };
         fetchCardData();
-        return () => {
-            strictIgnore = true;
-        };
     }, [cardId, sockCtx.connected, shouldFetch]);
 
     useSocketListener<ServerSE.UPDATE_CARD_FIELD>(ServerSE.UPDATE_CARD_FIELD, (payload) => {

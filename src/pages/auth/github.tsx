@@ -15,12 +15,7 @@ export const GithubAuth = () => {
     const code = urlParams.code;
 
     useEffect(() => {
-        let strictIgnore = false;
         const fetchData = async (code: any) => {
-            await new Promise((resolve) => setTimeout(resolve, 100));
-            if (strictIgnore) {
-                return;
-            }
             if (!code || typeof code !== 'string') {
                 notify(NoteType.GITHUB_AUTH_ERROR, 'Invalid github code!');
                 navigate(DEFAULT_NO_AUTH_ROUTE);
@@ -29,9 +24,6 @@ export const GithubAuth = () => {
             await usr.githubLogin(code);
         };
         fetchData(code);
-        return () => {
-            strictIgnore = true;
-        };
     }, [code]);
 
     return (

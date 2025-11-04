@@ -36,10 +36,8 @@ function ListElement(props: ListElementProps): React.JSX.Element {
     const sockCtx = useSocket();
 
     useEffect(() => {
-        let strictIgnore = false;
         const fetchListData = async () => {
-            await new Promise((resolve) => setTimeout(resolve, 0));
-            if (strictIgnore || !props.listId || !sockCtx.connected) {
+            if (!props.listId || !sockCtx.connected) {
                 return;
             }
             try {
@@ -64,9 +62,6 @@ function ListElement(props: ListElementProps): React.JSX.Element {
             }
         };
         fetchListData();
-        return () => {
-            strictIgnore = true;
-        };
     }, [props.listId, sockCtx.connected]);
 
     useSocketListener<ServerSE.UPDATE_LIST_FIELD>(ServerSE.UPDATE_LIST_FIELD, (payload) => {

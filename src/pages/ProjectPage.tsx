@@ -31,10 +31,8 @@ const ProjectPage = (): React.JSX.Element => {
     useRoom(RoomType.DATA, projectId, false);
 
     useEffect(() => {
-        let strictIgnore = false;
         const fetchProjectData = async () => {
-            await new Promise((resolve) => setTimeout(resolve, 0));
-            if (strictIgnore || !projectId || !sockCtx.connected) {
+            if (!projectId || !sockCtx.connected) {
                 return;
             }
 
@@ -48,9 +46,6 @@ const ProjectPage = (): React.JSX.Element => {
             }
         };
         fetchProjectData();
-        return () => {
-            strictIgnore = true;
-        };
     }, [projectId, sockCtx.connected]);
 
     useSocketListener<ServerSE.UPDATE_PROJECT_FIELD>(ServerSE.UPDATE_PROJECT_FIELD, (payload) => {

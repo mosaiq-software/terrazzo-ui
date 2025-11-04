@@ -57,10 +57,8 @@ const BoardPage = (): React.JSX.Element => {
     );
 
     useEffect(() => {
-        let strictIgnore = false;
         const fetchBoardData = async () => {
-            await new Promise((resolve) => setTimeout(resolve, 0));
-            if (strictIgnore || (!boardId && !cardId) || !sockCtx.connected) {
+            if (!boardId && !cardId) {
                 return;
             }
             try {
@@ -117,14 +115,11 @@ const BoardPage = (): React.JSX.Element => {
                 }
             } catch (err) {
                 notify(NoteType.BOARD_DATA_ERROR, err);
-                navigate('/dashboard');
                 return;
             }
         };
         fetchBoardData();
         return () => {
-            strictIgnore = true;
-
             // clear the board header when leaving the page
             trz.setBoardData(undefined);
         };

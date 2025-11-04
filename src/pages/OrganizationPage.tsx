@@ -32,10 +32,8 @@ const OrganizationPage = (): React.JSX.Element => {
     useRoom(RoomType.DATA, orgId, false);
 
     useEffect(() => {
-        let strictIgnore = false;
         const fetchOrgData = async () => {
-            await new Promise((resolve) => setTimeout(resolve, 0));
-            if (strictIgnore || !orgId || !sockCtx.connected) {
+            if (!orgId || !sockCtx.connected) {
                 return;
             }
             try {
@@ -48,9 +46,6 @@ const OrganizationPage = (): React.JSX.Element => {
             }
         };
         fetchOrgData();
-        return () => {
-            strictIgnore = true;
-        };
     }, [orgId, sockCtx.connected]);
 
     useSocketListener<ServerSE.UPDATE_ORG_FIELD>(ServerSE.UPDATE_ORG_FIELD, (payload) => {

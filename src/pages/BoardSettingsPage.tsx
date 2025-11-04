@@ -30,10 +30,8 @@ const BoardSettingsPage = (): React.JSX.Element => {
     useRoom(RoomType.DATA, boardId, false);
 
     useEffect(() => {
-        let strictIgnore = false;
         const fetchBoardData = async () => {
-            await new Promise((resolve) => setTimeout(resolve, 0));
-            if (strictIgnore || !boardId || !sockCtx.connected) {
+            if (!boardId || !sockCtx.connected) {
                 return;
             }
             try {
@@ -49,7 +47,6 @@ const BoardSettingsPage = (): React.JSX.Element => {
         };
         fetchBoardData();
         return () => {
-            strictIgnore = true;
             trz.setBoardData(undefined);
         };
     }, [boardId, sockCtx.connected]);
