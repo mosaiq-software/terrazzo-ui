@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useSocket } from '@trz/contexts/socket-context';
 import { BoardHeader, BoardId, CardId, Label, LabelId, ListId, UID } from '@mosaiq/terrazzo-common/types';
 import { useTRZ } from '@trz/contexts/TRZ-context';
-import { ActionIcon, Badge, Box, Button, ColorInput, Divider, Fieldset, Group, Pill, Select, Space, Stack, Text, Textarea, TextInput, Title, Tooltip } from '@mantine/core';
+import { ActionIcon, Badge, Box, Button, ColorInput, Divider, Fieldset, Group, Pill, ScrollArea, Select, Space, Stack, Text, Textarea, TextInput, Title, Tooltip } from '@mantine/core';
 import { RoomType, ServerSE } from '@mosaiq/terrazzo-common/socketTypes';
 import { useRoom } from '@trz/hooks/useRoom';
 import { createBoardLabel, deleteBoardLabel, getBoardData, updateBoardField, updateBoardLabel } from '@trz/emitters/all';
@@ -105,234 +105,233 @@ const BoardSettingsPage = (): React.JSX.Element => {
     }
 
     return (
-        <Box
-            style={{
-                display: 'flex',
-                flexDirection: 'column',
-                flexWrap: 'nowrap',
-                alignItems: 'flex-start',
-                justifyContent: 'flex-start',
-            }}
-        >
-            <Box
-                style={{
-                    width: '100%',
-                    display: 'flex',
-                    justifyContent: 'center',
-                }}
+        <ScrollArea h={`calc(100vh - ${trz.navbarHeight}px)`}>
+            <Stack
+                bg="#15161A"
+                mih="100vh"
+                pb="10vh"
+                align="center"
             >
-                <Stack
+                <Box
                     style={{
-                        width: '40rem',
-                        paddingTop: '2rem',
+                        width: '100%',
+                        display: 'flex',
+                        justifyContent: 'center',
                     }}
                 >
-                    <Group>
-                        <ActionIcon
-                            onClick={() => navigate(`/board/${boardId}`)}
-                            variant="subtle"
-                            size="md"
-                        >
-                            <MdOutlineChevronLeft size="24" />
-                        </ActionIcon>
-                        <Title order={2}>Settings for {boardData.name}</Title>
-                    </Group>
-                    <Fieldset
-                        legend="Board"
-                        bg="transparent"
+                    <Stack
+                        style={{
+                            width: '40rem',
+                            paddingTop: '2rem',
+                        }}
                     >
-                        <Stack>
-                            <TextInput
-                                labelProps={{
-                                    c: 'white',
-                                }}
-                                label="Board Name"
-                                placeholder="My Board"
-                                required
-                                value={boardData.name ?? ''}
-                                onChange={(e) => {
-                                    setBoardData({ ...boardData, name: e.target.value });
-                                    setIsDirty(true);
-                                }}
-                            />
-                            <TextInput
-                                w="8rem"
-                                labelProps={{
-                                    c: 'white',
-                                }}
-                                label="Board Code"
-                                placeholder=""
-                                value={boardData.boardCode ?? ''}
-                                onChange={(e) => {
-                                    setBoardData({ ...boardData, boardCode: e.target.value });
-                                    setIsDirty(true);
-                                }}
-                            />
+                        <Group>
+                            <ActionIcon
+                                onClick={() => navigate(`/board/${boardId}`)}
+                                variant="subtle"
+                                size="md"
+                            >
+                                <MdOutlineChevronLeft size="24" />
+                            </ActionIcon>
+                            <Title order={2}>Settings for {boardData.name}</Title>
+                        </Group>
+                        <Fieldset
+                            legend="Board"
+                            bg="transparent"
+                        >
+                            <Stack>
+                                <TextInput
+                                    labelProps={{
+                                        c: 'white',
+                                    }}
+                                    label="Board Name"
+                                    placeholder="My Board"
+                                    required
+                                    value={boardData.name ?? ''}
+                                    onChange={(e) => {
+                                        setBoardData({ ...boardData, name: e.target.value });
+                                        setIsDirty(true);
+                                    }}
+                                />
+                                <TextInput
+                                    w="8rem"
+                                    labelProps={{
+                                        c: 'white',
+                                    }}
+                                    label="Board Code"
+                                    placeholder=""
+                                    value={boardData.boardCode ?? ''}
+                                    onChange={(e) => {
+                                        setBoardData({ ...boardData, boardCode: e.target.value });
+                                        setIsDirty(true);
+                                    }}
+                                />
+                                <Button
+                                    disabled={!isDirty}
+                                    variant="filled"
+                                    onClick={async () => {
+                                        try {
+                                            updateBoardField(sockCtx, boardId, boardData);
+                                            notify(NoteType.CHANGES_SAVED);
+                                            setIsDirty(false);
+                                        } catch (e) {
+                                            notify(NoteType.BOARD_DATA_ERROR, e);
+                                        }
+                                    }}
+                                >
+                                    Save
+                                </Button>
+                            </Stack>
+                        </Fieldset>
+                        <Fieldset
+                            legend="Labels"
+                            bg="transparent"
+                        >
+                            <Stack>
+                                <Group
+                                    justify="flex-start"
+                                    wrap="wrap"
+                                >
+                                    {boardLabels.map((label) => {
+                                        const textColor = colorIsDarkAdvanced(label.color) ? '#ffffff' : '#000000';
+                                        return (
+                                            <Group
+                                                key={label.id}
+                                                bg={label.color}
+                                                w="fit-content"
+                                                wrap="nowrap"
+                                                justify="flex-start"
+                                                px="sm"
+                                                gap="0"
+                                                style={{
+                                                    borderRadius: '10px',
+                                                }}
+                                            >
+                                                <Text
+                                                    c={textColor}
+                                                    size="sm"
+                                                >
+                                                    {label.name}
+                                                </Text>
+                                                <ActionIcon
+                                                    size="input-xs"
+                                                    radius={'100%'}
+                                                    bg={'transparent'}
+                                                    onClick={() => {
+                                                        setEditingLabel(label);
+                                                    }}
+                                                >
+                                                    <MdOutlineEdit color={textColor} />
+                                                </ActionIcon>
+                                            </Group>
+                                        );
+                                    })}
+                                </Group>
+                                {editingLabel && (
+                                    <Group>
+                                        <TextInput
+                                            value={editingLabel.name}
+                                            onChange={(e) => setEditingLabel({ ...editingLabel, name: e.target.value })}
+                                            placeholder="New Label..."
+                                            autoFocus
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter' || e.key === 'Return') {
+                                                    onSaveLabel();
+                                                }
+                                            }}
+                                        />
+                                        <ColorInput
+                                            value={editingLabel.color}
+                                            onChange={(e) => setEditingLabel({ ...editingLabel, color: e })}
+                                        />
+                                        <Tooltip
+                                            label="Save"
+                                            openDelay={200}
+                                        >
+                                            <ActionIcon
+                                                size="input-sm"
+                                                onClick={onSaveLabel}
+                                                disabled={!isValidLabel(editingLabel)}
+                                            >
+                                                {editingLabel.id === TEMPORARY_ID && <MdOutlineAdd />}
+                                                {editingLabel.id !== TEMPORARY_ID && <MdOutlineCheck />}
+                                            </ActionIcon>
+                                        </Tooltip>
+                                        {editingLabel.id !== TEMPORARY_ID && (
+                                            <RingHoldingButton
+                                                durationMs={1000}
+                                                ringSize={50}
+                                                ringThickness={6}
+                                                color="red"
+                                                onClick={async () => {
+                                                    setEditingLabel(undefined);
+                                                    deleteBoardLabel(sockCtx, boardId, editingLabel.id);
+                                                }}
+                                            >
+                                                <MdOutlineDelete />
+                                            </RingHoldingButton>
+                                        )}
+                                        {editingLabel.id === TEMPORARY_ID && (
+                                            <Tooltip
+                                                label="Cancel"
+                                                openDelay={200}
+                                            >
+                                                <ActionIcon
+                                                    size="input-sm"
+                                                    variant="outline"
+                                                    onClick={async () => {
+                                                        setEditingLabel(undefined);
+                                                    }}
+                                                >
+                                                    {editingLabel.id === TEMPORARY_ID && <MdOutlineClose />}
+                                                </ActionIcon>
+                                            </Tooltip>
+                                        )}
+                                    </Group>
+                                )}
+                                {!editingLabel && (
+                                    <Tooltip
+                                        label="Add new Label"
+                                        openDelay={200}
+                                    >
+                                        <ActionIcon
+                                            size="input-sm"
+                                            onClick={onCreateNewLabel}
+                                        >
+                                            <MdOutlineAdd />
+                                        </ActionIcon>
+                                    </Tooltip>
+                                )}
+                            </Stack>
+                        </Fieldset>
+                        <Divider />
+                        <Space />
+                        <Text>Created at {new Date(boardData.createdAt).toLocaleString()}</Text>
+                        <Text>Board contains {boardData.totalCards} cards</Text>
+                        <Divider />
+                        <Space />
+                        <Group gap="sm">
                             <Button
-                                disabled={!isDirty}
-                                variant="filled"
-                                onClick={async () => {
+                                variant="light"
+                                color="red"
+                                w="min-content"
+                                onClick={() => {
                                     try {
-                                        updateBoardField(sockCtx, boardId, boardData);
+                                        updateBoardField(sockCtx, boardId, { archived: true });
                                         notify(NoteType.CHANGES_SAVED);
-                                        setIsDirty(false);
+                                        navigate(`/project/${boardData.projectId}`);
                                     } catch (e) {
                                         notify(NoteType.BOARD_DATA_ERROR, e);
                                     }
                                 }}
                             >
-                                Save
+                                Archive Board
                             </Button>
-                        </Stack>
-                    </Fieldset>
-                    <Fieldset
-                        legend="Labels"
-                        bg="transparent"
-                    >
-                        <Stack>
-                            <Group
-                                justify="flex-start"
-                                wrap="wrap"
-                            >
-                                {boardLabels.map((label) => {
-                                    const textColor = colorIsDarkAdvanced(label.color) ? '#ffffff' : '#000000';
-                                    return (
-                                        <Group
-                                            key={label.id}
-                                            bg={label.color}
-                                            w="fit-content"
-                                            wrap="nowrap"
-                                            justify="flex-start"
-                                            px="sm"
-                                            gap="0"
-                                            style={{
-                                                borderRadius: '10px',
-                                            }}
-                                        >
-                                            <Text
-                                                c={textColor}
-                                                size="sm"
-                                            >
-                                                {label.name}
-                                            </Text>
-                                            <ActionIcon
-                                                size="input-xs"
-                                                radius={'100%'}
-                                                bg={'transparent'}
-                                                onClick={() => {
-                                                    setEditingLabel(label);
-                                                }}
-                                            >
-                                                <MdOutlineEdit color={textColor} />
-                                            </ActionIcon>
-                                        </Group>
-                                    );
-                                })}
-                            </Group>
-                            {editingLabel && (
-                                <Group>
-                                    <TextInput
-                                        value={editingLabel.name}
-                                        onChange={(e) => setEditingLabel({ ...editingLabel, name: e.target.value })}
-                                        placeholder="New Label..."
-                                        autoFocus
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter' || e.key === 'Return') {
-                                                onSaveLabel();
-                                            }
-                                        }}
-                                    />
-                                    <ColorInput
-                                        value={editingLabel.color}
-                                        onChange={(e) => setEditingLabel({ ...editingLabel, color: e })}
-                                    />
-                                    <Tooltip
-                                        label="Save"
-                                        openDelay={200}
-                                    >
-                                        <ActionIcon
-                                            size="input-sm"
-                                            onClick={onSaveLabel}
-                                            disabled={!isValidLabel(editingLabel)}
-                                        >
-                                            {editingLabel.id === TEMPORARY_ID && <MdOutlineAdd />}
-                                            {editingLabel.id !== TEMPORARY_ID && <MdOutlineCheck />}
-                                        </ActionIcon>
-                                    </Tooltip>
-                                    {editingLabel.id !== TEMPORARY_ID && (
-                                        <RingHoldingButton
-                                            durationMs={1000}
-                                            ringSize={50}
-                                            ringThickness={6}
-                                            color="red"
-                                            onClick={async () => {
-                                                setEditingLabel(undefined);
-                                                deleteBoardLabel(sockCtx, boardId, editingLabel.id);
-                                            }}
-                                        >
-                                            <MdOutlineDelete />
-                                        </RingHoldingButton>
-                                    )}
-                                    {editingLabel.id === TEMPORARY_ID && (
-                                        <Tooltip
-                                            label="Cancel"
-                                            openDelay={200}
-                                        >
-                                            <ActionIcon
-                                                size="input-sm"
-                                                variant="outline"
-                                                onClick={async () => {
-                                                    setEditingLabel(undefined);
-                                                }}
-                                            >
-                                                {editingLabel.id === TEMPORARY_ID && <MdOutlineClose />}
-                                            </ActionIcon>
-                                        </Tooltip>
-                                    )}
-                                </Group>
-                            )}
-                            {!editingLabel && (
-                                <Tooltip
-                                    label="Add new Label"
-                                    openDelay={200}
-                                >
-                                    <ActionIcon
-                                        size="input-sm"
-                                        onClick={onCreateNewLabel}
-                                    >
-                                        <MdOutlineAdd />
-                                    </ActionIcon>
-                                </Tooltip>
-                            )}
-                        </Stack>
-                    </Fieldset>
-                    <Divider />
-                    <Space />
-                    <Text>Created at {new Date(boardData.createdAt).toLocaleString()}</Text>
-                    <Text>Board contains {boardData.totalCards} cards</Text>
-                    <Divider />
-                    <Space />
-                    <Group gap="sm">
-                        <Button
-                            variant="light"
-                            color="red"
-                            w="min-content"
-                            onClick={() => {
-                                try {
-                                    updateBoardField(sockCtx, boardId, { archived: true });
-                                    notify(NoteType.CHANGES_SAVED);
-                                    navigate(`/project/${boardData.projectId}`);
-                                } catch (e) {
-                                    notify(NoteType.BOARD_DATA_ERROR, e);
-                                }
-                            }}
-                        >
-                            Archive Board
-                        </Button>
-                    </Group>
-                </Stack>
-            </Box>
-        </Box>
+                        </Group>
+                    </Stack>
+                </Box>
+            </Stack>
+        </ScrollArea>
     );
 };
 

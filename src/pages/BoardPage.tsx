@@ -394,19 +394,13 @@ const BoardPage = (): React.JSX.Element => {
         return [];
     }, []);
 
-    if (!boardId && !cardId) {
-        // Error view when there is no boardId and cardId
+    if ((!boardId && !cardId) || !boardData) {
         return (
             <NotFound
-                itemType="Board"
+                itemType="board"
                 error={PageErrors.NOT_FOUND}
             />
         );
-    }
-
-    if (!boardData) {
-        // TODO(ttph): some loading state
-        return <></>;
     }
 
     const onRender: React.ProfilerOnRenderCallback = (id, phase, actualDuration, baseDuration, startTime, commitTime) => {
