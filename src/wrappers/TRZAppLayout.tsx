@@ -126,7 +126,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                             }}
                         />
                         <Title
-                            order={3}
+                            order={2}
                             c="#282836"
                             fw={700}
                             style={{

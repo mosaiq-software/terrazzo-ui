@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Box, Flex, Group, Button, Divider, Title, Text, Image, Stack, Center, Container, Anchor } from '@mantine/core';
-import { Link } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 
 import './LandingPage.css';
 import TerrazzoLogo from '../assets/terrazzo-logo.svg';
@@ -49,17 +49,36 @@ const LandingPage = () => {
                         justify="space-between"
                         align="center"
                     >
-                        <Group gap="sm">
-                            <TerrazzoLogo style={{ fill: COLORS.primary, width: 36, height: 36 }} />
+                        <NavLink
+                            to={'/'}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'baseline',
+                                justifyContent: 'flex-end',
+                                textDecoration: 'none',
+                                width: '200px',
+                                overflow: 'hidden',
+                            }}
+                        >
+                            <TerrazzoLogo
+                                style={{
+                                    fill: '#fff',
+                                    width: 16,
+                                    height: 20,
+                                }}
+                            />
                             <Title
-                                order={3}
-                                c={COLORS.primary}
+                                order={2}
+                                c="#fff"
                                 fw={700}
-                                style={{ letterSpacing: 1 }}
+                                style={{
+                                    letterSpacing: 1,
+                                    textDecoration: 'none',
+                                }}
                             >
-                                terrazzo
+                                errazzo
                             </Title>
-                        </Group>
+                        </NavLink>
                         <Group gap="xs">
                             {userData ? (
                                 <>
