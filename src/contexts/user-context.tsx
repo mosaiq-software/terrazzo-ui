@@ -88,7 +88,7 @@ const UserProvider: React.FC<any> = ({ children }) => {
         }
         localStorage.removeItem(LocalStorageKey.GITHUB_ACCESS_TOKEN);
         setGithubAuthToken(null);
-        navigate(DEFAULT_NO_AUTH_ROUTE);
+        window.location.href = '/';
     };
 
     const setUpAccount = async (username: string, firstName: string, lastName: string) => {
