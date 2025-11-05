@@ -6,6 +6,8 @@ import { getSearchResults } from '@trz/emitters/all';
 import { DatapointType, QueryResult } from '@mosaiq/terrazzo-common/types';
 import { NavLink, useNavigate } from 'react-router';
 import { MdOutlineAccountBox, MdOutlineIncompleteCircle, MdOutlineViewKanban } from 'react-icons/md';
+import { IoDocumentOutline } from 'react-icons/io5';
+import { BsCardText } from 'react-icons/bs';
 
 export function SearchBar() {
     const [searchSessionId, setSearchSessionId] = useState<string | undefined>(undefined);
@@ -14,11 +16,10 @@ export function SearchBar() {
     const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
     const sockCtx = useSocket();
     const navigate = useNavigate();
-    const osIsMac = useOs() === 'macos';
 
     useHotkeys([
         [
-            'mod+K',
+            '/',
             () => {
                 if (!searchSessionId) {
                     startNewSearchSession();
@@ -88,7 +89,7 @@ export function SearchBar() {
                         style={{ pointerEvents: 'none', color: 'gray' }}
                         fz="xs"
                     >
-                        {osIsMac ? '⌘K' : '^K'}
+                        {'/'}
                     </Text>
                 }
             />
@@ -171,7 +172,7 @@ const RenderedSearchResult = (props: RenderedSearchResultProps) => {
             >
                 <Stack
                     gap={2}
-                    w="100%"
+                    w="85%"
                 >
                     <Text
                         fw={500}
@@ -209,8 +210,15 @@ const getExtra = (type: DatapointType, id: string) => {
         case DatapointType.CardDescription:
             return {
                 link: `/card/${id}`,
-                icon: MdOutlineAccountBox,
+                icon: BsCardText,
                 typeName: 'Card',
+            };
+        case DatapointType.DocumentTitle:
+        case DatapointType.DocumentContent:
+            return {
+                link: `/doc/${id}`,
+                icon: IoDocumentOutline,
+                typeName: 'Document',
             };
         default:
             return {
