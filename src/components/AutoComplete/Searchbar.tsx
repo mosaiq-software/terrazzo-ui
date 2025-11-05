@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { Button, Modal, Input, Text, Divider, Stack, Group, TextInput } from '@mantine/core';
-import { useDebouncedCallback, useDisclosure, useHotkeys } from '@mantine/hooks';
+import { useDebouncedCallback, useDisclosure, useHotkeys, useOs } from '@mantine/hooks';
 import { useSocket } from '@trz/contexts/socket-context';
 import { getSearchResults } from '@trz/emitters/all';
 import { DatapointType, QueryResult } from '@mosaiq/terrazzo-common/types';
@@ -14,6 +14,7 @@ export function SearchBar() {
     const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
     const sockCtx = useSocket();
     const navigate = useNavigate();
+    const osIsMac = useOs() === 'macos';
 
     useHotkeys([
         [
@@ -81,7 +82,15 @@ export function SearchBar() {
                 onClick={startNewSearchSession}
                 readOnly
                 value="Search"
-                rightSection={<span style={{ pointerEvents: 'none', color: 'gray' }}>⌘K</span>}
+                rightSection={
+                    <Text
+                        span
+                        style={{ pointerEvents: 'none', color: 'gray' }}
+                        fz="xs"
+                    >
+                        {osIsMac ? '⌘K' : '^K'}
+                    </Text>
+                }
             />
             <Modal.Root
                 opened={searchSessionId !== undefined}
