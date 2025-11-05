@@ -13,7 +13,7 @@ import { replyInvite } from '@trz/emitters/all';
 import { useDashboard } from '@trz/contexts/dashboard-context';
 import { useSocketListener } from '@trz/hooks/useSocketListener';
 import { ServerSE } from '@mosaiq/terrazzo-common/socketTypes';
-import { AutoComplete } from '@trz/components/AutoComplete/AutoComplete';
+import { SearchBar } from '@trz/components/AutoComplete/Searchbar';
 import { UserProfileIcon } from '@trz/components/UserProfileIcon';
 import TerrazzoLogo from '../assets/terrazzo-logo.svg';
 
@@ -443,7 +443,7 @@ const TRZAppLayout = (props: TRZAppLayoutProps) => {
                                 </ScrollAreaAutosize>
                             </Popover.Dropdown>
                         </Popover>
-                        <AutoComplete />
+                        <SearchBar />
                         <UserProfileIcon />
                     </Group>
                 </Group>

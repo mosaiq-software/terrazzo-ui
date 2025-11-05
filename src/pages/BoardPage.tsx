@@ -64,7 +64,7 @@ const BoardPage = (): React.JSX.Element => {
             }
             try {
                 let boardIdToUse = boardId;
-                if (!boardIdToUse) {
+                if (!boardIdToUse || (cardId && !openedCard)) {
                     // If no boardId, fetch it from the cardId
                     const cardRes = await getCardData(sockCtx, cardId);
                     if (!cardRes) {
@@ -129,7 +129,7 @@ const BoardPage = (): React.JSX.Element => {
             // clear the board header when leaving the page
             trz.setBoardData(undefined);
         };
-    }, [boardId, sockCtx.connected]);
+    }, [boardId, sockCtx.connected, cardId]);
 
     useSocketListener<ServerSE.UPDATE_BOARD_FIELD>(ServerSE.UPDATE_BOARD_FIELD, (payload) => {
         setBoardData((prev) => {

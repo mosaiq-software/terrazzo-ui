@@ -159,3 +159,7 @@ export const emitMoveList = async (sockCtx: SocketContextType, listId: ListId, p
 export const emitMoveCard = async (sockCtx: SocketContextType, cardId: CardId, toList: ListId, position?: number): Promise<void> => {
     await sockCtx.emit<ClientSE.MOVE_CARD>(ClientSE.MOVE_CARD, { cardId, toList, position });
 };
+
+export const getSearchResults = async (sockCtx: SocketContextType, query: string, searchSessionId: string) => {
+    return await sockCtx.emit<ClientSE.GET_SEARCH_RESULTS>(ClientSE.GET_SEARCH_RESULTS, { query, searchSessionId });
+};
