@@ -1,6 +1,8 @@
 .remirror-editor {
     
     overflow-y: visible !important;
+    width: inherit !important;
+
     h1, h2, h3, h4, h5, h6, p, strong, em, u, s, a, blockquote, ul, ol, li {
         color: white !important;
     }

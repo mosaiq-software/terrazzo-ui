@@ -18,6 +18,7 @@ import { colorIsDarkAdvanced, generateRandomColor } from '@trz/util/colorUtils';
 import { RingHoldingButton } from '@trz/components/RingHoldingButton';
 import { fullName } from '@mosaiq/terrazzo-common/utils/textUtils';
 import { useDashboard } from '@trz/contexts/dashboard-context';
+import { setTitle } from '@trz/util/tabUtils';
 
 const UserSettingsPage = (): React.JSX.Element => {
     const [isDirty, setIsDirty] = useState<boolean>(false);
@@ -26,6 +27,10 @@ const UserSettingsPage = (): React.JSX.Element => {
     const userCtx = useUser();
     const { userDash, updateUserDash } = useDashboard();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        setTitle(`My Settings | Terrazzo`);
+    }, []);
 
     const archivedOrgs = useMemo(() => userDash?.organizations.filter((e) => e.archived) ?? [], [userDash?.organizations]);
 

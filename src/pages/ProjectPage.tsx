@@ -18,6 +18,7 @@ import { useRoom } from '@trz/hooks/useRoom';
 import { useSocketListener } from '@trz/hooks/useSocketListener';
 import { updateBaseFromPartial } from '@mosaiq/terrazzo-common/utils/arrayUtils';
 import { modals } from '@mantine/modals';
+import { setTitle } from '@trz/util/tabUtils';
 
 const ProjectPage = (): React.JSX.Element => {
     const params = useParams();
@@ -39,6 +40,7 @@ const ProjectPage = (): React.JSX.Element => {
             try {
                 const prj = await getProjectData(sockCtx, projectId);
                 setProjectData(prj ?? null);
+                setTitle(`${prj?.name ?? 'Project'} | Terrazzo`);
             } catch (err) {
                 notify(NoteType.PROJECT_DATA_ERROR, err);
                 navigate('/dashboard');
@@ -56,10 +58,6 @@ const ProjectPage = (): React.JSX.Element => {
             return updateBaseFromPartial<Project>(prev, payload);
         });
     });
-
-    const nonArchivedBoards = useMemo(() => {
-        return projectData?.boards.filter((board) => !board.archived) ?? [];
-    }, [projectData?.boards]);
 
     if (projectData === undefined) {
         return <Loader />;
@@ -90,21 +88,7 @@ const ProjectPage = (): React.JSX.Element => {
     }
 
     const tabs = {
-        Boards: (
-            <ProjectTabCards
-                boards={nonArchivedBoards}
-                onClickCreate={() => {
-                    modals.openContextModal({
-                        modal: 'board',
-                        title: 'Create Board',
-                        innerProps: { projectId: projectData.id },
-                    });
-                }}
-                onClickBoard={(boardId) => {
-                    navigate(`/board/${boardId}`);
-                }}
-            />
-        ),
+        Boards: <ProjectTabCards projectData={projectData} />,
         Members: (
             <ProjectTabMembers
                 myMembershipRecord={myMembershipRecord}

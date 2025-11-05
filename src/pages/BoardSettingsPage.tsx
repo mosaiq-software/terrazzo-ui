@@ -16,6 +16,7 @@ import { MdOutlineAdd, MdOutlineCheck, MdOutlineChevronLeft, MdOutlineClose, MdO
 import { TEMPORARY_ID } from '@mosaiq/terrazzo-common/constants';
 import { colorIsDarkAdvanced, generateRandomColor } from '@trz/util/colorUtils';
 import { RingHoldingButton } from '@trz/components/RingHoldingButton';
+import { setTitle } from '@trz/util/tabUtils';
 
 const BoardSettingsPage = (): React.JSX.Element => {
     const [boardData, setBoardData] = useState<BoardHeader | undefined>(undefined);
@@ -39,6 +40,7 @@ const BoardSettingsPage = (): React.JSX.Element => {
                 setBoardLabels(boardRes?.labels ?? []);
                 setBoardData(boardRes);
                 trz.setBoardData(boardRes);
+                setTitle(`${boardRes?.name ?? 'Board'} Settings | Terrazzo`);
             } catch (err) {
                 notify(NoteType.BOARD_DATA_ERROR, err);
                 return;

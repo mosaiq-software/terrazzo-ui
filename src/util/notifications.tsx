@@ -173,6 +173,15 @@ export const NoteType = {
         message: "Don't worry, your changes are automatically saved!",
         color: NoteColor.INFO,
     },
+    DOC_CREATION_ERROR: {
+        title: 'Error creating the document',
+    },
+    DOC_UPDATE_ERROR: {
+        title: 'Error updating the document',
+    },
+    DOC_DATA_ERROR: {
+        title: 'Error getting the document',
+    },
 };
 
 /**

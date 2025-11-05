@@ -1,27 +1,24 @@
-import React, { useEffect, useState } from 'react';
-import { ActionIcon, Box, Button, Center, Grid, Group, Loader, Modal, Stack, Text, Tooltip, useCombobox } from '@mantine/core';
+import React, { useEffect } from 'react';
+import { ActionIcon, Box, Button, Center, Group, Loader, Modal, Stack, Text, Tooltip, useCombobox } from '@mantine/core';
 import { CollaborativeTextArea } from '@trz/components/CollaborativeTextArea/CollaborativeTextArea';
-import { AvatarRow } from '@trz/components/AvatarRow';
 import EditableTextbox from '@trz/components/EditableTextbox';
 import { useSocket } from '@trz/contexts/socket-context';
 import { NoteType, notify } from '@trz/util/notifications';
-import { useTRZ } from '@trz/contexts/TRZ-context';
 import { getCardNumber } from '@trz/util/boardUtils';
 import { FaArchive, FaUserMinus, FaUserPlus } from 'react-icons/fa';
 import { MdFileCopy } from 'react-icons/md';
 import { PriorityButtons } from '@trz/components/CardDetails/PriorityButtons';
-import { Card, CardId } from '@mosaiq/terrazzo-common/types';
+import { CardId } from '@mosaiq/terrazzo-common/types';
 import { useUser } from '@trz/contexts/user-context';
-import { ServerSE } from '@mosaiq/terrazzo-common/socketTypes';
-import { getCardData, updateCardAssignee, updateCardField } from '@trz/emitters/all';
-import { useSocketListener } from '@trz/hooks/useSocketListener';
-import { updateBaseFromPartial } from '@mosaiq/terrazzo-common/utils/arrayUtils';
+import { updateCardAssignee, updateCardField } from '@trz/emitters/all';
 import { useClipboard, useIdle } from '@mantine/hooks';
 import { IDLE_TIMEOUT_MS } from '@trz/util/textUtils';
 import { fullName } from '@mosaiq/terrazzo-common/utils/textUtils';
 import { LabelsMenu } from './LabelsMenu';
 import { AssigneeMenu } from './AssigneeMenu';
 import { useCard } from '@trz/hooks/useCard';
+import { useCatchSaveKey } from '@trz/hooks/useCatchSaveKey';
+import { setTitle } from '@trz/util/tabUtils';
 
 interface CardDetailsProps {
     cardId: CardId;
@@ -37,6 +34,7 @@ const CardDetails = (props: CardDetailsProps): React.JSX.Element | null => {
     const idle = useIdle(IDLE_TIMEOUT_MS);
     const clipboard = useClipboard({ timeout: 500 });
     const card = useCard(props.cardId, false, true);
+    useCatchSaveKey();
 
     const onCloseModal = () => {
         props.onClose();

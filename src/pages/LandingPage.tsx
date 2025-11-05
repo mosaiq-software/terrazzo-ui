@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Box, Flex, Group, Button, Divider, Title, Text, Image, Stack, Center, Container, Anchor } from '@mantine/core';
 import { Link } from 'react-router-dom';
 
@@ -8,6 +8,7 @@ import mosaiqLogo from '../assets/mosaiq-logo.png';
 import terrazzoScreenshot from '../assets/terrazzo-screenshot.png';
 import { useUser } from '@trz/contexts/user-context';
 import { UserProfileIcon } from '@trz/components/UserProfileIcon';
+import { setTitle } from '@trz/util/tabUtils';
 
 const COLORS = {
     background: '#19191b',
@@ -21,6 +22,9 @@ const MAX_WIDTH = 700;
 
 const LandingPage = () => {
     const { userData } = useUser();
+    useEffect(() => {
+        setTitle(`Terrazzo`);
+    }, []);
     return (
         <Box
             bg={COLORS.background}

@@ -33,7 +33,7 @@ export const OrgTabMembers = (props: OrgTabMembersProps) => {
                 <Title
                     c="white"
                     pb="20"
-                    order={2}
+                    order={4}
                     maw="200"
                 >
                     Members

@@ -39,7 +39,7 @@ export const OrgTabSettings = (props: OrgTabSettingsProps) => {
             <Title
                 c="white"
                 pb="20"
-                order={2}
+                order={4}
                 maw="200"
             >
                 Settings

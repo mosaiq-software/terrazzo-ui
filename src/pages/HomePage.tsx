@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Box, ScrollArea, Title, Flex, Divider, Text, Loader, Center, Kbd, Button, Tooltip, Avatar, Group, Stack, HoverCard, UnstyledButton } from '@mantine/core';
 import { BOARD_CARD_WIDTH, BoardListCard } from '@trz/components/BoardListCards';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +8,7 @@ import { modals } from '@mantine/modals';
 import { useTRZ } from '@trz/contexts/TRZ-context';
 import { AvatarRow } from '@trz/components/AvatarRow';
 import { useDashboard } from '@trz/contexts/dashboard-context';
+import { setTitle } from '@trz/util/tabUtils';
 
 const HomePage = (): React.JSX.Element => {
     const usr = useUser();
@@ -15,6 +16,10 @@ const HomePage = (): React.JSX.Element => {
     const navigate = useNavigate();
     const clipboard = useClipboard();
     const { userDash, updateUserDash } = useDashboard();
+
+    useEffect(() => {
+        setTitle(`Dashboard | Terrazzo`);
+    }, []);
 
     const orgs = useMemo(() => userDash?.organizations.filter((e) => !e.archived), [userDash?.organizations]);
     const projects = useMemo(() => userDash?.standaloneProjects.filter((e) => !e.archived), [userDash?.standaloneProjects]);

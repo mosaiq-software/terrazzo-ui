@@ -12,6 +12,7 @@ import BoardSettingsPage from '@trz/pages/BoardSettingsPage';
 import UserSettingsPage from '@trz/pages/UserSettingsPage';
 import LoginPage from '@trz/pages/auth/LoginPage';
 import { NotFound, PageErrors } from './components/NotFound';
+import DocumentPage from './pages/DocumentPage';
 
 const Router = () => {
     return (
@@ -61,6 +62,10 @@ const Router = () => {
                 <Route
                     path="/org/:orgId/:tabId?"
                     element={<OrganizationPage />}
+                />
+                <Route
+                    path="/doc/:documentId"
+                    element={<DocumentPage />}
                 />
                 <Route
                     path="/settings"

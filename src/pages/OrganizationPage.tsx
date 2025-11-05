@@ -18,6 +18,7 @@ import { useDashboard } from '@trz/contexts/dashboard-context';
 import { modals } from '@mantine/modals';
 import { useSocketListener } from '@trz/hooks/useSocketListener';
 import { updateBaseFromPartial } from '@mosaiq/terrazzo-common/utils/arrayUtils';
+import { setTitle } from '@trz/util/tabUtils';
 
 const OrganizationPage = (): React.JSX.Element => {
     const params = useParams();
@@ -39,6 +40,7 @@ const OrganizationPage = (): React.JSX.Element => {
             try {
                 const org = await getOrganizationData(sockCtx, orgId);
                 setOrgData(org ?? null);
+                setTitle(`${org?.name ?? 'Organization'} | Terrazzo`);
             } catch (err) {
                 notify(NoteType.ORG_DATA_ERROR, err);
                 navigate('/dashboard');
@@ -56,10 +58,6 @@ const OrganizationPage = (): React.JSX.Element => {
             return updateBaseFromPartial<Organization>(prev, payload);
         });
     });
-
-    const nonArchivedProjects = useMemo(() => {
-        return orgData?.projects.filter((project) => !project.archived) ?? [];
-    }, [orgData?.projects]);
 
     if (orgData === undefined) {
         return <Loader />;
@@ -82,21 +80,7 @@ const OrganizationPage = (): React.JSX.Element => {
     }
 
     const tabs: any = {
-        Projects: (
-            <OrgTabCards
-                projects={nonArchivedProjects}
-                onClickCreate={() => {
-                    modals.openContextModal({
-                        modal: 'project',
-                        title: 'Create Project',
-                        innerProps: { orgId },
-                    });
-                }}
-                onClickProject={(projectId) => {
-                    navigate(`/project/${projectId}`);
-                }}
-            />
-        ),
+        Organization: <OrgTabCards orgData={orgData} />,
         Members: (
             <OrgTabMembers
                 myMembershipRecord={myMembershipRecord}

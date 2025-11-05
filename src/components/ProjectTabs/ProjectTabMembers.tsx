@@ -35,7 +35,7 @@ export const ProjectTabMembers = (props: ProjectTabMembersProps) => {
                 <Title
                     c="white"
                     pb="20"
-                    order={2}
+                    order={4}
                     maw="200"
                 >
                     Members

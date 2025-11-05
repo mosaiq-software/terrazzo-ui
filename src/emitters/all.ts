@@ -1,6 +1,6 @@
 import { EntityType, Role } from '@mosaiq/terrazzo-common/constants';
 import { ClientSE } from '@mosaiq/terrazzo-common/socketTypes';
-import { Board, BoardHeader, BoardId, BoardRes, Card, CardHeader, CardId, EntityId, Invite, InviteId, Label, LabelId, List, ListHeader, ListId, MembershipRecord, MembershipRecordId, Organization, OrganizationHeader, OrganizationId, Project, ProjectHeader, ProjectId, UID, UserDash, UserId } from '@mosaiq/terrazzo-common/types';
+import { Board, BoardHeader, BoardId, BoardRes, Card, CardHeader, CardId, DocumentHeader, DocumentId, EntityId, Invite, InviteId, Label, LabelId, List, ListHeader, ListId, MembershipRecord, MembershipRecordId, Organization, OrganizationHeader, OrganizationId, Project, ProjectHeader, ProjectId, UID, UserDash, UserId } from '@mosaiq/terrazzo-common/types';
 import { SocketContextType } from '@trz/contexts/socket-context';
 import { NoteType, notify } from '@trz/util/notifications';
 
@@ -162,4 +162,16 @@ export const emitMoveCard = async (sockCtx: SocketContextType, cardId: CardId, t
 
 export const getSearchResults = async (sockCtx: SocketContextType, query: string, searchSessionId: string) => {
     return await sockCtx.emit<ClientSE.GET_SEARCH_RESULTS>(ClientSE.GET_SEARCH_RESULTS, { query, searchSessionId });
+};
+
+export const getDocument = async (sockCtx: SocketContextType, documentId: DocumentId) => {
+    return await sockCtx.emit<ClientSE.GET_DOCUMENT>(ClientSE.GET_DOCUMENT, documentId);
+};
+
+export const createDocument = async (sockCtx: SocketContextType, title: string, parentId: UID) => {
+    return await sockCtx.emit<ClientSE.CREATE_DOCUMENT>(ClientSE.CREATE_DOCUMENT, { parentId, title });
+};
+
+export const updateDocumentMetadata = async (sockCtx: SocketContextType, documentId: DocumentId, partial: Partial<DocumentHeader>) => {
+    await sockCtx.emit<ClientSE.UPDATE_DOCUMENT_FIELD>(ClientSE.UPDATE_DOCUMENT_FIELD, { ...partial, id: documentId });
 };

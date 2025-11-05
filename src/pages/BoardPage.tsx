@@ -4,7 +4,7 @@ import CollaborativeMouseTracker from '@trz/wrappers/collaborativeMouseTracker';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useSocket } from '@trz/contexts/socket-context';
 import CreateList from '@trz/components/CreateList';
-import { BoardHeader, BoardId, CardId, ListId, UID } from '@mosaiq/terrazzo-common/types';
+import { BoardHeader, BoardId, Card, CardId, ListId, UID } from '@mosaiq/terrazzo-common/types';
 import { NoteType, notify } from '@trz/util/notifications';
 import SortableList from '@trz/components/DragAndDrop/SortableList';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent, DragStartEvent, CollisionDetection, MeasuringStrategy, DragOverlay } from '@dnd-kit/core';
@@ -22,6 +22,7 @@ import { arrayMoveInPlace, updateBaseFromPartial } from '@mosaiq/terrazzo-common
 import { useRoom } from '@trz/hooks/useRoom';
 import { useMap } from '@trz/hooks/useMap';
 import { CARD_CACHE_PREFIX, LIST_CACHE_PREFIX } from '@trz/util/boardUtils';
+import { setTitle } from '@trz/util/tabUtils';
 
 interface BoardContextType {
     listToCardsMap: Map<ListId, CardId[]>;
@@ -87,6 +88,10 @@ const BoardPage = (): React.JSX.Element => {
                     console.error('No board data found for boardId:', boardIdToUse);
                     return;
                 }
+                if (!cardId) {
+                    setTitle(`${boardRes.name} | Terrazzo`);
+                }
+
                 const tempListMap = new Map<ListId, CardId[]>();
                 const tempCardMap = new Map<CardId, ListId>();
                 for (const list of boardRes.lists) {
