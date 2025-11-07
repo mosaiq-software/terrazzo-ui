@@ -1,29 +1,29 @@
-import React, {useState} from "react";
-import {TextInput, Container, Flex, Button} from "@mantine/core";
-import {getHotkeyHandler} from "@mantine/hooks";
-import {ContextModalProps} from "@mantine/modals";
-import {useSocket} from "@trz/contexts/socket-context";
-import {useNavigate, useParams} from "react-router-dom";
-import {NoteType, notify} from "@trz/util/notifications";
-import { OrganizationId } from "@mosaiq/terrazzo-common/types";
-import { createProject } from "@trz/emitters/all";
+import React, { useState } from 'react';
+import { TextInput, Container, Flex, Button } from '@mantine/core';
+import { getHotkeyHandler } from '@mantine/hooks';
+import { ContextModalProps } from '@mantine/modals';
+import { useSocket } from '@trz/contexts/socket-context';
+import { useNavigate, useParams } from 'react-router-dom';
+import { NoteType, notify } from '@trz/util/notifications';
+import { OrganizationId } from '@mosaiq/terrazzo-common/types';
+import { createProject } from '@trz/emitters/all';
 
-const CreateProject = (props: ContextModalProps<{ modalBody: string, orgId: OrganizationId}>): React.JSX.Element => {
-    const [projectName, setProjectName] = React.useState("");
-    const [errorName, setErrorName] = useState("");
+const CreateProject = (props: ContextModalProps<{ modalBody: string; orgId: OrganizationId }>): React.JSX.Element => {
+    const [projectName, setProjectName] = React.useState('');
+    const [errorName, setErrorName] = useState('');
     const params = useParams();
     const sockCtx = useSocket();
     const navigate = useNavigate();
 
     async function onSubmit() {
-        setErrorName("");
+        setErrorName('');
 
-        if(projectName.length < 1){
-            setErrorName("Enter a Title");
+        if (projectName.length < 1) {
+            setErrorName('Enter a Title');
             return;
         }
-        if(projectName.length > 50){
-            setErrorName("Max 50 characters");
+        if (projectName.length > 50) {
+            setErrorName('Max 50 characters');
             return;
         }
         try {
@@ -31,15 +31,12 @@ const CreateProject = (props: ContextModalProps<{ modalBody: string, orgId: Orga
             navigate(`/project/${projectId}`);
         } catch (e) {
             notify(NoteType.PROJECT_CREATION_ERROR, e);
-            navigate(`/dashboard`);
         }
         props.context.closeModal(props.id);
     }
 
     return (
-        <Container onKeyDown={getHotkeyHandler([
-            ['Enter', onSubmit]
-        ])}>
+        <Container onKeyDown={getHotkeyHandler([['Enter', onSubmit]])}>
             <Flex
                 direction="column"
                 justify="center"
@@ -58,12 +55,15 @@ const CreateProject = (props: ContextModalProps<{ modalBody: string, orgId: Orga
                 />
             </Flex>
 
-            <Button fullWidth mt="md"
-                    onClick={onSubmit}>
+            <Button
+                fullWidth
+                mt="md"
+                onClick={onSubmit}
+            >
                 Create Project
             </Button>
         </Container>
-    )
-}
+    );
+};
 
-export const CreateProjectModal = (props: ContextModalProps<{ modalBody: string, orgId: OrganizationId }>) => (<CreateProject {...props}/>);
+export const CreateProjectModal = (props: ContextModalProps<{ modalBody: string; orgId: OrganizationId }>) => <CreateProject {...props} />;

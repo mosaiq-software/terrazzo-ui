@@ -1,17 +1,8 @@
-import React, {createContext, useContext, useEffect, useState} from 'react';
-import {io, Socket} from 'socket.io-client';
-import {
-    ClientSE,
-    ClientSEPayload,
-    ClientSEReplies,
-    ClientSocketIOEvent,
-    ServerSE,
-    ServerSEPayload,
-    SocketHandshakeAuth,
-    SocketId,
-} from '@mosaiq/terrazzo-common/socketTypes';
-import {UserHeader, UserId} from '@mosaiq/terrazzo-common/types';
-import {NoteType, notify} from '@trz/util/notifications';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
+import { ClientSE, ClientSEPayload, ClientSEReplies, ClientSocketIOEvent, ServerSE, ServerSEPayload, SocketHandshakeAuth, SocketId } from '@mosaiq/terrazzo-common/socketTypes';
+import { UserHeader, UserId } from '@mosaiq/terrazzo-common/types';
+import { NoteType, notify } from '@trz/util/notifications';
 import { useUser } from './user-context';
 
 export type SocketContextType = {
@@ -20,7 +11,7 @@ export type SocketContextType = {
     connected: boolean;
     emit<T extends ClientSE>(event: T, payload: ClientSEPayload[T]): Promise<ClientSEReplies[T] | undefined>;
     volatileEmit: <T extends ClientSE>(event: ClientSE, payload: ClientSEPayload[T]) => Promise<ClientSEReplies[T] | undefined>;
-}
+};
 
 const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
@@ -29,34 +20,33 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     const [socket, setSocketState] = useState<Socket | null>(null);
     const [connected, setConnected] = useState<boolean>(false);
     // const [userLookup, setUserLookup] = useState<{[userId:UserId]:UserHeader}>({});
-    
 
     useEffect(() => {
         if (!process.env.SOCKET_URL) {
-			throw new Error("SOCKET_URL environment variable is not set");
-		}
-        if(!usr.userData?.id || !usr.githubAuthToken) {
+            throw new Error('SOCKET_URL environment variable is not set');
+        }
+        if (!usr.userData?.id || !usr.githubAuthToken) {
             return;
         }
 
         // CREATE SOCKET CONNECTION
-        const auth:SocketHandshakeAuth = {
+        const auth: SocketHandshakeAuth = {
             userId: usr.userData.id,
             githubToken: usr.githubAuthToken,
         };
         const sock = io(process.env.SOCKET_URL, {
             auth,
-            path: "/socket"
+            path: '/socket',
         });
 
         setSocketState(sock);
 
         // ENGINE EVENTS - provided by socket.io
-		sock.on(ClientSocketIOEvent.CONNECT, async () => {
+        sock.on(ClientSocketIOEvent.CONNECT, async () => {
             const engine = sock.io.engine;
             setConnected(false);
-            engine.once("upgrade", () => {
-                if (engine.transport.name !== "websocket") {
+            engine.once('upgrade', () => {
+                if (engine.transport.name !== 'websocket') {
                     notify(NoteType.CONNECTION_ERROR);
                     sock.disconnect();
                 }
@@ -68,20 +58,20 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             notify(NoteType.CONNECTION_ERROR);
         });
 
-		sock.on(ClientSocketIOEvent.DISCONNECT, () => {
+        sock.on(ClientSocketIOEvent.DISCONNECT, () => {
             setConnected(false);
             notify(NoteType.DISCONNECTED);
-		});
+        });
         sock.io.on(ClientSocketIOEvent.RECONNECT_ATTEMPT, () => {
             notify(NoteType.RECONNECTING);
         });
-          
+
         sock.io.on(ClientSocketIOEvent.RECONNECT, () => {
             const engine = sock.io.engine;
             setConnected(false);
             notify(NoteType.RECONNECTING_SERVER_FOUND);
-            engine.once("upgrade", () => {
-                if (engine.transport.name === "websocket") {
+            engine.once('upgrade', () => {
+                if (engine.transport.name === 'websocket') {
                     notify(NoteType.CONNECTION_ESTABLISHED);
                 } else {
                     notify(NoteType.CONNECTION_ERROR);
@@ -96,9 +86,9 @@ const SocketProvider: React.FC<any> = ({ children }) => {
 
         return () => {
             setConnected(false);
-            console.warn("Effect closed")
+            console.warn('Effect closed');
             sock.disconnect();
-        }
+        };
     }, [usr.userData?.id, usr.githubAuthToken]);
 
     /**
@@ -107,12 +97,12 @@ const SocketProvider: React.FC<any> = ({ children }) => {
         @throws Server error
     */
     function emit<T extends ClientSE>(event: T, payload: ClientSEPayload[T]): Promise<ClientSEReplies[T] | undefined> {
-        return new Promise((resolve: (response: ClientSEReplies[T])=>void, reject: (error?: string)=>void) => {
-            if(!socket || !connected){
+        return new Promise((resolve: (response: ClientSEReplies[T]) => void, reject: (error?: string) => void) => {
+            if (!socket || !connected) {
                 return null;
             }
             socket.emit(event, payload, (response: ClientSEReplies[T], error?: string) => {
-                if(error) {
+                if (error) {
                     reject(error);
                 } else {
                     resolve(response);
@@ -127,12 +117,12 @@ const SocketProvider: React.FC<any> = ({ children }) => {
      * @throws Any server error
      */
     function volatileEmit<T extends ClientSE>(event: ClientSE, payload: ClientSEPayload[T]): Promise<ClientSEReplies[T] | undefined> {
-        return new Promise((resolve: (response: ClientSEReplies[T])=>void, reject: (error?: string)=>void) => {
+        return new Promise((resolve: (response: ClientSEReplies[T]) => void, reject: (error?: string) => void) => {
             if (!socket || !connected) {
                 return null;
             }
             socket.volatile.emit(event, payload, (response: ClientSEReplies[T], error?: string) => {
-                if(error) {
+                if (error) {
                     reject(error);
                 } else {
                     resolve(response);
@@ -140,8 +130,6 @@ const SocketProvider: React.FC<any> = ({ children }) => {
             });
         });
     }
-
-
 
     // EVENT EMITTERS
 
@@ -155,16 +143,18 @@ const SocketProvider: React.FC<any> = ({ children }) => {
     // }
 
     return (
-        <SocketContext.Provider value={{
-            socket,
-            sid: socket?.id,
-            connected,
-            emit,
-            volatileEmit
-        }}>
+        <SocketContext.Provider
+            value={{
+                socket,
+                sid: socket?.id,
+                connected,
+                emit,
+                volatileEmit,
+            }}
+        >
             {children}
         </SocketContext.Provider>
-    )
+    );
 };
 
 const useSocket = () => {
@@ -173,6 +163,6 @@ const useSocket = () => {
         throw new Error('useSocket must be used within a SocketProvider');
     }
     return context;
-}
+};
 
 export { SocketProvider, useSocket };
